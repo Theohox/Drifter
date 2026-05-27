@@ -31,27 +31,43 @@ updated: '{{NOW}}'
 
 | Field | Value |
 |-------|-------|
-| **ID** | 0.1 |
+| **ID** | FEAT-001 |
 | **Name** | Initialize project |
 | **Status** | 🟡 IN PROGRESS |
+| **Pipeline** | active |
+| **Depends On** | — |
 | **Evidence** | — |
-| **Next** | 0.2: First drift guard check |
+| **Next** | FEAT-002: First drift guard check |
 
 ---
 
 ## Blocked Tasks
 
-| ID | Name | Blocked On | ETA |
-|----|------|-----------|-----|
-| — | — | — | — |
+Tasks waiting on something before they can start.
+
+| ID | Name | Pipeline | Depends On | Blocked On | ETA |
+|----|------|----------|-----------|-----------|-----|
+| — | — | — | — | — | — |
 
 ---
 
 ## Future Tasks
 
-| ID | Name | Status | Docs |
-|----|------|--------|------|
-| — | — | — | — |
+Planned workstreams not yet scheduled.
+
+| ID | Name | Pipeline | Depends On | Status | Docs |
+|----|------|----------|-----------|--------|------|
+| — | — | — | — | — | — |
+
+---
+
+## Completed Tasks
+
+Historical record of done work. Preserved for context and forensic analysis.
+
+| ID | Name | Completed | Archive | Score |
+|----|------|-----------|---------|-------|
+| — | — | — | — | — |
 
 ---
 
@@ -60,9 +76,16 @@ updated: '{{NOW}}'
 When you finish the Active Task:
 
 1. **Paste evidence** into the Active Task table
-2. **Update Phase Status** if phase is complete
-3. **Run Drift Guard** — did you create new drift?
-4. **STOP** — if no next task is Ready, wait for human
+2. **Run `drifter check`** — did you create new drift?
+3. **Mark task done** — it moves to Completed Tasks automatically
+4. **Update Phase Status** if phase is complete
+5. **STOP** — if no next task is Ready, wait for human
+
+If you find a NEW issue while working:
+1. Don't fix it immediately unless it's blocking
+2. Add it to Blocked Tasks with "discovered during [task ID]"
+3. Continue with current Active Task
+4. The new task gets scheduled in the next phase
 
 ---
 

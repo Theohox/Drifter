@@ -1,0 +1,30 @@
+---
+title: Archive — Completed Task Records
+type: reference
+status: active
+phase: 1
+created: '{{NOW}}'
+updated: '{{NOW}}'
+---
+
+# Archive — Completed Task Records
+
+**One file per completed task.** This directory contains the permanent historical record of every task that has been finished.
+
+## Convention
+
+- **Filename**: `{TASK-ID}-{slug}.md` — e.g. `FEAT-001-foundation.md`
+- **Frontmatter**: Every archive file has YAML frontmatter with `type: archive`, `status: archived`, `task_id`, `completed`, and `score`
+- **Content**: Evidence, key decisions, files changed, and related task links
+
+## Why?
+
+The conductor's `## Completed Tasks` table is an index — it links here. The archive files are the full story. They are:
+
+- **Searchable** — grep across `docs/archive/` for any term
+- **Linkable** — cross-reference decisions and file changes
+- **Discoverable** — new agents read the archive to understand project history
+
+## Generated Automatically
+
+Archive files are created by `drifter conductor done --task-id ID --evidence "..."`. Do not create them manually unless backfilling history.

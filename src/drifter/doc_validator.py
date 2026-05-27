@@ -21,6 +21,13 @@ VALID_TYPES = {
     "index",
 }
 
+VALID_STATUSES = {
+    "active",
+    "draft",
+    "archived",
+    "deprecated",
+}
+
 
 @dataclass(frozen=True)
 class DocIssue:
@@ -107,6 +114,31 @@ def _validate_single(md_file: Path, root: Path) -> list[DocIssue]:
                 file=rel_path,
                 detail=f"Invalid type '{doc_type}'. Valid: {', '.join(sorted(VALID_TYPES))}",
                 severity="error",
+            ))
+
+    if "status" not in frontmatter:
+        issues.append(DocIssue(
+            file=rel_path,
+            detail="Missing 'status:' in frontmatter",
+            severity="warn",
+        ))
+    else:
+        doc_status = frontmatter["status"]
+        if doc_status not in VALID_STATUSES:
+            issues.append(DocIssue(
+                file=rel_path,
+                detail=f"Invalid status '{doc_status}'. Valid: {', '.join(sorted(VALID_STATUSES))}",
+                severity="warn",
+            ))
+
+    if "phase" in frontmatter:
+        try:
+            int(frontmatter["phase"])
+        except ValueError:
+            issues.append(DocIssue(
+                file=rel_path,
+                detail=f"Invalid phase '{frontmatter['phase']}'. Must be an integer.",
+                severity="warn",
             ))
 
     if "title" not in frontmatter:

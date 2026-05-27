@@ -67,3 +67,36 @@ updated: '2026-01-01T00:00:00Z'
 """)
         report = validate_docs(root=tmp_path, config=config)
         assert any("older than 'created'" in i.detail for i in report.issues)
+
+    def test_missing_status(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        doc = tmp_path / "docs" / "test.md"
+        doc.parent.mkdir(parents=True)
+        doc.write_text("""---
+title: Test
+type: guide
+created: '2026-01-01T00:00:00Z'
+updated: '2026-01-02T00:00:00Z'
+---
+
+# Test
+""")
+        report = validate_docs(root=tmp_path, config=config)
+        assert any("Missing 'status:'" in i.detail for i in report.issues)
+
+    def test_invalid_status(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        doc = tmp_path / "docs" / "test.md"
+        doc.parent.mkdir(parents=True)
+        doc.write_text("""---
+title: Test
+type: guide
+status: unknown
+created: '2026-01-01T00:00:00Z'
+updated: '2026-01-02T00:00:00Z'
+---
+
+# Test
+""")
+        report = validate_docs(root=tmp_path, config=config)
+        assert any("Invalid status" in i.detail for i in report.issues)

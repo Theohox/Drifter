@@ -36,10 +36,13 @@ drifter preflight --task "fix login bug"
 | `docs/session-protocol.md` | Hard rules: scope, evidence, no-recreation, stop rule. |
 | `docs/project-conductor.md` | Single source of truth: what's active, blocked, done. |
 | `drifter check` | Automated scanner: stale refs, hardcoded paths, doc drift. |
-| `drifter preflight` | Enforced 6-step pre-flight before any code change. |
+| `drifter preflight` | Enforced 7-step pre-flight before any code change. |
 | `drifter conductor` | CLI for managing active tasks and phase state. |
+| `drifter validate` | Validate document types and frontmatter. |
+| `drifter audit` | Audit session history for dangerous command violations. |
+| `drifter init` | Initialize Drifter in a new project. |
 
-## The 6-Step Pre-Flight
+## The 7-Step Pre-Flight
 
 Every session starts with this exact sequence:
 
@@ -49,6 +52,7 @@ Every session starts with this exact sequence:
 4. **RUN** `drifter check` — what's the current drift?
 5. **PICK** one active task from the conductor
 6. **GREP** for existing code before writing new code
+7. **READ** `dangerous_patterns.toml` — command boundaries before running shell
 
 No exceptions. No "I'll just quickly fix this one thing."
 
@@ -63,8 +67,9 @@ Drifter treats documentation as a correctness layer, not an afterthought. Every 
 | **Constitution** | `Purpose.md` | Stable principles. Rarely changes. |
 | **Snapshot** | `current_state.md` | Current truth only. Rewrite, don't append. |
 | **Backlog** | `agent_open.md` | Open work only. Remove items when done. |
-| **Archive** | `agent_closed.md` | Completed work with context. Append only. |
+| **Archive** | `docs/archive/` | One file per completed task. Auto-generated on `mark_done()`. |
 | **Playbook** | `AGENTS.md` | Operational procedures. Update when process changes. |
+| **Index** | `docs/phase-index.md` | Maps all docs to their phase without moving files. |
 
 When every doc knows its type, docs don't become lies.
 

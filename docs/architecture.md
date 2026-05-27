@@ -2,8 +2,9 @@
 title: Drifter Internal Architecture
 type: snapshot
 status: active
+phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T00:00:00Z'
+updated: '2026-05-27T19:03:41Z'
 ---
 
 # Drifter Internal Architecture
@@ -17,7 +18,7 @@ How Drifter is built. For contributors and advanced users.
 1. **Zero-dependency core** — Basic drift detection works with only the Python standard library
 2. **Plugin architecture** — Checks and reporters are swappable
 3. **Config in repo** — `drifter.toml` or `pyproject.toml [tool.drifter]`
-4. **Fast feedback** — `drifter check` runs in < 5 seconds on a 10k-file repo
+4. **Fast feedback** — the `check` command runs in < 5 seconds on a 10k-file repo
 5. **Language-agnostic** — Works with any project that has files and docs
 
 ---
@@ -43,12 +44,30 @@ How Drifter is built. For contributors and advanced users.
 │         │                │                     │             │
 │         ▼                ▼                     ▼             │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │              Built-in Checks                         │   │
+│  │              Built-in Checks (23)                    │   │
 │  │  • StaleReferenceCheck                               │   │
 │  │  • HardcodedPathCheck                                │   │
 │  │  • DigestStalenessCheck                              │   │
 │  │  • ConductorHealthCheck                              │   │
 │  │  • CrossDocConsistencyCheck                          │   │
+│  │  • GitSafetyCheck                                    │   │
+│  │  • DangerousPatternsCheck                            │   │
+│  │  • TimestampStalenessCheck                           │   │
+│  │  • ConductorContentCheck                             │   │
+│  │  • ArchitectureDocSyncCheck                          │   │
+│  │  • ReadmeCompletenessCheck                           │   │
+│  │  • PreFlightSyncCheck                                │   │
+│  │  • CredentialLeakCheck                               │   │
+│  │  • DeadCodeCheck                                     │   │
+│  │  • TestCoverageCheck                                 │   │
+│  │  • CliOutputCheck                                    │   │
+│  │  • GitignoreCheck                                    │   │
+│  │  • PipelineIntegrityCheck                            │   │
+│  │  • ArchiveIntegrityCheck                             │   │
+│  │  • TomllibCompatibilityCheck                         │   │
+│  │  • AuditCoverageCheck                                │   │
+│  │  • ReporterCompletenessCheck                         │   │
+│  │  • TemplateCountSyncCheck                            │   │
 │  └──────────────────────────────────────────────────────┘   │
 │         │                                                    │
 │         ▼                                                    │
@@ -74,11 +93,9 @@ How Drifter is built. For contributors and advanced users.
 │  │   runner    │  │   manager   │  │     checker         │  │
 │  └─────────────┘  └─────────────┘  └─────────────────────┘  │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │              Memory Layer (optional)                 │   │
-│  │  • session_capture.py                                │   │
-│  │  • compressor.py                                     │   │
-│  │  • semantic_search.py                                │   │
-│  │  • injector.py                                       │   │
+│  │              Memory Layer (future)                   │   │
+│  │  Planned: session capture, compression, search,      │   │
+│  │  injection. Not yet implemented.                     │   │
 │  └──────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -152,6 +169,9 @@ Config is loaded in this priority order (later overrides earlier):
 | `drifter check` | < 5s for 10k files | < 30s for 100k files |
 | `drifter validate` | < 1s for 100 docs | < 5s for 1k docs |
 | `drifter preflight` | < 10s total | < 30s if drift guard is slow |
+| `drifter conductor` | < 1s | < 5s |
+| `drifter audit` | < 2s | < 10s |
+| `drifter init` | < 1s | < 2s |
 
 Performance strategies:
 - Checks run in parallel using `concurrent.futures`

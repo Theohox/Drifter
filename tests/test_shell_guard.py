@@ -86,3 +86,29 @@ always_block = ["git commit"]
         result = guard.classify("git commit")
         # Should allow everything if no patterns file exists
         assert result.action == "allow"
+
+    def test_blocks_system_dir(self, tmp_path: Path) -> None:
+        patterns = tmp_path / "dangerous_patterns.toml"
+        patterns.write_text("""
+[filesystem]
+system_dirs = ["/etc"]
+sensitive_patterns = [".env"]
+""")
+        guard = ShellGuard(root=tmp_path)
+
+        result = guard.classify("cat /etc/passwd")
+        assert result.action == "block"
+        assert "/etc" in result.matched_pattern
+
+    def test_requires_approval_for_sensitive(self, tmp_path: Path) -> None:
+        patterns = tmp_path / "dangerous_patterns.toml"
+        patterns.write_text("""
+[filesystem]
+system_dirs = ["/etc"]
+sensitive_patterns = [".env"]
+""")
+        guard = ShellGuard(root=tmp_path)
+
+        result = guard.classify("cat .env")
+        assert result.action == "approval_required"
+        assert ".env" in result.matched_pattern

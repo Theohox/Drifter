@@ -13,7 +13,7 @@ class TestConfig:
         assert config.root == tmp_path
         assert config.drift_threshold == 70
         assert config.max_pending_age_days == 7
-        assert len(config.checks) == 7
+        assert len(config.checks) == 18
 
     def test_pyproject_override(self, tmp_path: Path) -> None:
         pyproject = tmp_path / "pyproject.toml"

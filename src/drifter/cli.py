@@ -24,9 +24,21 @@ def _format_issues_console(issues: list, score: int | None = None) -> None:
     print(f"{'='*60}")
 
     if issues:
-        print("\n  Issues found:")
-        for issue in issues:
-            print(f"    • {issue}")
+        errors = [i for i in issues if i.severity == "error"]
+        warns = [i for i in issues if i.severity == "warn"]
+        infos = [i for i in issues if i.severity == "info"]
+        if errors:
+            print(f"\n  Errors ({len(errors)}):")
+            for issue in errors:
+                print(f"    ✗ {issue}")
+        if warns:
+            print(f"\n  Warnings ({len(warns)}):")
+            for issue in warns:
+                print(f"    • {issue}")
+        if infos:
+            print(f"\n  Info ({len(infos)}):")
+            for issue in infos:
+                print(f"    ℹ {issue}")
     else:
         print("\n  ✓ No drift detected. System is clean.")
 
@@ -36,6 +48,55 @@ def _format_issues_console(issues: list, score: int | None = None) -> None:
 def cmd_check(args: argparse.Namespace) -> int:
     config = Config.load(root=args.root)
     report = run_checks(root=args.root, config=config)
+
+    # Auto-update all markdown timestamps and conductor state
+    try:
+        from datetime import datetime, timezone
+        import re as _re
+
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        updated_pattern = _re.compile(r"(updated:\s*')(.+?)(')")
+
+        root_path = config.root
+        md_files = list((root_path / "docs").rglob("*.md")) if (root_path / "docs").exists() else []
+        md_files.extend(root_path.glob("*.md"))
+
+        for md_file in md_files:
+            if config.is_ignored(md_file):
+                continue
+            text = md_file.read_text(encoding="utf-8")
+            if "updated:" in text and "---" in text:
+                new_text = updated_pattern.sub(rf"\g<1>{now}\g<3>", text, count=1)
+                if new_text != text:
+                    md_file.write_text(new_text, encoding="utf-8")
+
+        # Also update conductor score history
+        conductor = Conductor(root=args.root, config=config)
+        if conductor.exists():
+            # Try to count tests for the history entry
+            test_count = 0
+            try:
+                import subprocess
+                import os
+                env = dict(os.environ)
+                env["PYTHONPATH"] = str(config.root / "src")
+                result = subprocess.run(
+                    ["python3", "-m", "pytest", "tests/", "--collect-only"],
+                    capture_output=True, text=True, timeout=15,
+                    cwd=str(config.root),
+                    env=env,
+                )
+                match = _re.search(r"collected (\d+) items?", result.stdout)
+                if match:
+                    test_count = int(match.group(1))
+            except Exception:
+                pass
+            notes = "Auto-updated by drifter check"
+            if args.score:
+                notes = "Score-only run"
+            conductor.append_drift_score(report.score, tests=test_count, notes=notes)
+    except Exception:
+        pass
 
     if args.score:
         print(f"DRIFT: {report.total} issues | {report.errors} errors | {report.warns} warns | SCORE: {report.score}%")
@@ -67,6 +128,15 @@ def cmd_preflight(args: argparse.Namespace) -> int:
     config = Config.load(root=args.root)
     result = run_pre_flight(root=args.root, config=config, task=args.task)
     result.print_report()
+
+    # Auto-update conductor timestamp after preflight
+    try:
+        conductor = Conductor(root=args.root, config=config)
+        if conductor.exists():
+            conductor._touch_timestamp()
+    except Exception:
+        pass
+
     return 0 if result.passed else 1
 
 
@@ -188,7 +258,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
                 continue
             checked += 1
             classification = guard.classify(line)
-            if classification.action in ("block", "approval_required"):
+            if classification.action in ("block", "approval_required", "warn"):
                 violations.append((line, classification))
 
     print(f"  Commands checked: {checked}")
@@ -213,15 +283,21 @@ def cmd_init(args: argparse.Namespace) -> int:
     docs_dir = root / "docs"
     digests_dir = docs_dir / "digests"
     digests_dir.mkdir(parents=True, exist_ok=True)
+    archive_dir = docs_dir / "archive"
+    archive_dir.mkdir(parents=True, exist_ok=True)
 
     # Copy templates
-    template_dir = Path(__file__).parent.parent / "templates"
+    # Try src/ layout first (project root / templates), then fallback
+    template_dir = Path(__file__).parent.parent.parent / "templates"
+    if not template_dir.exists():
+        template_dir = Path(__file__).parent.parent / "templates"
     files_to_create = {
         root / "AGENTS.md": template_dir / "AGENTS.md.tmpl",
         root / "dangerous_patterns.toml": template_dir / "dangerous_patterns.toml.tmpl",
         docs_dir / "session-protocol.md": template_dir / "session-protocol.md.tmpl",
         docs_dir / "project-conductor.md": template_dir / "project-conductor.md.tmpl",
         digests_dir / "index.md": template_dir / "digest-index.md.tmpl",
+        archive_dir / "README.md": template_dir / "archive-readme.md.tmpl",
         root / "drifter.toml": template_dir / "drifter.toml.tmpl",
     }
 

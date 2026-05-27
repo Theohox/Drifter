@@ -2,8 +2,9 @@
 title: Drifter Rules Reference
 type: reference
 status: active
+phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T00:00:00Z'
+updated: '2026-05-27T19:03:41Z'
 ---
 
 # Drifter Rules Reference
@@ -28,7 +29,7 @@ find . -name "*similar*" -type f
 
 ---
 
-## The 6-Step Pre-Flight
+## The 7-Step Pre-Flight
 
 Every session must follow this exact sequence:
 
@@ -38,6 +39,7 @@ Every session must follow this exact sequence:
 4. **RUN** `drifter check` — what's the current drift?
 5. **PICK** one active task from the conductor
 6. **GREP** for existing code before writing new code
+7. **READ** `dangerous_patterns.toml` — command boundaries before running shell
 
 **Why:** Forces context loading before code generation. Prevents agents from starting with a blank slate.
 
@@ -301,7 +303,7 @@ This file is the **canonical enforcement spec** for command restrictions. It is 
 | Rule | Prevents | Enforced By |
 |------|----------|-------------|
 | Golden Rule | Recreation | Pre-flight step 6 |
-| 6-Step Pre-Flight | Context blindness | `drifter preflight` |
+| 7-Step Pre-Flight | Context blindness | `drifter preflight` |
 | Scope Boundary | Bloat, rabbit holes | Session protocol |
 | Evidence | False "done" claims | Conductor update requirement |
 | Stop Rule | Drift accumulation | Session protocol |

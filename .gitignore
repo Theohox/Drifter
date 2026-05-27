@@ -24,3 +24,12 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+# Sensitive files — must never be committed
+.env
+*.key
+*.pem
+*.crt
+id_rsa*
+*.password
+*secret*

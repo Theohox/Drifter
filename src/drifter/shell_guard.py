@@ -96,6 +96,27 @@ class ShellGuard:
                     matched_pattern=pattern,
                 )
 
+        # Check filesystem rules
+        fs = self.patterns.get("filesystem", {})
+
+        for system_dir in fs.get("system_dirs", []):
+            if system_dir.lower() in cmd_lower:
+                return Classification(
+                    action="block",
+                    reason=f"'{system_dir}' is in filesystem.system_dirs — never touch system directories",
+                    matched_pattern=system_dir,
+                )
+
+        for sensitive in fs.get("sensitive_patterns", []):
+            # Convert glob-like pattern to a simple substring check
+            sensitive_lower = sensitive.lower().replace("*", "")
+            if sensitive_lower in cmd_lower:
+                return Classification(
+                    action="approval_required",
+                    reason=f"'{sensitive}' is in filesystem.sensitive_patterns — requires explicit approval",
+                    matched_pattern=sensitive,
+                )
+
         return Classification(
             action="allow",
             reason="No dangerous patterns matched",

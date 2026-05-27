@@ -1,6 +1,6 @@
 """Pre-flight checklist runner.
 
-Enforces the 6-step pre-flight protocol before any coding session.
+Enforces the 7-step pre-flight protocol before any coding session.
 """
 
 from __future__ import annotations
@@ -50,7 +50,7 @@ def run_pre_flight(
     config: Config | None = None,
     task: str | None = None,
 ) -> PreFlightResult:
-    """Run the 6-step pre-flight protocol."""
+    """Run the 7-step pre-flight protocol."""
     if config is None:
         config = Config.load(root)
     if root is None:
@@ -160,6 +160,22 @@ def run_pre_flight(
         "passed": True,
         "message": "Reminder: search codebase before writing new code",
     })
+
+    # Step 7: Verify dangerous_patterns.toml exists
+    dp_file = root / "dangerous_patterns.toml"
+    if dp_file.exists():
+        step_results.append({
+            "name": "Dangerous Patterns",
+            "passed": True,
+            "message": "dangerous_patterns.toml found",
+        })
+    else:
+        errors.append("dangerous_patterns.toml not found — agents have no command boundaries")
+        step_results.append({
+            "name": "Dangerous Patterns",
+            "passed": False,
+            "message": "dangerous_patterns.toml not found — agents have no command boundaries",
+        })
 
     passed = len(errors) == 0
 

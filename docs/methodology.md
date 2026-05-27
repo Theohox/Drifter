@@ -2,8 +2,9 @@
 title: Drifter Methodology — The Philosophy and Why
 type: constitution
 status: active
+phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T00:00:00Z'
+updated: '2026-05-27T19:03:41Z'
 ---
 
 # Drifter Methodology — The Philosophy and Why
@@ -106,7 +107,7 @@ Drifter uses **proactive enforcement**: scripts, structure, and protocols that r
 
 ### Enforcement 1: The Pre-Flight Protocol
 
-The 6-step pre-flight is a **gate**, not a suggestion. The agent cannot proceed to coding until it has:
+The 7-step pre-flight is a **gate**, not a suggestion. The agent cannot proceed to coding until it has:
 1. Read the contract
 2. Read the rules
 3. Read the conductor

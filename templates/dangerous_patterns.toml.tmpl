@@ -2,10 +2,15 @@
 # Canonical location: repo root. Read this before running ANY shell command.
 #
 # This file is the single source of truth for what agents must never do.
-# It is agent-agnostic: any AI agent can read it and know the boundaries.
+# It is agent-agnostic: any AI agent (Kimi, Claude, Codex, Copilot, custom)
+# can read it and know the boundaries.
+#
+# If the computer resets, clone the repo and read this file.
+# You will immediately know what commands are forbidden.
 
 [git]
 # NEVER run these. Not with flags. Not with excuses.
+# The human reviews changes in the Git Panel and decides when to commit/push.
 always_block = [
     "git commit",
     "git push",
@@ -27,12 +32,13 @@ allowed = [
 ]
 
 # Allowed ONLY if human explicitly asked
+# Never assume staging is desired
 approval_required = [
     "git add",
 ]
 
 [shell]
-# Unconditionally blocked patterns
+# Unconditionally blocked patterns — these destroy systems or exfiltrate data
 blocked = [
     "rm -rf /",
     "rm -rf ~",
@@ -44,13 +50,16 @@ blocked = [
     "wget | sh",
     "wget | bash",
     "sudo rm",
+    "chmod 777 /",
 ]
 
-# Patterns that require explicit human confirmation
+# Patterns that require explicit human confirmation before execution
 confirm_required = [
     "rm -rf",
     "rm -r",
     "sudo",
+    "docker",
+    "kubectl",
 ]
 
 [filesystem]
@@ -62,4 +71,15 @@ system_dirs = [
     "/sbin",
     "/var",
     "/root",
+]
+
+# Sensitive file patterns — never read or write without approval
+sensitive_patterns = [
+    "*.key",
+    "*.pem",
+    "*.crt",
+    ".env",
+    "id_rsa*",
+    "*.password",
+    "*secret*",
 ]

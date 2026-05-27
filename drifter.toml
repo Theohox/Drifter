@@ -42,6 +42,86 @@ name = "dangerous_patterns"
 enabled = true
 severity = "error"
 
+[[drifter.checks]]
+name = "timestamp_staleness"
+enabled = true
+severity = "warn"
+
+[[drifter.checks]]
+name = "conductor_content"
+enabled = true
+severity = "warn"
+
+[[drifter.checks]]
+name = "architecture_doc_sync"
+enabled = true
+severity = "warn"
+
+[[drifter.checks]]
+name = "readme_completeness"
+enabled = true
+severity = "warn"
+
+[[drifter.checks]]
+name = "pre_flight_sync"
+enabled = true
+severity = "warn"
+
+[[drifter.checks]]
+name = "credential_leak"
+enabled = true
+severity = "error"
+
+[[drifter.checks]]
+name = "dead_code"
+enabled = true
+severity = "warn"
+
+[[drifter.checks]]
+name = "test_coverage"
+enabled = true
+severity = "warn"
+
+[[drifter.checks]]
+name = "cli_output"
+enabled = true
+severity = "warn"
+
+[[drifter.checks]]
+name = "gitignore"
+enabled = true
+severity = "error"
+
+[[drifter.checks]]
+name = "pipeline_integrity"
+enabled = true
+severity = "warn"
+
+[[drifter.checks]]
+name = "archive_integrity"
+enabled = true
+severity = "error"
+
+[[drifter.checks]]
+name = "tomllib_compatibility"
+enabled = true
+severity = "error"
+
+[[drifter.checks]]
+name = "audit_coverage"
+enabled = true
+severity = "error"
+
+[[drifter.checks]]
+name = "reporter_completeness"
+enabled = true
+severity = "error"
+
+[[drifter.checks]]
+name = "template_count_sync"
+enabled = true
+severity = "warn"
+
 # Paths to ignore during scanning
 [drifter.ignore]
 paths = [

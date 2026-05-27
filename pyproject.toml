@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "drifter"
-version = "0.1.0"
+version = "0.2.0"
 description = "Universal drift guard for AI agents — enforce discipline, prevent bloat, and stop hallucination before it starts."
 readme = "README.md"
 license = { text = "MIT" }
@@ -73,6 +73,76 @@ severity = "warn"
 name = "conductor_health"
 enabled = true
 severity = "error"
+
+[[tool.drifter.checks]]
+name = "cross_doc_consistency"
+enabled = true
+severity = "warn"
+
+[[tool.drifter.checks]]
+name = "git_safety"
+enabled = true
+severity = "error"
+
+[[tool.drifter.checks]]
+name = "dangerous_patterns"
+enabled = true
+severity = "error"
+
+[[tool.drifter.checks]]
+name = "timestamp_staleness"
+enabled = true
+severity = "warn"
+
+[[tool.drifter.checks]]
+name = "conductor_content"
+enabled = true
+severity = "warn"
+
+[[tool.drifter.checks]]
+name = "architecture_doc_sync"
+enabled = true
+severity = "warn"
+
+[[tool.drifter.checks]]
+name = "readme_completeness"
+enabled = true
+severity = "warn"
+
+[[tool.drifter.checks]]
+name = "pre_flight_sync"
+enabled = true
+severity = "warn"
+
+[[tool.drifter.checks]]
+name = "credential_leak"
+enabled = true
+severity = "error"
+
+[[tool.drifter.checks]]
+name = "dead_code"
+enabled = true
+severity = "warn"
+
+[[tool.drifter.checks]]
+name = "test_coverage"
+enabled = true
+severity = "warn"
+
+[[tool.drifter.checks]]
+name = "cli_output"
+enabled = true
+severity = "warn"
+
+[[tool.drifter.checks]]
+name = "gitignore"
+enabled = true
+severity = "error"
+
+[[tool.drifter.checks]]
+name = "pipeline_integrity"
+enabled = true
+severity = "warn"
 
 [tool.ruff]
 line-length = 100

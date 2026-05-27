@@ -19,6 +19,7 @@ Before any coding session:
 - [ ] **Check the digest index**: `docs/digests/index.md`
 - [ ] **Grep for existing functionality**: `grep -r "your_idea" src/ tests/`
 - [ ] **Run tests**: `python -m pytest tests/ -q`
+- [ ] **Read dangerous_patterns.toml**: command boundaries before running shell
 
 **If you skip this checklist, you will recreate existing code.**
 
@@ -30,8 +31,7 @@ Before any coding session:
 | Pre-flight runner | `src/drifter/pre_flight.py` | Don't add agent-specific logic. Universal rules only. |
 | Conductor manager | `src/drifter/conductor.py` | Don't auto-pick tasks. Humans/agents must explicitly choose. |
 | Document validator | `src/drifter/doc_validator.py` | Don't validate content, only structure and type rules. |
-| Memory layer | `src/memory/` | Optional dependency. Core must work without it. |
-| Reporters | `src/reporters/` | Each reporter is independent. Don't couple output formats. |
+| Reporters | `src/drifter/reporters/` | Each reporter is independent. Don't couple output formats. |
 | Templates | `templates/` | Annotated templates, not generated content. |
 | Plugins | `plugins/` | Agent-specific integrations. Core must not depend on plugins. |
 
@@ -43,6 +43,8 @@ Before any coding session:
 | Run pre-flight | `python -m drifter preflight` or `src/drifter/pre_flight.py` |
 | Manage conductor | `python -m drifter conductor` or `src/drifter/conductor.py` |
 | Validate docs | `python -m drifter validate` or `src/drifter/doc_validator.py` |
+| Add a new check | `src/drifter/drift_guard.py` — implement `Check` protocol |
+| Audit session | `drifter audit` or `src/drifter/shell_guard.py` |
 | Add a new check | `src/drifter/drift_guard.py` — implement `Check` protocol |
 | Add a reporter | `src/drifter/reporters/` — implement `Reporter` protocol |
 | Project config | `pyproject.toml [tool.drifter]` or `drifter.toml` |
@@ -167,6 +169,8 @@ python -m drifter check              # Run drift guard
 python -m drifter preflight          # Run pre-flight checklist
 python -m drifter conductor show     # Show active task
 python -m drifter validate           # Validate document types
+python -m drifter audit              # Audit session for dangerous commands
+python -m drifter init               # Initialize Drifter in a new project
 python -m pytest tests/ -q           # Run tests
 ruff check src/ tests/               # Lint
 mypy src/                            # Type check

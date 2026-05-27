@@ -2,8 +2,9 @@
 title: Session Protocol — Hard Rules for Every Session
 type: playbook
 status: active
+phase: 1
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T00:00:00Z'
+updated: '2026-05-27T19:03:41Z'
 ---
 
 # Session Protocol — Hard Rules for Every Session
@@ -12,7 +13,7 @@ These rules are non-negotiable. Break them and you create drift.
 
 ---
 
-## The 6-Step Pre-Flight (MUST DO)
+## The 7-Step Pre-Flight (MUST DO)
 
 Every session starts with this exact sequence:
 
@@ -23,6 +24,7 @@ Every session starts with this exact sequence:
 4. RUN   drifter check                — what's the current drift?
 5. PICK  one Active Task from the Conductor
 6. GREP  for existing code before writing new code
+7. READ  dangerous_patterns.toml     — command boundaries before running shell
 ```
 
 No exceptions. No "I'll just quickly fix this one thing." Read the Conductor first.

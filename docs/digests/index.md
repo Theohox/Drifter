@@ -2,8 +2,9 @@
 title: Digest Index
 type: index
 status: active
+phase: 1
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T00:00:00Z'
+updated: '2026-05-27T19:03:41Z'
 ---
 
 # Digest Index
@@ -36,4 +37,4 @@ Historical digests live here. Preserved for forensic analysis but not part of th
 
 ---
 
-*Index last updated: 2026-05-27. Phase 0 active.*
+*Index last updated: 2026-05-27. Phase 1 active.*
