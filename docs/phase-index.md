@@ -4,7 +4,7 @@ type: index
 status: active
 phase: 1
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T19:03:41Z'
+updated: '2026-05-27T19:17:11Z'
 ---
 
 # Phase Index — Documents by Phase
@@ -22,7 +22,6 @@ Documents created during the foundation phase. These are stable and rarely chang
 | [Methodology](methodology.md) | constitution | active | The "why" — philosophy and design principles |
 | [Adoption Guide](adoption-guide.md) | guide | active | Step-by-step for any project |
 | [Rules Reference](rules-reference.md) | reference | active | Complete rule catalog |
-| [Comparisons](comparisons.md) | reference | active | Drifter vs alternatives |
 | [Document Types](document-types.md) | reference | active | Type system for docs |
 | [Architecture](architecture.md) | snapshot | active | Internal architecture |
 

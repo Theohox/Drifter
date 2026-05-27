@@ -4,7 +4,7 @@ type: constitution
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T19:03:41Z'
+updated: '2026-05-27T19:17:11Z'
 ---
 
 # Drifter Methodology — The Philosophy and Why

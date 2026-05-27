@@ -76,6 +76,10 @@ class StaleReferenceCheck:
         for md_file in md_files:
             if config.is_ignored(md_file):
                 continue
+            # Skip archive files — they are historical records and may reference
+            # files that no longer exist (merged, renamed, or deleted)
+            if "docs/archive" in str(md_file):
+                continue
             text = md_file.read_text(encoding="utf-8")
             for pattern in self._PATH_PATTERNS:
                 for match in pattern.finditer(text):
