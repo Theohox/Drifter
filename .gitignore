@@ -33,3 +33,6 @@ Thumbs.db
 id_rsa*
 *.password
 *secret*
+
+# Drifter approval markers (local only)
+.git/approved

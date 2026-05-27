@@ -14,19 +14,18 @@ Drifter is not a prompt. It is a **system of enforced protocols** — pre-flight
 ## Quick Start
 
 ```bash
-# Clone the repo
-git clone https://github.com/Theohox/Drifter.git
-cd Drifter
+# Install
+pip install drifter
 
-# Run the drift guard on itself
-PYTHONPATH=src python3 -m drifter.cli check
-
-# Initialize in any project
+# Initialize in your project
 cd your-project
-PYTHONPATH=../Drifter/src python3 -m drifter.cli init
+drifter init
+
+# Run the drift guard
+drifter check
 
 # Run pre-flight before a coding session
-PYTHONPATH=../Drifter/src python3 -m drifter.cli preflight --task "fix login bug"
+drifter preflight --task "fix login bug"
 ```
 
 ## What You Get
