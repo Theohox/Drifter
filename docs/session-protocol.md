@@ -74,6 +74,22 @@ Do not pick the next task yourself unless the Conductor explicitly lists it as "
 
 ---
 
+## The Git Boundary Rule
+
+**Agents NEVER mutate git history.**
+
+| Command | Allowed? |
+|---------|----------|
+| `git status`, `git diff`, `git log` | ✅ Informational only |
+| `git add` | ⚠️ Only if human explicitly asks |
+| `git commit`, `git push`, `git reset`, `git rebase`, `git merge`, `git checkout -b`, `git tag`, `git cherry-pick` | ❌ NEVER |
+
+**Prior approval does not roll forward.** Each git mutation requires fresh explicit approval.
+
+The human reviews changes in the Git Panel and decides when to commit/push.
+
+---
+
 ## The No-Recreation Rule
 
 If you think "I should build X":

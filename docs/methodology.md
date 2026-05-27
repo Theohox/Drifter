@@ -199,6 +199,27 @@ Both are necessary. Neither is sufficient alone.
 
 ---
 
+## Why Agents Must Not Touch Git History
+
+The Git Boundary Rule exists because git history is not just code — it is a **communication layer** between humans. Agents that mutate git history destroy that layer.
+
+### Release Semantics
+Agents don't know whether a change is a patch fix, a minor feature, or a breaking change. They don't know if the codebase is in a release freeze. They don't know if `main` is protected. A `git push` from an agent can trigger CI deployments, notify stakeholders, or break downstream consumers — all without the human realizing it happened.
+
+### Commit Messages Are Intent Documentation
+A good commit message explains *why* a change was made, not just *what* changed. Agents can describe what they did, but they cannot capture the human intent behind the change. Commits written by agents become archaeological noise — future developers read them and learn nothing.
+
+### History Rewriting Is Invisible to Agents
+An agent that runs `git rebase -i` or `git push --force` may not understand that it just erased a colleague's work. Agents lack the social context to know that force-push at 3pm on a Friday is different from force-push on a feature branch no one else has checked out.
+
+### The Git Panel Is the Human's Review Surface
+Modern IDEs and editors provide a Git Panel where humans review diffs, stage hunks, and write commits. This is a **deliberate review surface**. Bypassing it means bypassing the last human check before code enters the permanent record.
+
+### The One Exception: `git add`
+Staging files (`git add`) is sometimes necessary for the agent to show the human what changed. But even this requires explicit permission. The agent should never assume staging is desired.
+
+---
+
 ## Adoption Criteria
 
 Drifter is not for every project. It adds overhead. Adopt it when:

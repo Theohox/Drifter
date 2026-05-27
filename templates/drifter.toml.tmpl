@@ -32,6 +32,11 @@ name = "cross_doc_consistency"
 enabled = true
 severity = "warn"
 
+[[tool.drifter.checks]]
+name = "git_safety"
+enabled = true
+severity = "error"
+
 # Paths to ignore during scanning
 [tool.drifter.ignore]
 paths = [

@@ -67,6 +67,21 @@ When you finish the Active Task:
 4. STOP — if no next task is Ready, wait for human
 ```
 
+### The Git Boundary Rule
+**Agents NEVER mutate git history.**
+
+| Command | Allowed? | Condition |
+|---------|----------|-----------|
+| `git status`, `git diff`, `git log` | ✅ Yes | Informational only |
+| `git add` | ⚠️ Only if explicitly asked | Never assume |
+| `git commit`, `git push` | ❌ NEVER | Human's job |
+| `git reset`, `git rebase`, `git merge` | ❌ NEVER | History-mutating |
+| `git checkout -b`, `git tag`, `git cherry-pick` | ❌ NEVER | History-mutating |
+
+**Prior approval does not roll forward.** Each git mutation requires fresh explicit approval.
+
+The human reviews changes in the Git Panel and decides when to commit/push.
+
 ### The No-Recreation Rule
 If you think "I should build X":
 

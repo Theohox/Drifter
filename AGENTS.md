@@ -90,6 +90,21 @@ If you think "I should build X":
 
 **If X exists in any form, use it. Do not recreate.**
 
+### The Git Boundary Rule
+**Agents NEVER mutate git history.**
+
+| Command | Allowed? | Condition |
+|---------|----------|-----------|
+| `git status`, `git diff`, `git log` | ✅ Yes | Informational only |
+| `git add` | ⚠️ Only if explicitly asked | Never assume |
+| `git commit`, `git push` | ❌ NEVER | Human's job |
+| `git reset`, `git rebase`, `git merge` | ❌ NEVER | History-mutating |
+| `git checkout -b`, `git tag`, `git cherry-pick` | ❌ NEVER | History-mutating |
+
+**Prior approval does not roll forward.** If the human said "commit that" yesterday, you still need fresh approval today.
+
+The human reviews changes in the Git Panel and decides when to commit/push. The agent writes code; the human owns the timeline.
+
 ### The Test Rule
 Every new check, reporter, or core function gets a test. Drifter is a correctness tool. It must be correct.
 

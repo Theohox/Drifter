@@ -246,6 +246,31 @@ When reporting to humans:
 
 ---
 
+## The Git Boundary Rule
+
+> **Agents NEVER run `git commit`, `git push`, `git reset`, `git rebase`, `git merge`, `git checkout -b`, `git tag`, `git cherry-pick`, or any history-mutating command.**
+
+| Command | Allowed? | Condition |
+|---------|----------|-----------|
+| `git status`, `git diff`, `git log` | ✅ Yes | Informational only |
+| `git add` | ⚠️ Only if explicitly asked | Never assume |
+| `git commit`, `git push` | ❌ NEVER | Human's job |
+| `git reset`, `git rebase`, `git merge` | ❌ NEVER | History-mutating |
+| `git checkout -b`, `git tag`, `git cherry-pick` | ❌ NEVER | History-mutating |
+
+**Why:**
+- Agents don't understand release semantics (is this a patch? minor? major?)
+- Agents can't write commit messages that capture human intent
+- Agents may force-push or rewrite shared history without realizing consequences
+- Human review of the diff before commit is a critical safety layer
+- The Git Panel is the human's tool, not the agent's
+
+**Prior approval does not roll forward.** If the human approved a `git commit` yesterday, you still need fresh approval today. Each git mutation is a separate decision.
+
+**Enforcement:** AGENTS.md hard rule. Drift guard `GitSafetyCheck` scans source files for git mutation commands.
+
+---
+
 ## Rule Summary Table
 
 | Rule | Prevents | Enforced By |
@@ -255,6 +280,7 @@ When reporting to humans:
 | Scope Boundary | Bloat, rabbit holes | Session protocol |
 | Evidence | False "done" claims | Conductor update requirement |
 | Stop Rule | Drift accumulation | Session protocol |
+| Git Boundary | History corruption, bad releases | AGENTS.md + drift guard |
 | No-Recreation | Bloat | Golden Rule + AGENTS.md |
 | Contract Test | Regression | Evidence rule |
 | Drift Score | Unaware drift | `drifter check --score` |
