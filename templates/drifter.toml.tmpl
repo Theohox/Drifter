@@ -1,0 +1,48 @@
+# Drifter configuration for this project.
+# See https://github.com/hox/drifter for documentation.
+
+[tool.drifter]
+root = "."
+max_pending_age_days = 7
+drift_threshold = 70
+
+# Built-in checks
+[[tool.drifter.checks]]
+name = "stale_reference"
+enabled = true
+severity = "warn"
+
+[[tool.drifter.checks]]
+name = "hardcoded_path"
+enabled = true
+severity = "error"
+
+[[tool.drifter.checks]]
+name = "digest_staleness"
+enabled = true
+severity = "warn"
+
+[[tool.drifter.checks]]
+name = "conductor_health"
+enabled = true
+severity = "error"
+
+[[tool.drifter.checks]]
+name = "cross_doc_consistency"
+enabled = true
+severity = "warn"
+
+# Paths to ignore during scanning
+[tool.drifter.ignore]
+paths = [
+    "venv/",
+    ".venv/",
+    "node_modules/",
+    "__pycache__/",
+    ".git/",
+    ".tox/",
+    ".pytest_cache/",
+    "target/",
+    "dist/",
+    "build/",
+]

@@ -1,0 +1,99 @@
+# AGENTS.md — Agent Contract for {{PROJECT_NAME}}
+
+*Read this FIRST before touching any code. Every. Single. Time.*
+
+## 0. The Golden Rule
+
+> **Before you write a single line of code, grep the codebase for what already exists.**
+
+{{PROJECT_NAME}} is a project with a specific shape. If you think "I should build X", first check if X already exists.
+
+## 1. Pre-Flight Checklist (Do This First)
+
+Before any coding session:
+
+- [ ] **Read this prompt** (you are here)
+- [ ] **Read the Session Protocol**: `docs/session-protocol.md`
+- [ ] **Read the Conductor**: `docs/project-conductor.md`
+- [ ] **Run Drift Guard**: `drifter check`
+- [ ] **Grep for existing functionality**: `grep -r "your_idea" src/ tests/`
+- [ ] **Run tests**: `python -m pytest tests/ -q`  <!-- adjust for your stack -->
+
+**If you skip this checklist, you will recreate existing code.**
+
+## 2. Architecture Boundaries
+
+| Component | Location | Don't Do |
+|-----------|----------|----------|
+| {{COMPONENT_1}} | `{{PATH_1}}/` | {{BOUNDARY_1}} |
+| {{COMPONENT_2}} | `{{PATH_2}}/` | {{BOUNDARY_2}} |
+
+## 3. What Already Exists (Don't Recreate)
+
+| What You Need | Where It Already Exists |
+|---------------|------------------------|
+| {{NEED_1}} | `{{LOCATION_1}}` |
+| {{NEED_2}} | `{{LOCATION_2}}` |
+
+## 4. Critical Rules
+
+### The Scope Boundary Rule
+Before touching any file, declare:
+
+> "I will only touch **[file]** for **[reason]**. I will not touch [related files]."
+
+If you discover a related issue while working:
+- Add it to Blocked Tasks in the Conductor
+- Do NOT fix it immediately
+- Finish your scoped task first
+
+### The Evidence Rule
+Every "done" task must have evidence:
+
+| Task Type | Required Evidence |
+|---|---|
+| Code change | Test output showing pass |
+| Doc update | `grep` showing no stale refs |
+
+No evidence = not done.
+
+### The Stop Rule
+When you finish the Active Task:
+
+```
+1. RUN tests
+2. RUN drift guard again — did you create new drift?
+3. UPDATE Conductor — mark done, paste evidence
+4. STOP — if no next task is Ready, wait for human
+```
+
+### The No-Recreation Rule
+If you think "I should build X":
+
+1. Grep for X in the codebase
+2. Check `docs/digests/index.md` for existing digests
+3. Check the directory structure — does it already exist under a different name?
+
+**If X exists in any form, use it. Do not recreate.**
+
+## 5. Communication Protocol
+
+**When reporting to humans:**
+
+1. **Lead with the answer, not the process.**
+2. **If you don't know, say so.** Never hallucinate file contents.
+3. **If you recreated something, admit it.**
+4. **Update digests.** Every session produces a digest.
+
+## 6. Quick Reference
+
+```bash
+drifter check              # Run drift guard
+drifter preflight          # Run pre-flight checklist
+drifter conductor show     # Show active task
+drifter validate           # Validate document types
+```
+
+---
+
+*This is a living document. Canonical location: repo root (`AGENTS.md`).*

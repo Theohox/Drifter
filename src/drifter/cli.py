@@ -1,0 +1,270 @@
+"""CLI entry point for Drifter."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+from drifter.config import Config
+from drifter.conductor import Conductor
+from drifter.doc_validator import validate_docs
+from drifter.drift_guard import run_checks
+from drifter.pre_flight import run_pre_flight
+
+
+def _format_issues_console(issues: list, score: int | None = None) -> None:
+    print(f"\n{'='*60}")
+    print("  DRIFT GUARD REPORT")
+    print(f"{'='*60}")
+    if score is not None:
+        print(f"  Score: {score}/100")
+    print(f"  Issues: {len(issues)}")
+    print(f"{'='*60}")
+
+    if issues:
+        print("\n  Issues found:")
+        for issue in issues:
+            print(f"    • {issue}")
+    else:
+        print("\n  ✓ No drift detected. System is clean.")
+
+    print(f"{'='*60}\n")
+
+
+def cmd_check(args: argparse.Namespace) -> int:
+    config = Config.load(root=args.root)
+    report = run_checks(root=args.root, config=config)
+
+    if args.score:
+        print(f"DRIFT: {report.total} issues | {report.errors} errors | {report.warns} warns | SCORE: {report.score}%")
+        return 1 if report.errors > 0 else 0
+
+    if args.json:
+        print(json.dumps({
+            "score": report.score,
+            "total": report.total,
+            "errors": report.errors,
+            "warns": report.warns,
+            "infos": report.infos,
+            "issues": [repr(i) for i in report.issues],
+            "timestamp": report.timestamp,
+        }, indent=2))
+        return 1 if report.errors > 0 else 0
+
+    if args.format == "github":
+        for issue in report.issues:
+            level = "error" if issue.severity == "error" else "warning"
+            print(f"::{level} file={issue.file}::{issue.check}: {issue.detail}")
+        return 1 if report.errors > 0 else 0
+
+    _format_issues_console(report.issues, report.score)
+    return 1 if report.errors > 0 else 0
+
+
+def cmd_preflight(args: argparse.Namespace) -> int:
+    config = Config.load(root=args.root)
+    result = run_pre_flight(root=args.root, config=config, task=args.task)
+    result.print_report()
+    return 0 if result.passed else 1
+
+
+def cmd_conductor(args: argparse.Namespace) -> int:
+    config = Config.load(root=args.root)
+    conductor = Conductor(root=args.root, config=config)
+
+    if args.conductor_command == "init":
+        path = conductor.init(force=args.force)
+        print(f"Conductor initialized at {path}")
+        return 0
+
+    if args.conductor_command == "show":
+        info = conductor.show()
+        if "error" in info:
+            print(f"Error: {info['error']}")
+            return 1
+        print(f"\n{'='*60}")
+        print("  CONDUCTOR")
+        print(f"{'='*60}")
+        print(f"  Phase: {info['phase']}")
+        if info.get("active_task"):
+            task = info["active_task"]
+            print(f"\n  Active Task:")
+            print(f"    ID:       {task['id']}")
+            print(f"    Name:     {task['name']}")
+            print(f"    Status:   {task['status']}")
+            print(f"    Evidence: {task['evidence']}")
+        print(f"{'='*60}\n")
+        return 0
+
+    if args.conductor_command == "done":
+        if not args.task_id:
+            print("Error: --task-id required")
+            return 1
+        success = conductor.mark_done(args.task_id, args.evidence or "")
+        if success:
+            print(f"Task {args.task_id} marked as done.")
+            return 0
+        print("Error: Could not mark task as done. Is the conductor format correct?")
+        return 1
+
+    if args.conductor_command == "block":
+        if not args.task_id or not args.reason:
+            print("Error: --task-id and --reason required")
+            return 1
+        success = conductor.block_task(args.task_id, args.reason)
+        if success:
+            print(f"Task {args.task_id} added to blocked tasks.")
+            return 0
+        print("Error: Could not block task. Is the conductor format correct?")
+        return 1
+
+    if args.conductor_command == "next":
+        info = conductor.next_task()
+        print(info.get("message", ""))
+        if "hint" in info:
+            print(f"Hint: {info['hint']}")
+        return 0
+
+    print(f"Unknown conductor command: {args.conductor_command}")
+    return 1
+
+
+def cmd_validate(args: argparse.Namespace) -> int:
+    config = Config.load(root=args.root)
+    report = validate_docs(root=args.root, config=config)
+
+    print(f"\n{'='*60}")
+    print("  DOCUMENT VALIDATION")
+    print(f"{'='*60}")
+    print(f"  Issues: {report.total} ({report.errors} errors, {report.warns} warnings)")
+    print(f"{'='*60}")
+
+    if report.issues:
+        print("\n  Issues found:")
+        for issue in report.issues:
+            print(f"    • {issue}")
+    else:
+        print("\n  ✓ All documents valid.")
+
+    print(f"{'='*60}\n")
+    return 1 if report.errors > 0 else 0
+
+
+def cmd_init(args: argparse.Namespace) -> int:
+    root = Path(args.root or ".").resolve()
+    root.mkdir(parents=True, exist_ok=True)
+
+    # Create docs directory
+    docs_dir = root / "docs"
+    digests_dir = docs_dir / "digests"
+    digests_dir.mkdir(parents=True, exist_ok=True)
+
+    # Copy templates
+    template_dir = Path(__file__).parent.parent / "templates"
+    files_to_create = {
+        root / "AGENTS.md": template_dir / "AGENTS.md.tmpl",
+        docs_dir / "session-protocol.md": template_dir / "session-protocol.md.tmpl",
+        docs_dir / "project-conductor.md": template_dir / "project-conductor.md.tmpl",
+        digests_dir / "index.md": template_dir / "digest-index.md.tmpl",
+        root / "drifter.toml": template_dir / "drifter.toml.tmpl",
+    }
+
+    created = []
+    skipped = []
+    for dest, src in files_to_create.items():
+        if dest.exists() and not args.force:
+            skipped.append(str(dest.relative_to(root)))
+            continue
+        if src.exists():
+            content = src.read_text(encoding="utf-8")
+        else:
+            content = f"# {dest.name}\n\n(Template not found. Please create this file manually.)\n"
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(content, encoding="utf-8")
+        created.append(str(dest.relative_to(root)))
+
+    print(f"\n{'='*60}")
+    print("  DRIFTER INIT")
+    print(f"{'='*60}")
+    print(f"  Root: {root}")
+    if created:
+        print(f"\n  Created:")
+        for f in created:
+            print(f"    ✓ {f}")
+    if skipped:
+        print(f"\n  Skipped (already exist, use --force to overwrite):")
+        for f in skipped:
+            print(f"    • {f}")
+    print(f"\n  Next steps:")
+    print(f"    1. Edit AGENTS.md with your project specifics")
+    print(f"    2. Edit docs/session-protocol.md with your rules")
+    print(f"    3. Edit docs/project-conductor.md with your active task")
+    print(f"    4. Run 'drifter check' to verify")
+    print(f"{'='*60}\n")
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="drifter",
+        description="Universal drift guard for AI agents",
+    )
+    parser.add_argument("--root", type=Path, default=None, help="Project root directory")
+
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # check
+    check_parser = subparsers.add_parser("check", help="Run drift guard")
+    check_parser.add_argument("--score", action="store_true", help="Print one-line score only")
+    check_parser.add_argument("--json", action="store_true", help="Output JSON report")
+    check_parser.add_argument("--format", choices=["console", "github"], default="console", help="Output format")
+    check_parser.set_defaults(func=cmd_check)
+
+    # preflight
+    preflight_parser = subparsers.add_parser("preflight", help="Run pre-flight checklist")
+    preflight_parser.add_argument("--task", default=None, help="Description of planned task")
+    preflight_parser.set_defaults(func=cmd_preflight)
+
+    # conductor
+    conductor_parser = subparsers.add_parser("conductor", help="Manage project conductor")
+    conductor_sub = conductor_parser.add_subparsers(dest="conductor_command", required=True)
+
+    conductor_init = conductor_sub.add_parser("init", help="Initialize conductor")
+    conductor_init.add_argument("--force", action="store_true", help="Overwrite existing")
+    conductor_init.set_defaults(func=cmd_conductor)
+
+    conductor_show = conductor_sub.add_parser("show", help="Show active task")
+    conductor_show.set_defaults(func=cmd_conductor)
+
+    conductor_done = conductor_sub.add_parser("done", help="Mark task as done")
+    conductor_done.add_argument("--task-id", required=True, help="Task ID")
+    conductor_done.add_argument("--evidence", default="", help="Evidence of completion")
+    conductor_done.set_defaults(func=cmd_conductor)
+
+    conductor_block = conductor_sub.add_parser("block", help="Block a task")
+    conductor_block.add_argument("--task-id", required=True, help="Task ID")
+    conductor_block.add_argument("--reason", required=True, help="Reason for blocking")
+    conductor_block.set_defaults(func=cmd_conductor)
+
+    conductor_next = conductor_sub.add_parser("next", help="Show next ready task")
+    conductor_next.set_defaults(func=cmd_conductor)
+
+    conductor_parser.set_defaults(func=cmd_conductor)
+
+    # validate
+    validate_parser = subparsers.add_parser("validate", help="Validate document types")
+    validate_parser.set_defaults(func=cmd_validate)
+
+    # init
+    init_parser = subparsers.add_parser("init", help="Initialize Drifter in a project")
+    init_parser.add_argument("--force", action="store_true", help="Overwrite existing files")
+    init_parser.set_defaults(func=cmd_init)
+
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
