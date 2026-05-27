@@ -4,7 +4,7 @@ type: reference
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T19:17:11Z'
+updated: '2026-05-27T19:22:55Z'
 ---
 
 # Document Type System
@@ -34,7 +34,7 @@ The document type system makes these violations **detectable**.
 
 **Examples:**
 - `docs/methodology.md` — why Drifter exists and what problems it solves
-- `docs/Purpose.md` — what the system is and is not
+- `AGENTS.md` — what the system is and is not
 
 **Mutation Rules:**
 - Amend, don't rewrite. Additions should be rare and justified.
@@ -53,8 +53,7 @@ The document type system makes these violations **detectable**.
 **Purpose:** Current truth. What the system looks like *right now*.
 
 **Examples:**
-- `docs/current_state.md` — current build health, slot inventory, known behaviors
-- `docs/architecture.md` — current architecture (if it changes frequently)
+- `docs/architecture.md` — current system architecture and component inventory
 
 **Mutation Rules:**
 - **Rewrite, don't append.** The entire document should be rewritten to reflect current truth.
@@ -75,7 +74,6 @@ The document type system makes these violations **detectable**.
 
 **Examples:**
 - `docs/project-conductor.md` — active task tracker (the "Active Task" and "Blocked Tasks" sections)
-- `docs/agent_open.md` — open gates/issues
 
 **Mutation Rules:**
 - **Remove items when done.** Do not strikethrough and keep.
@@ -95,7 +93,7 @@ The document type system makes these violations **detectable**.
 **Purpose:** Completed work with context. What was done and why.
 
 **Examples:**
-- `docs/agent_closed.md` — closed gates with root cause, fix, and verification
+- `docs/archive/` — completed tasks with evidence and context
 - `docs/digests/session-*.md` — session notes
 
 **Mutation Rules:**
@@ -115,7 +113,7 @@ The document type system makes these violations **detectable**.
 
 **Examples:**
 - `AGENTS.md` — the canonical agent contract
-- `docs/ops-playbook.md` — deployment, incident response, etc.
+- `docs/session-protocol.md` — hard rules for every session
 
 **Mutation Rules:**
 - Update when process changes.
@@ -135,7 +133,7 @@ The document type system makes these violations **detectable**.
 
 **Examples:**
 - `docs/adoption-guide.md` — how to adopt Drifter
-- `docs/contributing.md` — how to contribute
+- `docs/methodology.md` — philosophy and design principles
 
 **Mutation Rules:**
 - Update when workflow changes.
@@ -154,7 +152,7 @@ The document type system makes these violations **detectable**.
 
 **Examples:**
 - `docs/rules-reference.md` — complete rule catalog
-- `docs/api-reference.md` — API endpoint documentation
+- `docs/phase-index.md` — maps all docs to their phase
 
 **Mutation Rules:**
 - Update when facts change.
@@ -174,8 +172,8 @@ Every typed document must include:
 ```yaml
 ---
 title: Human-readable title
-type: <constitution|snapshot|backlog|archive|playbook|guide|reference>
-status: <active|stale|deprecated>
+type: <constitution|snapshot|backlog|archive|playbook|guide|reference|index>
+status: <active|draft|archived|deprecated>
 created: 'YYYY-MM-DDTHH:MM:SSZ'
 updated: 'YYYY-MM-DDTHH:MM:SSZ'
 ---
@@ -187,7 +185,7 @@ updated: 'YYYY-MM-DDTHH:MM:SSZ'
 |-------|-------------|
 | `title` | Human-readable title |
 | `type` | One of the types above |
-| `status` | `active`, `stale`, or `deprecated` |
+| `status` | `active`, `draft`, `archived`, or `deprecated` |
 | `created` | ISO 8601 timestamp |
 | `updated` | ISO 8601 timestamp, must be updated on every mutation |
 

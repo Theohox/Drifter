@@ -4,7 +4,7 @@ type: guide
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T19:17:11Z'
+updated: '2026-05-27T19:22:55Z'
 ---
 
 # Drifter Adoption Guide
@@ -24,14 +24,8 @@ This guide walks you through adopting Drifter in any project. Estimated time: 15
 ## Step 1: Install Drifter
 
 ```bash
-pip install drifter
-```
-
-Or install from source:
-
-```bash
-git clone https://github.com/hox/drifter.git
-cd drifter
+git clone https://github.com/Theohox/Drifter.git
+cd Drifter
 pip install -e ".[dev]"
 ```
 
@@ -49,6 +43,7 @@ This creates:
 - `dangerous_patterns.toml` — command restrictions (from template)
 - `docs/session-protocol.md` — hard rules (from template)
 - `docs/project-conductor.md` — active task tracker (from template)
+- `docs/archive/README.md` — archive convention (from template)
 - `docs/digests/index.md` — digest directory (from template)
 - `drifter.toml` — project configuration
 
@@ -120,11 +115,11 @@ Set up your first phase and active task:
 
 | Field | Value |
 |-------|-------|
-| **ID** | D.1 |
+| **ID** | FEAT-001 |
 | **Name** | Customize Drifter templates |
 | **Status** | 🟡 IN PROGRESS |
 | **Evidence** | — |
-| **Next** | D.2: Run first drift guard check |
+| **Next** | CHECK-001: Run first drift guard check |
 ```
 
 ---
@@ -232,8 +227,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install drifter
-      - run: drifter check --format github
+      - run: pip install -e ".[dev]"
+      - run: PYTHONPATH=src python3 -m drifter.cli check --format github
 ```
 
 ---
@@ -287,4 +282,4 @@ Each project gets its own `AGENTS.md` and conductor. Drifter is project-scoped. 
 - Read [`docs/rules-reference.md`](rules-reference.md) for the complete rule catalog
 - Read [`docs/methodology.md`](methodology.md) for the philosophy
 - Write your first custom check (see `src/drifter/drift_guard.py` for examples)
-- Add the memory layer for cross-session context (see `src/memory/`)
+- Read `docs/methodology.md` for the philosophy behind each rule

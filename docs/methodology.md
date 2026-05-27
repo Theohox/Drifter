@@ -4,7 +4,7 @@ type: constitution
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T19:17:11Z'
+updated: '2026-05-27T19:22:55Z'
 ---
 
 # Drifter Methodology — The Philosophy and Why
@@ -121,7 +121,7 @@ This is enforced by the `drifter preflight` command, which returns a non-zero ex
 
 Documents have types with **mutation rules**. A snapshot-type document that has been appended to instead of rewritten is a detectable violation. A backlog that still contains completed items is a detectable violation. The `drifter validate` command catches these automatically.
 
-This works because it externalizes the rules. The agent doesn't need to remember "don't append to current_state.md" — the validator enforces it.
+This works because it externalizes the rules. The agent doesn't need to remember "don't append to snapshots" — the validator enforces it.
 
 ### Enforcement 3: The Drift Guard
 
@@ -174,13 +174,13 @@ Drifter automates the last step. `drifter check` scans for stale references afte
 
 Not all documents serve the same purpose. Treating them the same causes drift.
 
-A **snapshot** (`current_state.md`) tells you what the system looks like *right now*. If you append to it, it becomes a history document, and no one knows what the current state is.
+A **snapshot** (`docs/architecture.md`) tells you what the system looks like *right now*. If you append to it, it becomes a history document, and no one knows what the current state is.
 
-A **backlog** (`agent_open.md`) tells you what work is *not done*. If you leave completed items in it, it becomes a history document, and no one knows what's actually open.
+A **backlog** (`docs/project-conductor.md`) tells you what work is *not done*. If you leave completed items in it, it becomes a history document, and no one knows what's actually open.
 
-An **archive** (`agent_closed.md`) tells you what work *was done* and *why*. If you rewrite it, you lose the historical context that prevents recreation.
+An **archive** (`docs/archive/`) tells you what work *was done* and *why*. If you rewrite it, you lose the historical context that prevents recreation.
 
-A **constitution** (`Purpose.md`) tells you what the system *is* and *is not*. If you change it frequently, it becomes a changelog, and no one knows what the stable principles are.
+A **constitution** (`AGENTS.md`) tells you what the system *is* and *is not*. If you change it frequently, it becomes a changelog, and no one knows what the stable principles are.
 
 The document type system encodes these rules explicitly. It is not bureaucracy — it is a **state machine for documentation**. Each type has valid transitions, and invalid transitions are drift.
 

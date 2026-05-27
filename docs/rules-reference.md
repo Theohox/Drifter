@@ -4,7 +4,7 @@ type: reference
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T19:17:11Z'
+updated: '2026-05-27T19:22:55Z'
 ---
 
 # Drifter Rules Reference
@@ -187,9 +187,9 @@ Every markdown file in `docs/` MUST have a `type:` in its frontmatter. Valid typ
 | Type | Mutation Rule | Example |
 |------|--------------|---------|
 | `constitution` | Rarely changes. Amend, don't rewrite. | `methodology.md` |
-| `snapshot` | Rewrite to reflect current truth. Never append. | `current_state.md` |
+| `snapshot` | Rewrite to reflect current truth. Never append. | `docs/architecture.md` |
 | `backlog` | Open work only. Remove items when done. | `project-conductor.md` |
-| `archive` | Append completed work. Never rewrite history. | `agent_closed.md` |
+| `archive` | Append completed work. Never rewrite history. | `docs/archive/` |
 | `playbook` | Update when process changes. | `AGENTS.md` |
 | `guide` | Update when workflow changes. | `adoption-guide.md` |
 | `reference` | Update when facts change. | `rules-reference.md` |
