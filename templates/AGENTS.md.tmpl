@@ -67,6 +67,21 @@ When you finish the Active Task:
 4. STOP — if no next task is Ready, wait for human
 ```
 
+### The Dangerous Patterns Rule
+**Before running ANY shell command, read `dangerous_patterns.toml` at repo root.**
+
+This file is the canonical enforcement spec. It tells you exactly what is forbidden, what requires approval, and what is safe.
+
+| Classification | Action | Example |
+|----------------|--------|---------|
+| `always_block` | ❌ NEVER run | `git commit`, `git push` |
+| `blocked` | ❌ NEVER run | `rm -rf /`, `curl | sh` |
+| `approval_required` | ⚠️ Ask human first | `git add` |
+| `confirm_required` | ⚠️ Confirm with human | `sudo`, `rm -rf` |
+| `allowed` | ✅ Proceed | `git status`, `git diff` |
+
+**If the file does not exist, STOP and create it.** It is as critical as this document.
+
 ### The Git Boundary Rule
 **Agents NEVER mutate git history.**
 

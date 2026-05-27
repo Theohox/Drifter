@@ -32,6 +32,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         {"name": "conductor_health", "enabled": True, "severity": "error"},
         {"name": "cross_doc_consistency", "enabled": True, "severity": "warn"},
         {"name": "git_safety", "enabled": True, "severity": "error"},
+        {"name": "dangerous_patterns", "enabled": True, "severity": "error"},
     ],
     "ignore": {
         "paths": [

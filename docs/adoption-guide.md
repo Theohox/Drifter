@@ -45,6 +45,7 @@ drifter init
 
 This creates:
 - `AGENTS.md` — agent contract (from template)
+- `dangerous_patterns.toml` — command restrictions (from template)
 - `docs/session-protocol.md` — hard rules (from template)
 - `docs/project-conductor.md` — active task tracker (from template)
 - `docs/digests/index.md` — digest directory (from template)
@@ -54,7 +55,30 @@ This creates:
 
 ## Step 3: Customize the Templates
 
-### 3.1 Edit `AGENTS.md`
+### 3.1 Edit `dangerous_patterns.toml`
+
+This is the **canonical enforcement spec**. It tells every agent what commands are forbidden.
+
+Customize the patterns for your project:
+
+```toml
+[git]
+always_block = [
+    "git commit",
+    "git push",
+    # Add project-specific git commands to block
+]
+
+[shell]
+blocked = [
+    "rm -rf /",
+    # Add project-specific shell patterns to block
+]
+```
+
+**This file is as critical as AGENTS.md.** If it doesn't exist, agents have no command boundaries.
+
+### 3.2 Edit `AGENTS.md`
 
 Replace the template sections with your project's specifics:
 

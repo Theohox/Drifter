@@ -84,7 +84,7 @@ class TestConductorHealthCheck:
 class TestRunChecks:
     def test_empty_project(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
-        # Create minimal docs dir to avoid missing conductor error
+        # Create minimal required files to avoid drift guard errors
         docs = tmp_path / "docs"
         docs.mkdir()
         conductor = docs / "project-conductor.md"
@@ -99,6 +99,11 @@ type: backlog
 | ID | Name |
 | 1 | Task |
 """)
+        # Create dangerous_patterns.toml and AGENTS.md to pass DangerousPatternsCheck
+        patterns = tmp_path / "dangerous_patterns.toml"
+        patterns.write_text("[git]\nalways_block = [\"git commit\"]\n[shell]\nblocked = []\n")
+        agents = tmp_path / "AGENTS.md"
+        agents.write_text("# AGENTS.md\n\nRead dangerous_patterns.toml before running commands.\n")
         report = run_checks(root=tmp_path, config=config)
         assert report.score == 100
         assert report.total == 0

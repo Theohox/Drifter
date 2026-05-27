@@ -74,6 +74,23 @@ Do not pick the next task yourself unless the Conductor explicitly lists it as "
 
 ---
 
+## The Dangerous Patterns Rule
+
+**Before running ANY shell command, read `dangerous_patterns.toml` at repo root.**
+
+This file is the canonical enforcement spec. It tells you exactly what is forbidden, what requires approval, and what is safe.
+
+| Classification | Action |
+|----------------|--------|
+| `always_block` / `blocked` | ❌ NEVER run |
+| `approval_required` | ⚠️ Ask human first |
+| `confirm_required` | ⚠️ Confirm with human |
+| `allowed` | ✅ Proceed |
+
+**If the file does not exist, STOP and create it.** It is as critical as this protocol.
+
+---
+
 ## The Git Boundary Rule
 
 **Agents NEVER mutate git history.**

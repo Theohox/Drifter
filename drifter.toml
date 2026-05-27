@@ -37,6 +37,11 @@ name = "git_safety"
 enabled = true
 severity = "error"
 
+[[drifter.checks]]
+name = "dangerous_patterns"
+enabled = true
+severity = "error"
+
 # Paths to ignore during scanning
 [drifter.ignore]
 paths = [

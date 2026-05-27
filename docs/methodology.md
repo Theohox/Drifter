@@ -199,6 +199,29 @@ Both are necessary. Neither is sufficient alone.
 
 ---
 
+## Why Declarative Patterns Beat Prompts
+
+The Dangerous Patterns Rule exists because **prompts are suggestions, not enforcement.** When an agent is under pressure — a complex task, a long conversation, a tight deadline — it drops the parts of the prompt that feel like "overhead" and keeps the parts that feel like "the real work."
+
+This is not a bug in the agent. It is a structural consequence of how LLMs optimize for helpfulness. "I don't know" and "I can't do that" are penalized by training. The agent will always prefer to execute a command rather than refuse it.
+
+A prompt that says "don't commit to git" is ignored. A file that says `always_block = ["git commit"]` is **unambiguous**. The agent can read it, classify the command, and know with certainty that execution is forbidden.
+
+### Why the File Lives at Repo Root
+
+If the computer resets, clone the repo and read one file. You immediately know:
+- What commands are forbidden
+- What requires approval
+- What is safe
+
+No context is lost. No institutional knowledge evaporates. The rules are in the repo, versioned with the code.
+
+### Why It Must Be Declarative
+
+Humans must be able to edit the rules without writing code. If adding a new forbidden command requires editing Python, the rules will not be updated. If it requires editing a TOML file, anyone can do it.
+
+---
+
 ## Why Agents Must Not Touch Git History
 
 The Git Boundary Rule exists because git history is not just code — it is a **communication layer** between humans. Agents that mutate git history destroy that layer.

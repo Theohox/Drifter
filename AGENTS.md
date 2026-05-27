@@ -90,6 +90,29 @@ If you think "I should build X":
 
 **If X exists in any form, use it. Do not recreate.**
 
+### The Dangerous Patterns Rule
+**Before running ANY shell command, read `dangerous_patterns.toml` at repo root.**
+
+This file is the canonical enforcement spec. It is not a suggestion. It is the single source of truth for what commands are forbidden.
+
+| Classification | Action | Example |
+|----------------|--------|---------|
+| `always_block` | ❌ NEVER run | `git commit`, `git push`, `rm -rf /` |
+| `blocked` | ❌ NEVER run | `dd if=`, `curl | sh` |
+| `approval_required` | ⚠️ Ask human first | `git add` |
+| `confirm_required` | ⚠️ Confirm with human | `sudo`, `rm -rf` |
+| `allowed` | ✅ Proceed | `git status`, `git diff` |
+
+**How to check:**
+```python
+from drifter.shell_guard import ShellGuard
+guard = ShellGuard()
+print(guard.check("git commit -m x"))  # BLOCKED
+print(guard.check("git status"))       # ALLOWED
+```
+
+**If dangerous_patterns.toml does not exist, STOP and create it.** This file is as critical as AGENTS.md.
+
 ### The Git Boundary Rule
 **Agents NEVER mutate git history.**
 

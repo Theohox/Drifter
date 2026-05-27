@@ -246,6 +246,31 @@ When reporting to humans:
 
 ---
 
+## The Dangerous Patterns Rule
+
+> **Before running ANY shell command, read `dangerous_patterns.toml` at repo root.**
+
+This file is the **canonical enforcement spec** for command restrictions. It is agent-agnostic: any AI agent can read it and know the boundaries.
+
+**Classifications:**
+
+| Type | Action | Example |
+|------|--------|---------|
+| `always_block` | ❌ NEVER run | `git commit`, `git push` |
+| `blocked` | ❌ NEVER run | `rm -rf /`, `curl | sh` |
+| `approval_required` | ⚠️ Ask human first | `git add` |
+| `confirm_required` | ⚠️ Confirm with human | `sudo`, `rm -rf` |
+| `allowed` | ✅ Proceed | `git status`, `git diff` |
+
+**Why:** Prompts are suggestions; this file is enforceable. If the computer resets, clone the repo and read this file — you immediately know what commands are forbidden.
+
+**Enforcement:**
+- `ShellGuard.classify(command)` returns the classification
+- `drifter check` verifies the file exists and is referenced in AGENTS.md
+- `drifter audit` scans session history for violations
+
+---
+
 ## The Git Boundary Rule
 
 > **Agents NEVER run `git commit`, `git push`, `git reset`, `git rebase`, `git merge`, `git checkout -b`, `git tag`, `git cherry-pick`, or any history-mutating command.**

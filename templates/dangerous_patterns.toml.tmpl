@@ -1,0 +1,65 @@
+# dangerous_patterns.toml — Agent Command Restrictions
+# Canonical location: repo root. Read this before running ANY shell command.
+#
+# This file is the single source of truth for what agents must never do.
+# It is agent-agnostic: any AI agent can read it and know the boundaries.
+
+[git]
+# NEVER run these. Not with flags. Not with excuses.
+always_block = [
+    "git commit",
+    "git push",
+    "git reset",
+    "git rebase",
+    "git merge",
+    "git checkout -b",
+    "git tag",
+    "git cherry-pick",
+]
+
+# Allowed without restriction — informational only
+allowed = [
+    "git status",
+    "git diff",
+    "git log",
+    "git show",
+    "git branch",
+]
+
+# Allowed ONLY if human explicitly asked
+approval_required = [
+    "git add",
+]
+
+[shell]
+# Unconditionally blocked patterns
+blocked = [
+    "rm -rf /",
+    "rm -rf ~",
+    "dd if=",
+    "mkfs",
+    "> /dev/sd",
+    "curl | sh",
+    "curl | bash",
+    "wget | sh",
+    "wget | bash",
+    "sudo rm",
+]
+
+# Patterns that require explicit human confirmation
+confirm_required = [
+    "rm -rf",
+    "rm -r",
+    "sudo",
+]
+
+[filesystem]
+# System directories — never touch without explicit confirmation
+system_dirs = [
+    "/etc",
+    "/usr",
+    "/bin",
+    "/sbin",
+    "/var",
+    "/root",
+]

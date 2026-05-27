@@ -152,6 +152,59 @@ def cmd_validate(args: argparse.Namespace) -> int:
     return 1 if report.errors > 0 else 0
 
 
+def cmd_audit(args: argparse.Namespace) -> int:
+    from drifter.shell_guard import ShellGuard
+
+    config = Config.load(root=args.root)
+    guard = ShellGuard(root=args.root)
+
+    print(f"\n{'='*60}")
+    print("  SESSION AUDIT")
+    print(f"{'='*60}")
+
+    # Check if dangerous_patterns.toml exists
+    patterns_file = config.root / "dangerous_patterns.toml"
+    if not patterns_file.exists():
+        print("  ✗ dangerous_patterns.toml not found — cannot audit without rules")
+        print(f"{'='*60}\n")
+        return 1
+
+    print("  dangerous_patterns.toml: ✓ Found")
+
+    # Try to read bash history for audit
+    history_path = Path.home() / ".bash_history"
+    violations = []
+    checked = 0
+
+    if history_path.exists() and not args.no_history:
+        lines = history_path.read_text(encoding="utf-8").strip().split("\n")
+        # Check last N commands (default 100)
+        window = args.window or 100
+        recent_lines = lines[-window:] if len(lines) > window else lines
+
+        for line in recent_lines:
+            line = line.strip()
+            if not line:
+                continue
+            checked += 1
+            classification = guard.classify(line)
+            if classification.action in ("block", "approval_required"):
+                violations.append((line, classification))
+
+    print(f"  Commands checked: {checked}")
+
+    if violations:
+        print(f"\n  ✗ {len(violations)} VIOLATION(S) FOUND:")
+        for cmd, classification in violations:
+            print(f"    • [{classification.action.upper()}] {cmd}")
+            print(f"      → {classification.reason}")
+    else:
+        print("\n  ✓ No violations detected.")
+
+    print(f"{'='*60}\n")
+    return 1 if violations else 0
+
+
 def cmd_init(args: argparse.Namespace) -> int:
     root = Path(args.root or ".").resolve()
     root.mkdir(parents=True, exist_ok=True)
@@ -165,6 +218,7 @@ def cmd_init(args: argparse.Namespace) -> int:
     template_dir = Path(__file__).parent.parent / "templates"
     files_to_create = {
         root / "AGENTS.md": template_dir / "AGENTS.md.tmpl",
+        root / "dangerous_patterns.toml": template_dir / "dangerous_patterns.toml.tmpl",
         docs_dir / "session-protocol.md": template_dir / "session-protocol.md.tmpl",
         docs_dir / "project-conductor.md": template_dir / "project-conductor.md.tmpl",
         digests_dir / "index.md": template_dir / "digest-index.md.tmpl",
@@ -256,6 +310,12 @@ def main(argv: list[str] | None = None) -> int:
     # validate
     validate_parser = subparsers.add_parser("validate", help="Validate document types")
     validate_parser.set_defaults(func=cmd_validate)
+
+    # audit
+    audit_parser = subparsers.add_parser("audit", help="Audit session for dangerous command violations")
+    audit_parser.add_argument("--window", type=int, default=100, help="Number of recent history commands to check")
+    audit_parser.add_argument("--no-history", action="store_true", help="Skip bash history check")
+    audit_parser.set_defaults(func=cmd_audit)
 
     # init
     init_parser = subparsers.add_parser("init", help="Initialize Drifter in a project")

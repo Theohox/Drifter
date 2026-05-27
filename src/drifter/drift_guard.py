@@ -334,6 +334,75 @@ class GitSafetyCheck:
         return issues
 
 
+class DangerousPatternsCheck:
+    """Verify dangerous_patterns.toml exists and is referenced in AGENTS.md."""
+
+    name = "dangerous_patterns"
+
+    def run(self, root: Path, config: Config) -> list[Issue]:
+        issues: list[Issue] = []
+        patterns_file = root / "dangerous_patterns.toml"
+        agents_md = root / "AGENTS.md"
+
+        # Check file exists
+        if not patterns_file.exists():
+            issues.append(Issue(
+                check=self.name,
+                file="dangerous_patterns.toml",
+                detail="dangerous_patterns.toml does not exist at repo root — agents have no command boundaries",
+                severity="error",
+            ))
+            return issues
+
+        # Check it's valid TOML
+        try:
+            import tomllib
+            with patterns_file.open("rb") as f:
+                data = tomllib.load(f)
+            # Check required sections exist
+            if "git" not in data:
+                issues.append(Issue(
+                    check=self.name,
+                    file="dangerous_patterns.toml",
+                    detail="Missing [git] section",
+                    severity="warn",
+                ))
+            if "shell" not in data:
+                issues.append(Issue(
+                    check=self.name,
+                    file="dangerous_patterns.toml",
+                    detail="Missing [shell] section",
+                    severity="warn",
+                ))
+        except Exception as e:
+            issues.append(Issue(
+                check=self.name,
+                file="dangerous_patterns.toml",
+                detail=f"Invalid TOML: {e}",
+                severity="error",
+            ))
+
+        # Check AGENTS.md references it
+        if agents_md.exists():
+            agents_text = agents_md.read_text(encoding="utf-8")
+            if "dangerous_patterns.toml" not in agents_text:
+                issues.append(Issue(
+                    check=self.name,
+                    file="AGENTS.md",
+                    detail="AGENTS.md does not reference dangerous_patterns.toml — agents may not know to read it",
+                    severity="error",
+                ))
+        else:
+            issues.append(Issue(
+                check=self.name,
+                file="AGENTS.md",
+                detail="AGENTS.md does not exist",
+                severity="error",
+            ))
+
+        return issues
+
+
 # ── Check Registry ──────────────────────────────────────────────────────────
 
 BUILTIN_CHECKS: dict[str, type[Check]] = {
@@ -343,6 +412,7 @@ BUILTIN_CHECKS: dict[str, type[Check]] = {
     "conductor_health": ConductorHealthCheck,
     "cross_doc_consistency": CrossDocConsistencyCheck,
     "git_safety": GitSafetyCheck,
+    "dangerous_patterns": DangerousPatternsCheck,
 }
 
 
