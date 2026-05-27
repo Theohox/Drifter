@@ -4,7 +4,7 @@ type: playbook
 status: active
 phase: 1
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T19:22:55Z'
+updated: '2026-05-27T21:57:33Z'
 ---
 
 # Session Protocol — Hard Rules for Every Session
@@ -104,6 +104,12 @@ This file is the canonical enforcement spec. It tells you exactly what is forbid
 | `git commit`, `git push`, `git reset`, `git rebase`, `git merge`, `git checkout -b`, `git tag`, `git cherry-pick` | ❌ NEVER |
 
 **Prior approval does not roll forward.** Each git mutation requires fresh explicit approval.
+
+**Enforcement:** Drifter detects violations automatically:
+- `AgentSelfAuditCheck` — scans your bash history for blocked commands
+- `GitCommitApprovalCheck` — verifies every commit has an approval marker (`[APPROVED BY ...]`)
+
+**If you committed without approval, `drifter check` will fail.** Stop working. Report the violation. Do not commit again until the human approves.
 
 The human reviews changes in the Git Panel and decides when to commit/push.
 

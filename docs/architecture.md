@@ -4,7 +4,7 @@ type: snapshot
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T19:22:55Z'
+updated: '2026-05-27T21:57:33Z'
 ---
 
 # Drifter Internal Architecture
@@ -30,7 +30,7 @@ How Drifter is built. For contributors and advanced users.
 │                        CLI (cli.py)                         │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
 │  │   check     │  │  preflight  │  │     conductor       │  │
-│  │  command    │  │   command   │  │      command        │  │
+│  │  command    │  │   command   │  │      command        │  │  command   │  │
 │  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘  │
 │         │                │                     │             │
 │         ▼                ▼                     ▼             │
@@ -44,7 +44,7 @@ How Drifter is built. For contributors and advanced users.
 │         │                │                     │             │
 │         ▼                ▼                     ▼             │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │              Built-in Checks (23)                    │   │
+│  │              Built-in Checks (32)                    │   │
 │  │  • StaleReferenceCheck                               │   │
 │  │  • HardcodedPathCheck                                │   │
 │  │  • DigestStalenessCheck                              │   │
@@ -67,7 +67,16 @@ How Drifter is built. For contributors and advanced users.
 │  │  • TomllibCompatibilityCheck                         │   │
 │  │  • AuditCoverageCheck                                │   │
 │  │  • ReporterCompletenessCheck                         │   │
-│  │  • TemplateCountSyncCheck                            │   │
+│  │  • AgentSelfAuditCheck                               │   │
+│  │  • GitCommitApprovalCheck                            │   │
+│  │  • TreeIntegrityCheck                                │   │
+│  │  • FileSizeCheck                                     │   │
+│  │  • ManifestSyncCheck                                 │   │
+│  │  • ClaimSyncCheck                                    │   │
+│  │  • ReadBeforeWriteCheck                              │   │
+│  │  • TestAfterWriteCheck                               │   │
+│  │  • DriftCheckAfterWriteCheck                         │   │
+│  │  • NoRushCheck                                       │   │
 │  └──────────────────────────────────────────────────────┘   │
 │         │                                                    │
 │         ▼                                                    │
@@ -93,9 +102,9 @@ How Drifter is built. For contributors and advanced users.
 │  │   runner    │  │   manager   │  │     checker         │  │
 │  └─────────────┘  └─────────────┘  └─────────────────────┘  │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │              Memory Layer (future)                   │   │
-│  │  Planned: session capture, compression, search,      │   │
-│  │  injection. Not yet implemented.                     │   │
+│  │              Memory Layer (removed)                  │   │
+│  │  Was `src/drifter/memory/`. Deleted as dead code.    │   │
+│  │  Cross-session persistence via digests + conductor.  │   │
 │  └──────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -172,6 +181,8 @@ Config is loaded in this priority order (later overrides earlier):
 | `drifter conductor` | < 1s | < 5s |
 | `drifter audit` | < 2s | < 10s |
 | `drifter init` | < 1s | < 2s |
+| `drifter log` | < 10ms | < 100ms |
+| `drifter session-report` | < 100ms | < 500ms |
 
 Performance strategies:
 - Checks run in parallel using `concurrent.futures`

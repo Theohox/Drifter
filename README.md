@@ -9,7 +9,7 @@ Drifter is a methodology and toolkit that forces AI agents to follow standard ru
 3. **Context blindness** — editing without reading the whole codebase
 4. **Drift** — docs, code, and reality diverging over time
 
-Drifter is not a prompt. It is a **system of enforced protocols** — pre-flight checklists, 23 automated drift checks, document type constraints, and a project conductor that keeps agents focused on one thing at a time.
+Drifter is not a prompt. It is a **system of enforced protocols** — pre-flight checklists, 32 automated drift checks, document type constraints, and a project conductor that keeps agents focused on one thing at a time.
 
 ## Quick Start
 
@@ -38,7 +38,7 @@ PYTHONPATH=../Drifter/src python3 -m drifter.cli preflight --task "fix login bug
 | `docs/session-protocol.md` | Hard rules: scope, evidence, no-recreation, stop rule. |
 | `docs/project-conductor.md` | Single source of truth: what's active, blocked, done. |
 | `docs/archive/README.md` | Completed task records. One file per finished task. |
-| `drifter check` | 23 automated checks: stale refs, hardcoded paths, doc drift, credential leaks, dead code, and more. |
+| `drifter check` | 32 automated checks: stale refs, hardcoded paths, doc drift, credential leaks, dead code, and more. |
 | `drifter preflight` | Enforced 7-step pre-flight before any code change. |
 | `drifter conductor` | CLI for managing active tasks and phase state. |
 | `drifter validate` | Validate document types and frontmatter. |

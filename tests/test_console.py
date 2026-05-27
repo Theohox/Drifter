@@ -1,6 +1,6 @@
 """Tests for console reporter."""
 
-from drifter.drift_guard import Issue
+from drifter.checks._base import Issue
 from drifter.reporters.console import ConsoleReporter
 
 

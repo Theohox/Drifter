@@ -1,0 +1,210 @@
+# Drifter Canonical Manifest
+# Single source of truth for codebase structure, counts, and boundaries.
+# Agents: read this before modifying code. Checks validate against this.
+
+[project]
+name = "Drifter"
+version = "0.2.0"
+python_requires = ">=3.10"
+
+[structure]
+max_file_lines = 300
+max_check_lines = 100
+forbidden_empty_dirs = ["rules/"]
+required_dirs = [
+    "docs/",
+    "docs/archive/",
+    "docs/digests/",
+    "src/drifter/",
+    "src/drifter/checks/",
+    "src/drifter/reporters/",
+    "tests/",
+    "plugins/",
+    "templates/",
+]
+
+# Complete source tree — every file must be declared
+# [tree.<path>] where <path> is the directory prefix (use "root" for repo root)
+
+[tree.root]
+"AGENTS.md" = { type = "constitution" }
+"LICENSE" = { type = "license" }
+"README.md" = { type = "readme" }
+"dangerous_patterns.toml" = { type = "config" }
+"drifter-manifest.toml" = { type = "manifest" }
+"drifter.toml" = { type = "config" }
+"pyproject.toml" = { type = "config" }
+
+[tree.src.drifter]
+"__init__.py" = { layer = "package", max_lines = 50, purpose = "Package init" }
+"cli.py" = { layer = "cli", max_lines = 500, imports = ["config", "checks", "conductor", "doc_validator", "pre_flight", "reporters"] }
+"config.py" = { layer = "core", max_lines = 160, purpose = "Config loader" }
+"conductor.py" = { layer = "core", max_lines = 300, purpose = "Conductor manager" }
+"_conductor_helpers.py" = { layer = "core", max_lines = 150, purpose = "Conductor helpers" }
+"doc_validator.py" = { layer = "core", max_lines = 150, purpose = "Doc validator" }
+"_doc_validate.py" = { layer = "core", max_lines = 140, purpose = "Doc validation internals" }
+"drift_guard.py" = { layer = "engine", max_lines = 100, purpose = "Check runner" }
+"pre_flight.py" = { layer = "core", max_lines = 200, purpose = "Pre-flight runner" }
+"shell_guard.py" = { layer = "core", max_lines = 150, purpose = "Command classifier" }
+"session_logger.py" = { layer = "core", max_lines = 100, purpose = "Session audit logger" }
+
+[tree.src.drifter.checks]
+"__init__.py" = { layer = "checks", max_lines = 100, purpose = "Check registry" }
+"_base.py" = { layer = "checks", max_lines = 50, purpose = "Protocol and dataclasses" }
+"agent_behavior.py" = { layer = "checks", max_lines = 100, purpose = "Agent behavior checks" }
+"code_quality.py" = { layer = "checks", max_lines = 210, purpose = "Code quality checks" }
+"docs.py" = { layer = "checks", max_lines = 300, purpose = "Documentation checks" }
+"project.py" = { layer = "checks", max_lines = 320, purpose = "Project state checks" }
+"security.py" = { layer = "checks", max_lines = 230, purpose = "Security checks" }
+"structure.py" = { layer = "checks", max_lines = 260, purpose = "Manifest structural checks" }
+"sync.py" = { layer = "checks", max_lines = 340, purpose = "Sync verification checks" }
+"behavioral.py" = { layer = "checks", max_lines = 160, purpose = "Behavioral audit checks" }
+
+[tree.src.drifter.reporters]
+"__init__.py" = { layer = "reporters", max_lines = 50, purpose = "Reporter package" }
+"console.py" = { layer = "reporters", max_lines = 150, purpose = "Console reporter" }
+"github_actions.py" = { layer = "reporters", max_lines = 100, purpose = "GitHub Actions reporter" }
+"json_reporter.py" = { layer = "reporters", max_lines = 100, purpose = "JSON reporter" }
+
+[tree.docs]
+"adoption-guide.md" = { type = "guide" }
+"architecture.md" = { type = "snapshot" }
+"document-types.md" = { type = "reference" }
+"methodology.md" = { type = "constitution" }
+"phase-index.md" = { type = "index" }
+"project-conductor.md" = { type = "backlog" }
+"rules-reference.md" = { type = "reference", max_lines = 320 }
+"session-protocol.md" = { type = "playbook" }
+"digests/index.md" = { type = "snapshot" }
+"digests/session-2026-05-27-manifest-and-audit-log.md" = { type = "snapshot" }
+
+[tree.docs.archive]
+"README.md" = { type = "archive" }
+"FEAT-001-foundation.md" = { type = "archive" }
+"CHECK-001-archive-pipeline.md" = { type = "archive" }
+"CHECK-002-semantic-id-migration-phase-metadata-and-dependenc.md" = { type = "archive" }
+
+[tree.tests]
+"test_cli.py" = { tests = "cli" }
+"test_conductor.py" = { tests = "conductor" }
+"test_config.py" = { tests = "config" }
+"test_console.py" = { tests = "reporters/console" }
+"test_doc_validator.py" = { tests = "doc_validator" }
+"test__doc_validate.py" = { tests = "doc_validate" }
+"test__conductor_helpers.py" = { tests = "conductor_helpers" }
+"test_checks_base.py" = { tests = "checks" }
+"test_drift_guard.py" = { tests = "engine" }
+"test_checks_behavior.py" = { tests = "checks" }
+"test_checks_docs.py" = { tests = "checks" }
+"test_checks_project.py" = { tests = "checks" }
+"test_checks_structure.py" = { tests = "checks" }
+"test_github_actions.py" = { tests = "reporters/github_actions" }
+"test_json_reporter.py" = { tests = "reporters/json_reporter" }
+"test_pre_flight.py" = { tests = "pre_flight" }
+"test_shell_guard.py" = { tests = "shell_guard" }
+"test_session_logger.py" = { tests = "session_logger" }
+"__init__.py" = { type = "package" }
+
+[tree.plugins.kimi-cli]
+"README.md" = { type = "stub" }
+
+[tree.plugins.mcp-server]
+"README.md" = { type = "stub" }
+
+[tree.templates]
+"AGENTS.md.tmpl" = { type = "template" }
+"archive-readme.md.tmpl" = { type = "template" }
+"dangerous_patterns.toml.tmpl" = { type = "template" }
+"digest-index.md.tmpl" = { type = "template" }
+"drifter.toml.tmpl" = { type = "template" }
+"project-conductor.md.tmpl" = { type = "template" }
+"session-protocol.md.tmpl" = { type = "template" }
+
+[boundaries]
+# Import layer rules: who may import whom
+[[boundaries.rule]]
+from_layer = "checks"
+may_import = ["checks", "core", "package"]
+may_not_import = ["cli", "reporters", "plugins"]
+
+[[boundaries.rule]]
+from_layer = "reporters"
+may_import = ["core", "package"]
+may_not_import = ["checks", "cli", "plugins"]
+
+[[boundaries.rule]]
+from_layer = "core"
+may_import = ["core", "package"]
+may_not_import = ["cli", "reporters", "plugins", "checks"]
+
+[[boundaries.rule]]
+from_layer = "engine"
+may_import = ["checks", "core", "package"]
+may_not_import = ["cli", "reporters", "plugins"]
+
+[[boundaries.rule]]
+from_layer = "cli"
+may_import = ["all"]
+
+[[boundaries.rule]]
+from_layer = "plugins"
+may_import = ["all"]
+# Plugins are leaf nodes — src/drifter may NOT import plugins
+
+[checks]
+count = 32
+names = [
+    "stale_reference",
+    "hardcoded_path",
+    "digest_staleness",
+    "conductor_health",
+    "cross_doc_consistency",
+    "git_safety",
+    "dangerous_patterns",
+    "timestamp_staleness",
+    "conductor_content",
+    "architecture_doc_sync",
+    "readme_completeness",
+    "pre_flight_sync",
+    "credential_leak",
+    "dead_code",
+    "test_coverage",
+    "cli_output",
+    "gitignore",
+    "pipeline_integrity",
+    "archive_integrity",
+    "tomllib_compatibility",
+    "audit_coverage",
+    "reporter_completeness",
+    "agent_self_audit",
+    "git_commit_approval",
+    "tree_integrity",
+    "file_size",
+    "manifest_sync",
+    "claim_sync",
+    "read_before_write",
+    "test_after_write",
+    "drift_check_after_write",
+    "no_rush",
+]
+
+[pre_flight]
+step_count = 7
+
+[generated]
+# Files/sections that MUST be derived from manifest, never hand-edited
+files = [
+    { path = "README.md", marker = "<!-- drifter:generated -->", source = "checks.count" },
+    { path = "docs/architecture.md", marker = "<!-- drifter:generated -->", source = "checks.names" },
+    { path = "drifter.toml", marker = "# drifter:generated checks", source = "checks.names" },
+]
+
+[claims]
+# Numerical claims in docs that must match manifest
+"README.md" = [
+    { pattern = "{count} automated drift checks", value = "checks.count" },
+    { pattern = "{count} automated checks", value = "checks.count" },
+]
+"docs/architecture.md" = [
+    { pattern = "Built-in Checks ({count})", value = "checks.count" },
+]

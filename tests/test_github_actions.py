@@ -1,6 +1,6 @@
 """Tests for GitHub Actions reporter."""
 
-from drifter.drift_guard import Issue
+from drifter.checks._base import Issue
 from drifter.reporters.github_actions import GitHubActionsReporter
 
 

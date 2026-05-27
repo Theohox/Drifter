@@ -12,6 +12,7 @@ from drifter.conductor import Conductor
 from drifter.doc_validator import validate_docs
 from drifter.drift_guard import run_checks
 from drifter.pre_flight import run_pre_flight
+from drifter.session_logger import SessionLogger
 
 
 def _format_issues_console(issues: list, score: int | None = None) -> None:
@@ -336,6 +337,74 @@ def cmd_init(args: argparse.Namespace) -> int:
     return 0
 
 
+
+
+def cmd_log(args: argparse.Namespace) -> int:
+    """Log an action to the session audit log."""
+    logger = SessionLogger()
+    logger.log(args.action, args.target)
+    return 0
+
+
+def cmd_session_report(args: argparse.Namespace) -> int:
+    """Generate session report card from audit log."""
+    from drifter.checks.behavioral import (
+        ReadBeforeWriteCheck,
+        TestAfterWriteCheck,
+        DriftCheckAfterWriteCheck,
+        NoRushCheck,
+    )
+    from drifter.config import Config
+
+    config = Config.load(root=args.root)
+    checks = [
+        ReadBeforeWriteCheck(),
+        TestAfterWriteCheck(),
+        DriftCheckAfterWriteCheck(),
+        NoRushCheck(),
+    ]
+
+    all_issues: list = []
+    for check in checks:
+        all_issues.extend(check.run(args.root, config))
+
+    print(f"\n{'='*60}")
+    print("  SESSION REPORT CARD")
+    print(f"{'='*60}")
+
+    logger = SessionLogger()
+    entries = logger.read_entries()
+    reads = [e for e in entries if e.action == "READ"]
+    writes = [e for e in entries if e.action == "WRITE"]
+    shells = [e for e in entries if e.action == "SHELL"]
+    tests = [e for e in entries if "pytest" in e.target or "test" in e.target.lower()]
+    drift_checks = [e for e in entries if "drifter check" in e.target]
+
+    print(f"  Files read: {len(reads)}")
+    print(f"  Files written: {len(writes)}")
+    print(f"  Shell commands: {len(shells)}")
+    print(f"  Test runs: {len(tests)}")
+    print(f"  Drift checks: {len(drift_checks)}")
+
+    if all_issues:
+        errors = [i for i in all_issues if i.severity == "error"]
+        warns = [i for i in all_issues if i.severity == "warn"]
+        if errors:
+            print(f"\n  Errors ({len(errors)}):")
+            for issue in errors:
+                print(f"    ✗ {issue}")
+        if warns:
+            print(f"\n  Warnings ({len(warns)}):")
+            for issue in warns:
+                print(f"    • {issue}")
+        print(f"\n  ✗ SESSION REPORT CARD FAILED. Fix violations before declaring done.")
+        print(f"{'='*60}\n")
+        return 1
+    else:
+        print(f"\n  ✓ SESSION REPORT CARD PASSED. You may declare done.")
+        print(f"{'='*60}\n")
+        return 0
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="drifter",
@@ -397,6 +466,16 @@ def main(argv: list[str] | None = None) -> int:
     init_parser = subparsers.add_parser("init", help="Initialize Drifter in a project")
     init_parser.add_argument("--force", action="store_true", help="Overwrite existing files")
     init_parser.set_defaults(func=cmd_init)
+
+    # log
+    log_parser = subparsers.add_parser("log", help="Log an action to the session audit log")
+    log_parser.add_argument("action", choices=["READ", "WRITE", "SHELL", "CHECK"], help="Action type")
+    log_parser.add_argument("target", help="Target file or command")
+    log_parser.set_defaults(func=cmd_log)
+
+    # session-report
+    report_parser = subparsers.add_parser("session-report", help="Generate session report card")
+    report_parser.set_defaults(func=cmd_session_report)
 
     args = parser.parse_args(argv)
     return args.func(args)

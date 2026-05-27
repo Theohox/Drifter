@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from drifter.drift_guard import Issue
+from drifter.checks._base import Issue
 
 
 class ConsoleReporter:

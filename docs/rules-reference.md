@@ -4,7 +4,7 @@ type: reference
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T19:22:55Z'
+updated: '2026-05-27T21:57:33Z'
 ---
 
 # Drifter Rules Reference

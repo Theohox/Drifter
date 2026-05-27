@@ -2,7 +2,7 @@
 
 import json
 
-from drifter.drift_guard import Issue
+from drifter.checks._base import Issue
 from drifter.reporters.json_reporter import JsonReporter
 
 

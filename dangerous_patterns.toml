@@ -83,3 +83,29 @@ sensitive_patterns = [
     "*.password",
     "*secret*",
 ]
+
+[agent]
+# Actions the agent must NEVER take without explicit human approval.
+# These are enforced by AgentSelfAuditCheck and GitCommitApprovalCheck.
+# The agent CANNOT bypass these — violations are detected by drifter check.
+always_report = [
+    "git commit",
+    "git push",
+    "git reset",
+    "git rebase",
+    "git merge",
+    "git tag",
+    "git cherry-pick",
+    "git checkout -b",
+]
+
+# Actions that require explicit human approval BEFORE execution.
+# The agent must ask and receive a YES before running these.
+approval_required = [
+    "git add",
+    "rm -rf",
+    "rm -r",
+    "sudo",
+    "docker",
+    "kubectl",
+]
