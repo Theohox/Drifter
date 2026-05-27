@@ -28,7 +28,8 @@ required_dirs = [
 
 [tree.root]
 "AGENTS.md" = { type = "constitution" }
-"LICENSE" = { type = "license" }
+"LICENSE-MIT" = { type = "license" }
+"LICENSE-APACHE" = { type = "license" }
 "README.md" = { type = "readme" }
 "dangerous_patterns.toml" = { type = "config" }
 "drifter-manifest.toml" = { type = "manifest" }

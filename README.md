@@ -2,14 +2,18 @@
 
 > **Before you write a single line of code, know what already exists.**
 
-Drifter is a methodology and toolkit that forces AI agents to follow standard rules before touching code. It prevents the four failure modes of agentic coding:
+AI coding agents generate code faster than teams can review it. The result is predictable: hallucinated files, undocumented bloat, context blindness, and docs that become lies. Apiiro found AI-generated code introduced **>10,000 new security findings per month** by mid-2025 — a 10x increase. The DORA report found that **30% of developers don't trust AI-generated code**.
 
-1. **Hallucination** — inventing files, APIs, or patterns that don't exist
-2. **Bloat** — adding unnecessary code, dependencies, or complexity
-3. **Context blindness** — editing without reading the whole codebase
-4. **Drift** — docs, code, and reality diverging over time
+Drifter is a `pip install` defense layer. It does not replace your agent. It constrains it.
 
-Drifter is not a prompt. It is a **system of enforced protocols** — pre-flight checklists, 33 automated drift checks, document type constraints, and a project conductor that keeps agents focused on one thing at a time.
+- **Pre-flight checklist** — 7 enforced steps before any code change
+- **33 automated drift checks** — stale refs, doc drift, credential leaks, dead code, file-size bloat, and more
+- **Document type system** — every doc knows its mutation rules; docs don't become lies
+- **Project conductor** — one active task at a time; scope creep is structurally prevented
+- **Command boundaries** — agents read `dangerous_patterns.toml` before running shell
+- **Session audit** — immutable log of reads, writes, and checks; append-only coding is detectable
+
+Drifter is not a prompt. It is a **system of enforced protocols**.
 
 ## Quick Start
 
@@ -96,6 +100,17 @@ When every doc knows its type, docs don't become lies.
 - **vs Linting** — Linters catch code issues. Drifter catches documentation and process drift. Complementary.
 - **vs Code Review** — Review catches the 20% that needs human judgment. Drifter catches the 80% of routine mistakes automatically.
 
+## Evidence
+
+The problem Drifter solves is not hypothetical:
+
+- **Apiiro (Sep 2025)**: AI-generated code introduced >10,000 new security findings/month by June 2025 — a 10x increase from Dec 2024
+- **DORA 2025**: Higher AI adoption correlates with increased software delivery instability; 30% of developers report little/no trust in AI-generated code
+- **Packmind / ContextOps**: Documented "context decay" — conventions shift, libraries break, standards degrade without active countermeasures
+- **Industry consensus**: `.cursorrules` and `CLAUDE.md` are static artifacts with "no lifecycle management, no versioning, no modification history, no drift detection"
+
+No other tool combines pre-flight enforcement, drift detection, document type constraints, scope control, command boundaries, and session audit in a single `pip install`.
+
 ## Documentation
 
 - [`docs/methodology.md`](docs/methodology.md) — The "why" in detail
@@ -104,4 +119,13 @@ When every doc knows its type, docs don't become lies.
 
 ## License
 
-MIT
+Licensed under either of
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or https://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or https://opensource.org/licenses/MIT)
+
+at your option.
+
+## Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.

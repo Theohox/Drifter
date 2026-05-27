@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 from drifter.config import Config
@@ -304,12 +305,16 @@ def cmd_init(args: argparse.Namespace) -> int:
 
     created = []
     skipped = []
+    project_name = root.name or "my-project"
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     for dest, src in files_to_create.items():
         if dest.exists() and not args.force:
             skipped.append(str(dest.relative_to(root)))
             continue
         if src.exists():
             content = src.read_text(encoding="utf-8")
+            content = content.replace("{{PROJECT_NAME}}", project_name)
+            content = content.replace("{{NOW}}", now)
         else:
             content = f"# {dest.name}\n\n(Template not found. Please create this file manually.)\n"
         dest.parent.mkdir(parents=True, exist_ok=True)
