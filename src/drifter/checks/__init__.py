@@ -34,6 +34,7 @@ from drifter.checks.security import (
     GitSafetyCheck,
     GitignoreCheck,
 )
+from drifter.checks.config_sync import ConfigSyncCheck
 from drifter.checks.structure import ClaimSyncCheck, FileSizeCheck, ManifestSyncCheck, TreeIntegrityCheck
 from drifter.checks.sync import (
     ArchitectureDocSyncCheck,
@@ -73,4 +74,9 @@ BUILTIN_CHECKS: dict[str, type[Check]] = {
     "file_size": FileSizeCheck,
     "manifest_sync": ManifestSyncCheck,
     "claim_sync": ClaimSyncCheck,
+    "read_before_write": ReadBeforeWriteCheck,
+    "test_after_write": TestAfterWriteCheck,
+    "drift_check_after_write": DriftCheckAfterWriteCheck,
+    "no_rush": NoRushCheck,
+    "config_sync": ConfigSyncCheck,
 }

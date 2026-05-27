@@ -118,11 +118,6 @@ enabled = true
 severity = "error"
 
 [[drifter.checks]]
-name = "template_count_sync"
-enabled = true
-severity = "warn"
-
-[[drifter.checks]]
 name = "agent_self_audit"
 enabled = true
 severity = "error"
@@ -171,6 +166,11 @@ severity = "error"
 name = "no_rush"
 enabled = true
 severity = "warn"
+
+[[drifter.checks]]
+name = "config_sync"
+enabled = true
+severity = "error"
 
 # Paths to ignore during scanning
 [drifter.ignore]

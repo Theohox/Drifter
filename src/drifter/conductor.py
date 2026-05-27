@@ -93,7 +93,7 @@ class Conductor:
         phase_match = re.search(r"\*\*Phase[^*]+\*\*.*?(🟢|🟡|🔴|🔄)\s*ACTIVE", text)
         phase = phase_match.group(0) if phase_match else "Unknown"
         task_match = re.search(
-            r"\*\*ID\*\*\s*\|\s*(.+?)\n.*?\*\*Name\*\*\s*\|\s*(.+?)\n.*?\*\*Status\*\*\s*\|\s*(.+?)\n.*?\*\*Evidence\*\*\s*\|\s*(.+?)\n",
+            r"\*\*ID\*\*\s*\|\s*([^|\n]+?)\s*\|.*?\*\*Name\*\*\s*\|\s*([^|\n]+?)\s*\|.*?\*\*Status\*\*\s*\|\s*([^|\n]+?)\s*\|.*?\*\*Evidence\*\*\s*\|\s*([^|\n]+?)\s*\|",
             text,
             re.DOTALL,
         )

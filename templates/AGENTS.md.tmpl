@@ -6,7 +6,7 @@
 
 > **Before you write a single line of code, grep the codebase for what already exists.**
 
-{{PROJECT_NAME}} is a project with a specific shape. If you think "I should build X", first check if X already exists.
+{{PROJECT_NAME}} is a project with a clear architecture. If you think "I should build X", first check if X already exists.
 
 ## 1. Pre-Flight Checklist (Do This First)
 
@@ -15,7 +15,7 @@ Before any coding session:
 - [ ] **Read this prompt** (you are here)
 - [ ] **Read the Session Protocol**: `docs/session-protocol.md`
 - [ ] **Read the Conductor**: `docs/project-conductor.md`
-- [ ] **Run Drift Guard**: `drifter check`
+- [ ] **Run Drift Guard**: `python -m drifter check`
 - [ ] **Check the digest index**: `docs/digests/index.md`
 - [ ] **Grep for existing functionality**: `grep -r "your_idea" src/ tests/`
 - [ ] **Run tests**: `python -m pytest tests/ -q`
@@ -39,10 +39,11 @@ Before any coding session:
 
 | What You Need | Where It Already Exists |
 |---------------|------------------------|
-| Run drift guard | `drifter check` or `src/drifter/drift_guard.py` |
-| Run pre-flight | `drifter preflight` or `src/drifter/pre_flight.py` |
-| Manage conductor | `drifter conductor` or `src/drifter/conductor.py` |
-| Validate docs | `drifter validate` or `src/drifter/doc_validator.py` |
+| Run drift guard | `python -m drifter check` or `src/drifter/drift_guard.py` |
+| Run pre-flight | `python -m drifter preflight` or `src/drifter/pre_flight.py` |
+| Manage conductor | `python -m drifter conductor` or `src/drifter/conductor.py` |
+| Validate docs | `python -m drifter validate` or `src/drifter/doc_validator.py` |
+| Add a new check | `src/drifter/drift_guard.py` — implement `Check` protocol |
 | Audit session | `drifter audit` or `src/drifter/shell_guard.py` |
 | Add a new check | `src/drifter/drift_guard.py` — implement `Check` protocol |
 | Add a reporter | `src/drifter/reporters/` — implement `Reporter` protocol |
@@ -79,7 +80,7 @@ When you finish the Active Task:
 1. RUN tests (pytest)
 2. RUN drift guard again — did you create new drift?
 3. UPDATE Conductor — mark done, paste evidence
-4. STOP — if no next task is Ready, wait for human
+4. STOP — if no next task is Ready, wait for hox
 ```
 
 ### The No-Recreation Rule
@@ -114,8 +115,9 @@ print(guard.check("git status"))       # ALLOWED
 
 **If dangerous_patterns.toml does not exist, STOP and create it.** This file is as critical as AGENTS.md.
 
-### The Git Boundary Rule
-**Agents NEVER mutate git history.**
+### The Git Boundary Rule — ABSOLUTE
+
+**Agents do not commit. Agents do not push. EVER.**
 
 | Command | Allowed? | Condition |
 |---------|----------|-----------|
@@ -125,7 +127,17 @@ print(guard.check("git status"))       # ALLOWED
 | `git reset`, `git rebase`, `git merge` | ❌ NEVER | History-mutating |
 | `git checkout -b`, `git tag`, `git cherry-pick` | ❌ NEVER | History-mutating |
 
-**Prior approval does not roll forward.** If the human said "commit that" yesterday, you still need fresh approval today.
+**ABSOLUTE RULES:**
+1. **Each commit requires FRESH explicit approval.** Prior approval never rolls forward. "Commit that yesterday" = expired. Ask again today.
+2. **Approval must be verbatim.** The human must say something like "commit and push" or "you may commit." IMPLIED approval ("ok", "proceed", "looks good", "C") is NOT sufficient.
+3. **If you committed without approval, STOP.** Do not commit again. Report the violation immediately. The human decides whether to revert.
+4. **If `drifter check` fails because of AgentSelfAuditCheck or GitCommitApprovalCheck, you violated the rule.** Stop working. Report it. Ask for instructions.
+
+**NO EXCUSES:**
+- "It was small" — NOT AN EXCUSE.
+- "The user would want it" — NOT AN EXCUSE. You cannot read minds.
+- "I forgot" — NOT AN EXCUSE. The check exists so you don't forget.
+- "It was an emergency" — NOT AN EXCUSE. There is no git emergency that requires bypassing the human.
 
 The human reviews changes in the Git Panel and decides when to commit/push. The agent writes code; the human owns the timeline.
 
@@ -154,30 +166,75 @@ Every markdown file in `docs/` MUST have a `type:` in its frontmatter:
 
 ## 6. Communication Protocol
 
-**When reporting to humans:**
+**When reporting to hox:**
 
 1. **Lead with the answer, not the process.**
 2. **If you don't know, say so.** Never hallucinate file contents.
 3. **If you recreated something, admit it.**
 4. **Update digests.** Every session produces a digest.
 
-## 7. Quick Reference
+## 7. Session Audit Log — NON-NEGOTIABLE
+
+Every tool call you make is recorded in an append-only log. Checks verify behavioral patterns from this log. **If the log shows you rushed, appended without reading, or skipped tests, you cannot declare the task done.**
+
+### How to Log
+
+After every significant action, log it:
 
 ```bash
-drifter check              # Run drift guard
-drifter preflight          # Run pre-flight checklist
-drifter conductor show     # Show active task
-drifter validate           # Validate document types
-drifter audit              # Audit session for dangerous commands
-drifter init               # Initialize Drifter in a new project
-python -m pytest tests/ -q # Run tests
-ruff check src/ tests/     # Lint
-mypy src/                  # Type check
+# After ReadFile
+drifter log READ /path/to/file
+
+# After WriteFile or StrReplaceFile
+drifter log WRITE /path/to/file
+
+# After Shell
+drifter log SHELL "command you ran"
+
+# After drifter check
+drifter log CHECK "drifter check passed 84/100"
+```
+
+**If you forget to log, the session report will fail. The log is your proof of diligence.**
+
+### Before Declaring "Done"
+
+Run the session report:
+
+```bash
+drifter session-report
+```
+
+It produces a report card. If it fails, you are not done. Fix the violations.
+
+### What the Report Card Checks
+
+| Check | What It Verifies | Severity |
+|-------|-----------------|----------|
+| **ReadBeforeWrite** | Every WRITE had a preceding READ | error |
+| **TestAfterWrite** | Last WRITE was followed by a test run | error |
+| **DriftCheckAfterWrite** | Last WRITE was followed by `drifter check` | error |
+| **NoRush** | At least one drift check per 3 WRITEs | warn |
+
+**Why this exists**: The #1 failure mode of AI agents is append-only coding without reading existing code. This log forces you to prove you read before you wrote.
+
+## 8. Quick Reference
+
+```bash
+python -m drifter check              # Run drift guard
+python -m drifter preflight          # Run pre-flight checklist
+python -m drifter conductor show     # Show active task
+python -m drifter validate           # Validate document types
+python -m drifter audit              # Audit session for dangerous commands
+python -m drifter init               # Initialize Drifter in a new project
+python -m pytest tests/ -q           # Run tests
+ruff check src/ tests/               # Lint
+mypy src/                            # Type check
 ```
 
 ## 8. If You're Stuck
 
-**Before asking humans:**
+**Before asking hox:**
 
 1. Read this prompt again.
 2. Check `docs/digests/index.md`
@@ -189,3 +246,4 @@ mypy src/                  # Type check
 ---
 
 *This is a living document. Canonical location: repo root (`AGENTS.md`).*
+*Created: 2026-05-27 | Purpose: Prevent agents from reinventing the drift guard.*

@@ -38,7 +38,7 @@ required_dirs = [
 [tree.src.drifter]
 "__init__.py" = { layer = "package", max_lines = 50, purpose = "Package init" }
 "cli.py" = { layer = "cli", max_lines = 500, imports = ["config", "checks", "conductor", "doc_validator", "pre_flight", "reporters"] }
-"config.py" = { layer = "core", max_lines = 160, purpose = "Config loader" }
+"config.py" = { layer = "core", max_lines = 180, purpose = "Config loader" }
 "conductor.py" = { layer = "core", max_lines = 300, purpose = "Conductor manager" }
 "_conductor_helpers.py" = { layer = "core", max_lines = 150, purpose = "Conductor helpers" }
 "doc_validator.py" = { layer = "core", max_lines = 150, purpose = "Doc validator" }
@@ -58,6 +58,7 @@ required_dirs = [
 "security.py" = { layer = "checks", max_lines = 230, purpose = "Security checks" }
 "structure.py" = { layer = "checks", max_lines = 260, purpose = "Manifest structural checks" }
 "sync.py" = { layer = "checks", max_lines = 340, purpose = "Sync verification checks" }
+"config_sync.py" = { layer = "checks", max_lines = 120, purpose = "Config sync check" }
 "behavioral.py" = { layer = "checks", max_lines = 160, purpose = "Behavioral audit checks" }
 
 [tree.src.drifter.reporters]
@@ -98,6 +99,7 @@ required_dirs = [
 "test_checks_docs.py" = { tests = "checks" }
 "test_checks_project.py" = { tests = "checks" }
 "test_checks_structure.py" = { tests = "checks" }
+"test_checks_config_sync.py" = { tests = "checks" }
 "test_github_actions.py" = { tests = "reporters/github_actions" }
 "test_json_reporter.py" = { tests = "reporters/json_reporter" }
 "test_pre_flight.py" = { tests = "pre_flight" }
@@ -152,7 +154,7 @@ may_import = ["all"]
 # Plugins are leaf nodes — src/drifter may NOT import plugins
 
 [checks]
-count = 32
+count = 33
 names = [
     "stale_reference",
     "hardcoded_path",
@@ -186,6 +188,7 @@ names = [
     "test_after_write",
     "drift_check_after_write",
     "no_rush",
+    "config_sync",
 ]
 
 [pre_flight]

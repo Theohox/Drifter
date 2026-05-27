@@ -6,7 +6,7 @@ root = "."
 max_pending_age_days = 7
 drift_threshold = 70
 
-# Built-in checks (32 total)
+# Built-in checks (33 total)
 [[tool.drifter.checks]]
 name = "stale_reference"
 enabled = true
@@ -118,9 +118,59 @@ enabled = true
 severity = "error"
 
 [[tool.drifter.checks]]
-name = "template_count_sync"
+name = "agent_self_audit"
+enabled = true
+severity = "error"
+
+[[tool.drifter.checks]]
+name = "git_commit_approval"
+enabled = true
+severity = "error"
+
+[[tool.drifter.checks]]
+name = "tree_integrity"
 enabled = true
 severity = "warn"
+
+[[tool.drifter.checks]]
+name = "file_size"
+enabled = true
+severity = "warn"
+
+[[tool.drifter.checks]]
+name = "manifest_sync"
+enabled = true
+severity = "error"
+
+[[tool.drifter.checks]]
+name = "claim_sync"
+enabled = true
+severity = "warn"
+
+[[tool.drifter.checks]]
+name = "read_before_write"
+enabled = true
+severity = "error"
+
+[[tool.drifter.checks]]
+name = "test_after_write"
+enabled = true
+severity = "error"
+
+[[tool.drifter.checks]]
+name = "drift_check_after_write"
+enabled = true
+severity = "error"
+
+[[tool.drifter.checks]]
+name = "no_rush"
+enabled = true
+severity = "warn"
+
+[[tool.drifter.checks]]
+name = "config_sync"
+enabled = true
+severity = "error"
 
 # Paths to ignore during scanning
 [tool.drifter.ignore]
