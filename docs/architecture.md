@@ -4,7 +4,7 @@ type: snapshot
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T23:03:16Z'
+updated: '2026-05-29T00:27:03Z'
 ---
 
 # Drifter Internal Architecture
@@ -17,7 +17,7 @@ How Drifter is built. For contributors and advanced users.
 
 1. **Zero-dependency core** — Basic drift detection works with only the Python standard library
 2. **Plugin architecture** — Checks and reporters are swappable
-3. **Config in repo** — `drifter.toml` or `pyproject.toml [tool.drifter]`
+3. **Config in repo** — `drifter.toml` (`[drifter]` section) or `pyproject.toml [tool.drifter]`
 4. **Fast feedback** — the `check` command runs in < 5 seconds on a 10k-file repo
 5. **Language-agnostic** — Works with any project that has files and docs
 
@@ -166,7 +166,7 @@ Built-in reporters:
 Config is loaded in this priority order (later overrides earlier):
 
 1. Built-in defaults (`src/drifter/config.py`)
-2. `drifter.toml` in project root
+2. `drifter.toml` in project root (`[drifter]` section)
 3. `pyproject.toml [tool.drifter]`
 4. Command-line flags
 
@@ -226,7 +226,7 @@ class NoConsoleLogCheck:
 Register in `drifter.toml`:
 
 ```toml
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "no_console_log"
 path = "my_project/checks/no_console_log.py"
 enabled = true

@@ -38,7 +38,7 @@ updated: '{{NOW}}'
 | **Pipeline** | active |
 | **Depends On** | — |
 | **Evidence** | — |
-| **Next** | FEAT-002: First drift guard check |
+| **Next** | — |
 
 ---
 
@@ -78,7 +78,8 @@ When you finish the Active Task:
 
 1. **Paste evidence** into the Active Task table
 2. **Run `drifter check`** — did you create new drift?
-3. **Mark task done** — it moves to Completed Tasks automatically
+3. **Mark task done**: `drifter conductor done --task-id ID --evidence "..."`
+   - This moves the task to Completed Tasks AND creates an archive file automatically
 4. **Update Phase Status** if phase is complete
 5. **STOP** — if no next task is Ready, wait for human
 

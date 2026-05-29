@@ -46,6 +46,8 @@ drifter preflight --task "fix login bug"
 | `drifter conductor` | CLI for managing active tasks and phase state. |
 | `drifter validate` | Validate document types and frontmatter. |
 | `drifter audit` | Audit session history for dangerous command violations. |
+| `drifter log` | Log agent actions (READ/WRITE/SHELL/CHECK) to per-project session audit. |
+| `drifter session-report` | Generate behavioral report card from session audit log. |
 | `drifter init` | Initialize Drifter in a new project. |
 
 ## The 7-Step Pre-Flight

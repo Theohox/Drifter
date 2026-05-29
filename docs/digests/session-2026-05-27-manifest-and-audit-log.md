@@ -1,7 +1,10 @@
 ---
 title: Session Digest — Manifest System + Session Audit Log
-session_date: 2026-05-27
-author: agent
+type: archive
+status: archived
+phase: 1
+created: '2026-05-27T23:30:00Z'
+updated: '2026-05-29T00:27:03Z'
 ---
 
 # Session Digest — Manifest System + Session Audit Log

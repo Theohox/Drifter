@@ -4,7 +4,7 @@ type: guide
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T23:03:16Z'
+updated: '2026-05-29T00:27:03Z'
 ---
 
 # Drifter Adoption Guide
@@ -129,24 +129,28 @@ Set up your first phase and active task:
 Edit `drifter.toml` (or add `[tool.drifter]` to `pyproject.toml`):
 
 ```toml
-[tool.drifter]
+[drifter]
 root = "."
 max_pending_age_days = 7
 drift_threshold = 70
 
+# Optional: enable agent self-audit by pointing to shell history
+# When unset (default), AgentSelfAuditCheck is disabled
+# history_path = "~/.bash_history"
+
 # Which checks to run
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "stale_reference"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "hardcoded_path"
 enabled = true
 severity = "error"
 
 # Add custom ignore patterns
-[tool.drifter.ignore]
+[drifter.ignore]
 paths = [
     "venv/",
     "node_modules/",
@@ -251,14 +255,14 @@ After a week of use:
 Add ignore patterns to `drifter.toml`:
 
 ```toml
-[tool.drifter.ignore]
+[drifter.ignore]
 paths = ["path/to/ignore/"]
 ```
 
 Or disable checks you don't need:
 
 ```toml
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "digest_staleness"
 enabled = false
 ```
@@ -273,7 +277,7 @@ Add conductor update to your agent's stop rule. Some agents need explicit prompt
 
 ### "I have multiple projects"
 
-Each project gets its own `AGENTS.md` and conductor. Drifter is project-scoped. Run `drifter init` in each repo.
+Each project gets its own `AGENTS.md`, conductor, and session audit log (`<project>/.drifter/session.log`). Drifter is fully project-scoped. Run `drifter init` in each repo.
 
 ---
 

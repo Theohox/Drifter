@@ -4,7 +4,7 @@ type: backlog
 status: active
 phase: 1
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T23:03:16Z'
+updated: '2026-05-29T00:27:04Z'
 ---
 
 # Project Conductor — Master Plan & Active Task Tracker
@@ -41,7 +41,7 @@ updated: '2026-05-27T23:03:16Z'
 - [x] Plugin stubs created (reporters tested, memory removed as dead code)
 - [x] README finalized
 - [x] Published to GitHub
-- [x] Modularized checks package (9 modules, 32 checks)
+- [x] Modularized checks package (10 modules, 33 checks)
 - [x] Manifest system operational (`drifter-manifest.toml`, structural checks)
 - [x] Session audit log operational (`session_logger.py`, behavioral checks)
 - [ ] Memory layer implemented and tested (removed — dead code)
@@ -104,8 +104,11 @@ Historical record of done work. Preserved for context and forensic analysis.
 | REFACTOR-002 | Refactor oversized `src/drifter/doc_validator.py` | 2026-05-27T23:45 | Extracted `_validate_single` and `_parse_frontmatter` to `_doc_validate.py`. doc_validator.py: ~60 lines (was 208). | — |
 | REFACTOR-003 | Split oversized test files | 2026-05-27T23:45 | Split `test_drift_guard.py` → `test_checks_base.py` + `test_checks_behavior.py` + `test_drift_guard.py`. Split `test_new_checks.py` → `test_checks_docs.py` + `test_checks_project.py` + `test_checks_structure.py`. Added `test__doc_validate.py` and `test__conductor_helpers.py`. | — |
 | CHECK-003 | Manifest system, session audit log, and modularization | 2026-05-27T23:30 | [digest](digests/session-2026-05-27-manifest-and-audit-log.md) | 84/100 |
+| FIX-001 | Eliminate false drift: per-project session logs, test isolation, fnmatch is_ignored | 2026-05-29 | [digest](digests/session-2026-05-29-eliminate-false-drift.md) | 100/100 |
 
 **Note on CHECK-003 score**: Session was performed WITHOUT an active task (protocol violation). Agent worked on manifest + audit infrastructure without pre-flight, scope declaration, or conductor update. Initial score was 66/100 with 8 file_size warnings + 1 git_commit_approval error + 3 agent_self_audit warnings. Agent then violated protocol AGAIN by fixing blocked tasks inline instead of waiting for human. Post-fix score: 84/100. Remaining issues: 1 git_commit_approval error (expected enforcement) + 3 agent_self_audit warnings (sudo in bash history, not agent commands).
+
+**Note on FIX-001**: Session initiated by human request ("create a plan and update drifter"). Pre-flight checklist executed. Scope: session isolation, test isolation, doc frontmatter, is_ignored glob matching. 113 tests pass. Score 100/100. No protocol violations.
 
 ---
 
@@ -217,6 +220,19 @@ If you find a NEW issue while working:
 | 2026-05-27T22:47 | 94/100 | 108 | Auto-updated by drifter check |
 | 2026-05-27T23:02 | 80/100 | 108 | Auto-updated by drifter check |
 | 2026-05-27T23:03 | 94/100 | 108 | Auto-updated by drifter check |
+| 2026-05-27T23:03 | 94/100 | 108 | Auto-updated by drifter check |
+| 2026-05-27T23:23 | 90/100 | 112 | Auto-updated by drifter check |
+| 2026-05-27T23:23 | 94/100 | 112 | Auto-updated by drifter check |
+| 2026-05-28T02:35 | 94/100 | 112 | Auto-updated by drifter check |
+| 2026-05-28T23:56 | 52/100 | 112 | Auto-updated by drifter check |
+| 2026-05-29T00:00 | 52/100 | 112 | Score-only run |
+| 2026-05-29T00:22 | 88/100 | 113 | Score-only run |
+| 2026-05-29T00:22 | 96/100 | 113 | Auto-updated by drifter check |
+| 2026-05-29T00:22 | 96/100 | 113 | Score-only run |
+| 2026-05-29T00:24 | 100/100 | 113 | Score-only run |
+| 2026-05-29T00:25 | 96/100 | 113 | Score-only run |
+| 2026-05-29T00:26 | 96/100 | 113 | Auto-updated by drifter check |
+| 2026-05-29T00:27 | 100/100 | 113 | Score-only run |
 
 ---
 

@@ -38,4 +38,9 @@ drift_threshold = 90
     def test_is_ignored(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
         assert config.is_ignored(tmp_path / "venv" / "foo.py")
+        assert config.is_ignored(tmp_path / ".venv" / "bin" / "python")
+        assert config.is_ignored(tmp_path / "node_modules" / "lodash" / "index.js")
+        assert config.is_ignored(tmp_path / "src" / "__pycache__" / "foo.cpython-312.pyc")
         assert not config.is_ignored(tmp_path / "src" / "foo.py")
+        assert not config.is_ignored(tmp_path / "myvenv" / "foo.py")
+        assert not config.is_ignored(tmp_path / "src" / "venv_utils.py")

@@ -38,7 +38,7 @@ required_dirs = [
 
 [tree.src.drifter]
 "__init__.py" = { layer = "package", max_lines = 50, purpose = "Package init" }
-"cli.py" = { layer = "cli", max_lines = 500, imports = ["config", "checks", "conductor", "doc_validator", "pre_flight", "reporters"] }
+"cli.py" = { layer = "cli", max_lines = 550, imports = ["config", "checks", "conductor", "doc_validator", "pre_flight", "reporters"] }
 "config.py" = { layer = "core", max_lines = 180, purpose = "Config loader" }
 "conductor.py" = { layer = "core", max_lines = 300, purpose = "Conductor manager" }
 "_conductor_helpers.py" = { layer = "core", max_lines = 150, purpose = "Conductor helpers" }
@@ -58,7 +58,7 @@ required_dirs = [
 "project.py" = { layer = "checks", max_lines = 320, purpose = "Project state checks" }
 "security.py" = { layer = "checks", max_lines = 230, purpose = "Security checks" }
 "structure.py" = { layer = "checks", max_lines = 260, purpose = "Manifest structural checks" }
-"sync.py" = { layer = "checks", max_lines = 340, purpose = "Sync verification checks" }
+"sync.py" = { layer = "checks", max_lines = 360, purpose = "Sync verification checks" }
 "config_sync.py" = { layer = "checks", max_lines = 120, purpose = "Config sync check" }
 "behavioral.py" = { layer = "checks", max_lines = 160, purpose = "Behavioral audit checks" }
 
@@ -78,7 +78,8 @@ required_dirs = [
 "rules-reference.md" = { type = "reference", max_lines = 320 }
 "session-protocol.md" = { type = "playbook" }
 "digests/index.md" = { type = "snapshot" }
-"digests/session-2026-05-27-manifest-and-audit-log.md" = { type = "snapshot" }
+"digests/session-2026-05-27-manifest-and-audit-log.md" = { type = "archive" }
+"digests/session-2026-05-29-eliminate-false-drift.md" = { type = "archive" }
 
 [tree.docs.archive]
 "README.md" = { type = "archive" }

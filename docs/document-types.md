@@ -4,7 +4,7 @@ type: reference
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T23:03:16Z'
+updated: '2026-05-29T00:27:03Z'
 ---
 
 # Document Type System

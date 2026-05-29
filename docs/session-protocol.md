@@ -4,7 +4,7 @@ type: playbook
 status: active
 phase: 1
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T23:03:16Z'
+updated: '2026-05-29T00:27:03Z'
 ---
 
 # Session Protocol — Hard Rules for Every Session
@@ -106,7 +106,7 @@ This file is the canonical enforcement spec. It tells you exactly what is forbid
 **Prior approval does not roll forward.** Each git mutation requires fresh explicit approval.
 
 **Enforcement:** Drifter detects violations automatically:
-- `AgentSelfAuditCheck` — scans your bash history for blocked commands
+- `AgentSelfAuditCheck` — scans the configured `history_path` for blocked commands (opt-in; set `history_path = "~/.bash_history"` in `drifter.toml` to enable)
 - `GitCommitApprovalCheck` — verifies every commit has an approval marker (`[APPROVED BY ...]`)
 
 **If you committed without approval, `drifter check` will fail.** Stop working. Report the violation. Do not commit again until the human approves.

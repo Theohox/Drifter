@@ -47,7 +47,7 @@ Before any coding session:
 | Audit session | `drifter audit` or `src/drifter/shell_guard.py` |
 | Add a new check | `src/drifter/drift_guard.py` — implement `Check` protocol |
 | Add a reporter | `src/drifter/reporters/` — implement `Reporter` protocol |
-| Project config | `pyproject.toml [tool.drifter]` or `drifter.toml` |
+| Project config | `drifter.toml` (`[drifter]` section) or `pyproject.toml [tool.drifter]` |
 
 ## 4. Critical Rules
 
@@ -164,7 +164,25 @@ Every markdown file in `docs/` MUST have a `type:` in its frontmatter:
 
 **Wrong type = drift.** Fix it.
 
-## 6. Communication Protocol
+## 6. Canonical Documents
+
+Every document in `docs/` is canonical. Read the right one at the right time:
+
+| Document | Read when... | Type |
+|----------|-------------|------|
+| `docs/methodology.md` | You need to understand WHY a rule exists | constitution |
+| `docs/session-protocol.md` | Before every coding session | playbook |
+| `docs/project-conductor.md` | Before every coding session | backlog |
+| `docs/rules-reference.md` | You need the complete rule catalog | reference |
+| `docs/architecture.md` | You're changing Drifter internals | snapshot |
+| `docs/adoption-guide.md` | You're adopting Drifter in a new project | guide |
+| `docs/document-types.md` | You're unsure what type a doc should be | reference |
+| `docs/phase-index.md` | You want to know what was built in each phase | index |
+| `docs/digests/index.md` | You want to see past session records | snapshot |
+
+---
+
+## 7. Communication Protocol
 
 **When reporting to hox:**
 
@@ -173,7 +191,7 @@ Every markdown file in `docs/` MUST have a `type:` in its frontmatter:
 3. **If you recreated something, admit it.**
 4. **Update digests.** Every session produces a digest.
 
-## 7. Session Audit Log — NON-NEGOTIABLE
+## 8. Session Audit Log — NON-NEGOTIABLE
 
 Every tool call you make is recorded in an append-only log. Checks verify behavioral patterns from this log. **If the log shows you rushed, appended without reading, or skipped tests, you cannot declare the task done.**
 
@@ -218,7 +236,7 @@ It produces a report card. If it fails, you are not done. Fix the violations.
 
 **Why this exists**: The #1 failure mode of AI agents is append-only coding without reading existing code. This log forces you to prove you read before you wrote.
 
-## 8. Quick Reference
+## 9. Quick Reference
 
 ```bash
 python -m drifter check              # Run drift guard
@@ -232,14 +250,15 @@ ruff check src/ tests/               # Lint
 mypy src/                            # Type check
 ```
 
-## 8. If You're Stuck
+## 10. If You're Stuck
 
 **Before asking hox:**
 
 1. Read this prompt again.
 2. Check `docs/digests/index.md`
-3. Grep the codebase.
-4. Read the README.
+3. Check `docs/rules-reference.md` for the complete rule catalog.
+4. Grep the codebase.
+5. Read the README.
 
 **If you still need help:** Say exactly what you checked and found.
 

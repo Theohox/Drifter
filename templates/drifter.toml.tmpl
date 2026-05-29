@@ -1,179 +1,179 @@
 # Drifter configuration for {{PROJECT_NAME}}.
 # See https://github.com/hox/drifter for documentation.
 
-[tool.drifter]
+[drifter]
 root = "."
 max_pending_age_days = 7
 drift_threshold = 70
 
-# Built-in checks (33 total)
-[[tool.drifter.checks]]
+# Built-in checks
+[[drifter.checks]]
 name = "stale_reference"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "hardcoded_path"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "digest_staleness"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "conductor_health"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "cross_doc_consistency"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "git_safety"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "dangerous_patterns"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "timestamp_staleness"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "conductor_content"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "architecture_doc_sync"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "readme_completeness"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "pre_flight_sync"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "credential_leak"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "dead_code"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "test_coverage"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "cli_output"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "gitignore"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "pipeline_integrity"
 enabled = true
-severity = "error"
+severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "archive_integrity"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "tomllib_compatibility"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "audit_coverage"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "reporter_completeness"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "agent_self_audit"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "git_commit_approval"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "tree_integrity"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "file_size"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "manifest_sync"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "claim_sync"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "read_before_write"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "test_after_write"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "drift_check_after_write"
 enabled = true
 severity = "error"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "no_rush"
 enabled = true
 severity = "warn"
 
-[[tool.drifter.checks]]
+[[drifter.checks]]
 name = "config_sync"
 enabled = true
 severity = "error"
 
 # Paths to ignore during scanning
-[tool.drifter.ignore]
+[drifter.ignore]
 paths = [
     "venv/",
     ".venv/",

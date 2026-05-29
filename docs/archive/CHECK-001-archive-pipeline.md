@@ -4,6 +4,7 @@ type: archive
 status: archived
 phase: 0
 created: '2026-05-27T00:00:00Z'
+updated: '2026-05-29T00:27:03Z'
 completed: '2026-05-27T17:45:00Z'
 score: 100
 task_id: CHECK-001
@@ -27,7 +28,7 @@ task_id: CHECK-001
 ## Files Changed
 
 - `src/drifter/conductor.py` — `mark_done()` auto-archives, `append_drift_score()` added
-- `src/drifter/cli.py` — auto-updates conductor timestamps on `check` and `preflight`
+- `src/drifter/cli.py` — auto-updates conductor timestamps on `preflight`
 - `templates/project-conductor.md.tmpl` — updated with pipeline columns
 - `docs/project-conductor.md` — archive + pipeline columns live
 - `tests/` — expanded to 66 tests

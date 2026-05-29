@@ -16,7 +16,7 @@ class ReadBeforeWriteCheck:
 
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
-        logger = SessionLogger()
+        logger = SessionLogger(root=root)
         entries = logger.read_entries()
 
         read_targets: set[str] = set()
@@ -41,7 +41,7 @@ class TestAfterWriteCheck:
 
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
-        logger = SessionLogger()
+        logger = SessionLogger(root=root)
         entries = logger.read_entries()
 
         if not entries:
@@ -80,7 +80,7 @@ class DriftCheckAfterWriteCheck:
 
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
-        logger = SessionLogger()
+        logger = SessionLogger(root=root)
         entries = logger.read_entries()
 
         if not entries:
@@ -117,7 +117,7 @@ class NoRushCheck:
 
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
-        logger = SessionLogger()
+        logger = SessionLogger(root=root)
         entries = logger.read_entries()
 
         write_count = 0

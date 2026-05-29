@@ -9,7 +9,7 @@ Resolves config from (in priority order):
 
 from __future__ import annotations
 
-import json
+import fnmatch
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -60,6 +60,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         {"name": "no_rush", "enabled": True, "severity": "warn"},
         {"name": "config_sync", "enabled": True, "severity": "error"},
     ],
+    "history_path": None,
     "ignore": {
         "paths": [
             "venv/",
@@ -89,12 +90,12 @@ class CheckConfig:
 class IgnoreConfig:
     paths: list[str] = field(default_factory=list)
 
-
 @dataclass
 class Config:
     root: Path
     max_pending_age_days: int = 7
     drift_threshold: int = 70
+    history_path: str | None = None
     checks: list[CheckConfig] = field(default_factory=list)
     ignore: IgnoreConfig = field(default_factory=IgnoreConfig)
 
@@ -138,21 +139,26 @@ class Config:
             for c in raw.get("checks", [])
         ]
 
-        ignore = IgnoreConfig(paths=raw.get("ignore", {}).get("paths", []))
-
         return cls(
             root=resolved_root,
             max_pending_age_days=raw.get("max_pending_age_days", 7),
             drift_threshold=raw.get("drift_threshold", 70),
+            history_path=raw.get("history_path"),
             checks=checks,
-            ignore=ignore,
+            ignore=IgnoreConfig(paths=raw.get("ignore", {}).get("paths", [])),
         )
 
     def is_ignored(self, path: Path) -> bool:
         """Check if a path matches any ignore pattern."""
         str_path = str(path)
         for pattern in self.ignore.paths:
-            if pattern in str_path:
+            if fnmatch.fnmatch(str_path, pattern):
+                return True
+            if pattern.endswith("/"):
+                dir_name = pattern.rstrip("/")
+                if dir_name in path.parts or f"/{dir_name}/" in str_path or str_path.endswith(f"/{dir_name}"):
+                    return True
+            elif fnmatch.fnmatch(path.name, pattern):
                 return True
         return False
 

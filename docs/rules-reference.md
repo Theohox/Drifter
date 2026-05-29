@@ -4,7 +4,7 @@ type: reference
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T23:03:16Z'
+updated: '2026-05-29T00:27:03Z'
 ---
 
 # Drifter Rules Reference
@@ -269,7 +269,7 @@ This file is the **canonical enforcement spec** for command restrictions. It is 
 **Enforcement:**
 - `ShellGuard.classify(command)` returns the classification
 - `drifter check` verifies the file exists and is referenced in AGENTS.md
-- `drifter audit` scans session history for violations
+- `drifter audit` scans `~/.bash_history` for dangerous command violations
 
 ---
 

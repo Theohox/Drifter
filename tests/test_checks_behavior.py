@@ -11,44 +11,40 @@ from drifter.drift_guard import run_checks
 
 class TestAgentSelfAuditCheck:
     def test_detects_blocked_command(self, tmp_path: Path) -> None:
-        config = Config.load(root=tmp_path)
+        config = Config.load(
+            root=tmp_path,
+            overrides={"history_path": str(tmp_path / ".bash_history")},
+        )
         dp = tmp_path / "dangerous_patterns.toml"
         dp.write_text(
             '[agent]\nalways_report = ["git commit"]\napproval_required = ["sudo"]\n'
         )
-        import os
         fake_history = tmp_path / ".bash_history"
         fake_history.write_text("git commit -m 'test'\n")
-        old_home = os.environ.get("HOME")
-        os.environ["HOME"] = str(tmp_path)
-        try:
-            check = AgentSelfAuditCheck()
-            issues = check.run(tmp_path, config)
-            assert len(issues) == 1
-            assert "git commit" in issues[0].detail
-            assert issues[0].severity == "error"
-        finally:
-            if old_home is not None:
-                os.environ["HOME"] = old_home
-            else:
-                del os.environ["HOME"]
+        check = AgentSelfAuditCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 1
+        assert "git commit" in issues[0].detail
+        assert issues[0].severity == "error"
 
     def test_no_history_no_crash(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
         dp = tmp_path / "dangerous_patterns.toml"
         dp.write_text('[agent]\nalways_report = ["git commit"]\n')
-        import os
-        old_home = os.environ.get("HOME")
-        os.environ["HOME"] = str(tmp_path)
-        try:
-            check = AgentSelfAuditCheck()
-            issues = check.run(tmp_path, config)
-            assert len(issues) == 0
-        finally:
-            if old_home is not None:
-                os.environ["HOME"] = old_home
-            else:
-                del os.environ["HOME"]
+        check = AgentSelfAuditCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 0
+
+    def test_history_path_disabled_by_default(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        dp = tmp_path / "dangerous_patterns.toml"
+        dp.write_text('[agent]\nalways_report = ["git commit"]\n')
+        # Create a fake bash history even though config has no history_path
+        fake_history = tmp_path / ".bash_history"
+        fake_history.write_text("git commit -m 'test'\n")
+        check = AgentSelfAuditCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 0
 
 
 class TestGitCommitApprovalCheck:

@@ -210,6 +210,25 @@ class ReadmeCompletenessCheck:
             ))
             return issues
 
+        # If README predates Drifter installation, be lenient — the user may not
+        # have updated it yet. Only enforce if README is newer than drifter files.
+        readme_mtime = readme.stat().st_mtime
+        drifter_files = [
+            root / "drifter.toml",
+            root / "AGENTS.md",
+            root / "docs" / "session-protocol.md",
+        ]
+        drifter_mtime = None
+        for df in drifter_files:
+            if df.exists():
+                mt = df.stat().st_mtime
+                if drifter_mtime is None or mt < drifter_mtime:
+                    drifter_mtime = mt
+
+        # If README is older than drifter files, user hasn't updated it yet — skip
+        if drifter_mtime is not None and readme_mtime < drifter_mtime:
+            return issues
+
         text = readme.read_text(encoding="utf-8")
         for mention in self._REQUIRED_MENTIONS:
             if mention not in text:

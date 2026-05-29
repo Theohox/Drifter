@@ -21,8 +21,13 @@ class LogEntry:
 class SessionLogger:
     """Append-only session log for agent tool calls."""
 
-    def __init__(self, path: Path | None = None):
-        self.path = path or (Path.home() / ".drifter" / "session.log")
+    def __init__(self, path: Path | None = None, root: Path | None = None):
+        if path is not None:
+            self.path = path
+        elif root is not None:
+            self.path = root / ".drifter" / "session.log"
+        else:
+            self.path = Path.home() / ".drifter" / "session.log"
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
     def log(self, action: str, target: str) -> None:
