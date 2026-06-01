@@ -32,8 +32,10 @@ required_dirs = [
 "LICENSE-APACHE" = { type = "license" }
 "README.md" = { type = "readme" }
 "dangerous_patterns.toml" = { type = "config" }
+"docs/Drifter_Enhancement_SOW.docx" = { type = "reference" }
 "drifter-manifest.toml" = { type = "manifest" }
 "drifter.toml" = { type = "config" }
+".drifter/session.log" = { type = "log", note = "Per-project session audit log, .gitignored" }
 "pyproject.toml" = { type = "config" }
 
 [tree.src.drifter]
@@ -45,8 +47,10 @@ required_dirs = [
 "doc_validator.py" = { layer = "core", max_lines = 150, purpose = "Doc validator" }
 "_doc_validate.py" = { layer = "core", max_lines = 140, purpose = "Doc validation internals" }
 "drift_guard.py" = { layer = "engine", max_lines = 100, purpose = "Check runner" }
-"pre_flight.py" = { layer = "core", max_lines = 200, purpose = "Pre-flight runner" }
-"shell_guard.py" = { layer = "core", max_lines = 150, purpose = "Command classifier" }
+"pre_flight.py" = { layer = "core", max_lines = 230, purpose = "Pre-flight runner" }
+"shell_guard.py" = { layer = "core", max_lines = 170, purpose = "Command classifier" }
+"errors.py" = { layer = "core", max_lines = 50, purpose = "Enforcement exceptions" }
+"plugin_api.py" = { layer = "core", max_lines = 80, purpose = "Plugin interceptor API" }
 "session_logger.py" = { layer = "core", max_lines = 100, purpose = "Session audit logger" }
 
 [tree.src.drifter.checks]
@@ -58,9 +62,9 @@ required_dirs = [
 "project.py" = { layer = "checks", max_lines = 320, purpose = "Project state checks" }
 "security.py" = { layer = "checks", max_lines = 230, purpose = "Security checks" }
 "structure.py" = { layer = "checks", max_lines = 260, purpose = "Manifest structural checks" }
-"sync.py" = { layer = "checks", max_lines = 360, purpose = "Sync verification checks" }
+"sync.py" = { layer = "checks", max_lines = 470, purpose = "Sync verification checks" }
 "config_sync.py" = { layer = "checks", max_lines = 120, purpose = "Config sync check" }
-"behavioral.py" = { layer = "checks", max_lines = 160, purpose = "Behavioral audit checks" }
+"behavioral.py" = { layer = "checks", max_lines = 180, purpose = "Behavioral audit checks" }
 
 [tree.src.drifter.reporters]
 "__init__.py" = { layer = "reporters", max_lines = 50, purpose = "Reporter package" }
@@ -98,6 +102,7 @@ required_dirs = [
 "test_checks_base.py" = { tests = "checks" }
 "test_drift_guard.py" = { tests = "engine" }
 "test_checks_behavior.py" = { tests = "checks" }
+"test_checks_behavioral.py" = { tests = "checks" }
 "test_checks_docs.py" = { tests = "checks" }
 "test_checks_project.py" = { tests = "checks" }
 "test_checks_structure.py" = { tests = "checks" }
@@ -107,6 +112,9 @@ required_dirs = [
 "test_pre_flight.py" = { tests = "pre_flight" }
 "test_shell_guard.py" = { tests = "shell_guard" }
 "test_session_logger.py" = { tests = "session_logger" }
+"test_errors.py" = { tests = "errors" }
+"test_plugin_api.py" = { tests = "plugin_api" }
+"test_doc_coverage.py" = { tests = "doc_coverage" }
 "__init__.py" = { type = "package" }
 
 [tree.plugins.kimi-cli]
@@ -114,6 +122,8 @@ required_dirs = [
 
 [tree.plugins.mcp-server]
 "README.md" = { type = "stub" }
+"server.py" = { type = "stub" }
+"config.json" = { type = "config" }
 
 [tree.templates]
 "AGENTS.md.tmpl" = { type = "template" }
@@ -156,7 +166,7 @@ may_import = ["all"]
 # Plugins are leaf nodes — src/drifter may NOT import plugins
 
 [checks]
-count = 33
+count = 34
 names = [
     "stale_reference",
     "hardcoded_path",
@@ -169,6 +179,7 @@ names = [
     "conductor_content",
     "architecture_doc_sync",
     "readme_completeness",
+    "doc_coverage",
     "pre_flight_sync",
     "credential_leak",
     "dead_code",

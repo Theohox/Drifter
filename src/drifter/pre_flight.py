@@ -49,6 +49,7 @@ def run_pre_flight(
     root: Path | None = None,
     config: Config | None = None,
     task: str | None = None,
+    keyword: str | None = None,
 ) -> PreFlightResult:
     """Run the 7-step pre-flight protocol."""
     if config is None:
@@ -154,12 +155,40 @@ def run_pre_flight(
             "message": "Cannot check without conductor",
         })
 
-    # Step 6: Grep for existing code (informational only — can't enforce)
-    step_results.append({
-        "name": "Grep for Existing Code",
-        "passed": True,
-        "message": "Reminder: search codebase before writing new code",
-    })
+    # Step 6: Grep for existing code
+    if keyword:
+        try:
+            result = subprocess.run(
+                ["grep", "-r", "-i", "--include=*.py", keyword, str(root / "src")],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                lines = result.stdout.strip().split("\n")
+                step_results.append({
+                    "name": "Grep for Existing Code",
+                    "passed": True,
+                    "message": f"Found {len(lines)} matches for '{keyword}' in src/",
+                })
+            else:
+                step_results.append({
+                    "name": "Grep for Existing Code",
+                    "passed": True,
+                    "message": f"No matches for '{keyword}' in src/ — safe to create new",
+                })
+        except Exception as e:
+            step_results.append({
+                "name": "Grep for Existing Code",
+                "passed": True,
+                "message": f"Grep failed: {e}",
+            })
+    else:
+        step_results.append({
+            "name": "Grep for Existing Code",
+            "passed": True,
+            "message": "Reminder: search codebase before writing new code (pass --keyword to search)",
+        })
 
     # Step 7: Verify dangerous_patterns.toml exists
     dp_file = root / "dangerous_patterns.toml"

@@ -1,0 +1,17 @@
+{
+  "name": "drifter",
+  "version": "0.2.0",
+  "description": "Drift guard MCP server — command enforcement, session audit, pre-flight checks",
+  "entrypoint": "python",
+  "args": ["server.py"],
+  "env": {
+    "DRIFTER_ROOT": "."
+  },
+  "tools": [
+    "drifter_classify",
+    "drifter_enforce",
+    "drifter_log",
+    "drifter_preflight",
+    "drifter_check"
+  ]
+}

@@ -7,10 +7,12 @@ AI coding agents generate code faster than teams can review it. The result is pr
 Drifter is a `pip install` defense layer. It does not replace your agent. It constrains it.
 
 - **Pre-flight checklist** — 7 enforced steps before any code change
-- **33 automated drift checks** — stale refs, doc drift, credential leaks, dead code, file-size bloat, and more
+- **34 automated drift checks** — stale refs, doc drift, credential leaks, dead code, file-size bloat, and more
 - **Document type system** — every doc knows its mutation rules; docs don't become lies
 - **Project conductor** — one active task at a time; scope creep is structurally prevented
 - **Command boundaries** — agents read `dangerous_patterns.toml` before running shell
+- **Real enforcement** — `ShellGuard.enforce()` raises `DangerousCommandError` or `ApprovalRequiredError` on violation
+- **Plugin API** — `ToolInterceptor` auto-logs and enforces before any tool call (MCP, Kimi, custom)
 - **Session audit** — immutable log of reads, writes, and checks; append-only coding is detectable
 
 Drifter is not a prompt. It is a **system of enforced protocols**.
@@ -41,7 +43,7 @@ drifter preflight --task "fix login bug"
 | `docs/session-protocol.md` | Hard rules: scope, evidence, no-recreation, stop rule. |
 | `docs/project-conductor.md` | Single source of truth: what's active, blocked, done. |
 | `docs/archive/README.md` | Completed task records. One file per finished task. |
-| `drifter check` | 33 automated checks: stale refs, hardcoded paths, doc drift, credential leaks, dead code, and more. |
+| `drifter check` | 34 automated checks: stale refs, hardcoded paths, doc drift, credential leaks, dead code, and more. |
 | `drifter preflight` | Enforced 7-step pre-flight before any code change. |
 | `drifter conductor` | CLI for managing active tasks and phase state. |
 | `drifter validate` | Validate document types and frontmatter. |
@@ -112,6 +114,42 @@ The problem Drifter solves is not hypothetical:
 - **Industry consensus**: `.cursorrules` and `CLAUDE.md` are static artifacts with "no lifecycle management, no versioning, no modification history, no drift detection"
 
 No other tool combines pre-flight enforcement, drift detection, document type constraints, scope control, command boundaries, and session audit in a single `pip install`.
+
+## Enforcement Layer
+
+Drifter is not just a linter — it can actively block dangerous commands:
+
+```python
+from drifter.shell_guard import ShellGuard
+
+guard = ShellGuard()
+guard.enforce("git commit -m 'fix'")  # Raises DangerousCommandError
+guard.enforce("sudo apt install x")   # Raises ApprovalRequiredError
+guard.enforce("git status")           # Returns Classification(action="allow")
+```
+
+For plugin authors, `ToolInterceptor` auto-logs and enforces before every tool call:
+
+```python
+from drifter.plugin_api import ToolInterceptor
+
+interceptor = ToolInterceptor()
+interceptor.before_read("src/main.py")      # Logs READ
+interceptor.before_write("src/main.py")     # Logs WRITE
+interceptor.before_shell("git status")      # Logs SHELL + enforces
+```
+
+## MCP Server Plugin
+
+An MCP server is available in `plugins/mcp-server/`:
+
+```bash
+cd plugins/mcp-server
+pip install fastmcp
+python server.py
+```
+
+Exposes Drifter tools as MCP tools: `drifter_classify`, `drifter_enforce`, `drifter_log`, `drifter_preflight`, `drifter_check`.
 
 ## Documentation
 

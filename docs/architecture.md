@@ -4,7 +4,7 @@ type: snapshot
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-29T00:27:03Z'
+updated: '2026-06-01T14:21:00Z'
 ---
 
 # Drifter Internal Architecture
@@ -44,7 +44,7 @@ How Drifter is built. For contributors and advanced users.
 │         │                │                     │             │
 │         ▼                ▼                     ▼             │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │              Built-in Checks (33)                    │   │
+│  │              Built-in Checks (34)                    │   │
 │  │  • StaleReferenceCheck                               │   │
 │  │  • HardcodedPathCheck                                │   │
 │  │  • DigestStalenessCheck                              │   │
@@ -78,6 +78,7 @@ How Drifter is built. For contributors and advanced users.
 │  │  • DriftCheckAfterWriteCheck                         │   │
 │  │  • NoRushCheck                                       │   │
 │  │  • ConfigSyncCheck                                   │   │
+│  │  • DocCoverageCheck                                  │   │
 │  └──────────────────────────────────────────────────────┘   │
 │         │                                                    │
 │         ▼                                                    │

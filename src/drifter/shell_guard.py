@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import sys
 import tomllib
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -121,6 +122,37 @@ class ShellGuard:
             action="allow",
             reason="No dangerous patterns matched",
         )
+
+    def enforce(self, command: str) -> Classification:
+        """Enforce dangerous_patterns against a command.
+
+        Raises DangerousCommandError on block.
+        Raises ApprovalRequiredError on approval_required.
+        Returns Classification on allow or warn (warn logs a warning).
+        """
+        from drifter.errors import ApprovalRequiredError, DangerousCommandError
+
+        classification = self.classify(command)
+        if classification.action == "block":
+            raise DangerousCommandError(
+                command=command,
+                pattern=classification.matched_pattern,
+                reason=classification.reason,
+                classification=classification,
+            )
+        if classification.action == "approval_required":
+            raise ApprovalRequiredError(
+                command=command,
+                pattern=classification.matched_pattern,
+                reason=classification.reason,
+                classification=classification,
+            )
+        if classification.action == "warn":
+            warnings.warn(
+                f"DANGEROUS COMMAND WARNING: {classification.reason} (command: '{command}')",
+                stacklevel=2,
+            )
+        return classification
 
     def check(self, command: str) -> str:
         """Check a command and return a human-readable result."""

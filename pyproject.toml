@@ -45,6 +45,6 @@ dev = [
 drifter = "drifter.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/hox/drifter"
+Homepage = "https://github.com/Theohox/Drifter"
 Documentation = "https://github.com/hox/drifter/tree/main/docs"
 Issues = "https://github.com/hox/drifter/issues"

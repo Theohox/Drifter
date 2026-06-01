@@ -346,3 +346,105 @@ class ReporterCompletenessCheck:
                 ))
 
         return issues
+
+
+class DocCoverageCheck:
+    """Verify AGENTS.md documents all modules, CLI commands, and features.
+
+    Also verify README.md mentions key features, and that config/template
+    files are in sync with their templates.
+    """
+
+    name = "doc_coverage"
+
+    # Files that should match their templates exactly
+    _TEMPLATE_PAIRS = [
+        ("dangerous_patterns.toml", "templates/dangerous_patterns.toml.tmpl"),
+    ]
+
+    # Key features that should be mentioned in README.md
+    _README_FEATURES = [
+        "enforcement",
+        "dangerous_patterns",
+        "session audit",
+        "pre-flight",
+        "conductor",
+    ]
+
+    def run(self, root: Path, config: Config) -> list[Issue]:
+        issues: list[Issue] = []
+
+        # --- 1. AGENTS.md module coverage ---
+        agents_md = root / "AGENTS.md"
+        if agents_md.exists():
+            agents_text = agents_md.read_text(encoding="utf-8")
+            src_dir = root / "src" / "drifter"
+            if src_dir.exists():
+                for py_file in src_dir.glob("*.py"):
+                    if py_file.name in ("__init__.py", "_base.py"):
+                        continue
+                    # Skip private helper modules (e.g., _doc_validate.py, _conductor_helpers.py)
+                    if py_file.name.startswith("_"):
+                        continue
+                    module_name = py_file.name
+                    if module_name not in agents_text:
+                        issues.append(Issue(
+                            check=self.name,
+                            file="AGENTS.md",
+                            detail=f"does not mention module '{module_name}'",
+                            severity="warn",
+                        ))
+
+        # --- 2. AGENTS.md Quick Reference CLI coverage ---
+        cli_file = root / "src" / "drifter" / "cli.py"
+        if cli_file.exists() and agents_md.exists():
+            cli_text = cli_file.read_text(encoding="utf-8")
+            # Extract top-level subparser commands (exclude conductor_sub)
+            commands = re.findall(r'(?<!conductor_sub\.)add_parser\("([^"]+)"', cli_text)
+            # Also extract conductor sub-commands
+            conductor_subs = re.findall(r'conductor_sub\.add_parser\("([^"]+)"', cli_text)
+            all_commands = commands + conductor_subs
+            for cmd in commands:
+                if f"drifter {cmd}" not in agents_text:
+                    issues.append(Issue(
+                        check=self.name,
+                        file="AGENTS.md",
+                        detail=f"Quick Reference missing CLI command 'drifter {cmd}'",
+                        severity="warn",
+                    ))
+            for cmd in conductor_subs:
+                if f"drifter conductor {cmd}" not in agents_text:
+                    issues.append(Issue(
+                        check=self.name,
+                        file="AGENTS.md",
+                        detail=f"Quick Reference missing CLI command 'drifter conductor {cmd}'",
+                        severity="warn",
+                    ))
+
+        # --- 3. README.md feature coverage ---
+        readme = root / "README.md"
+        if readme.exists():
+            readme_text = readme.read_text(encoding="utf-8").lower()
+            for feature in self._README_FEATURES:
+                if feature.lower() not in readme_text:
+                    issues.append(Issue(
+                        check=self.name,
+                        file="README.md",
+                        detail=f"does not mention feature '{feature}'",
+                        severity="warn",
+                    ))
+
+        # --- 4. Template sync ---
+        for rendered_name, template_name in self._TEMPLATE_PAIRS:
+            rendered = root / rendered_name
+            template = root / template_name
+            if rendered.exists() and template.exists():
+                if rendered.read_text(encoding="utf-8") != template.read_text(encoding="utf-8"):
+                    issues.append(Issue(
+                        check=self.name,
+                        file=rendered_name,
+                        detail=f"diverges from template '{template_name}'",
+                        severity="warn",
+                    ))
+
+        return issues

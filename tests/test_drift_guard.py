@@ -33,6 +33,7 @@ type: backlog
             "AGENTS.md dangerous_patterns.toml session-protocol.md project-conductor.md\n"
             "drifter check drifter preflight drifter conductor "
             "drifter validate drifter audit drifter init\n"
+            "enforcement dangerous_patterns session audit pre-flight conductor\n"
         )
         gitignore = tmp_path / ".gitignore"
         gitignore.write_text(".env\n")

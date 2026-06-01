@@ -35,7 +35,15 @@ Before any coding session:
 
 | What You Need | Where It Already Exists |
 |---------------|------------------------|
-| <!-- TODO: Add your existing features --> | |
+| Run drift guard | `python -m drifter check` or `src/drifter/drift_guard.py` |
+| Run pre-flight | `python -m drifter preflight` or `src/drifter/pre_flight.py` |
+| Manage conductor | `python -m drifter conductor` or `src/drifter/conductor.py` |
+| Validate docs | `python -m drifter validate` or `src/drifter/doc_validator.py` |
+| Audit session | `drifter audit` or `src/drifter/shell_guard.py` |
+| Enforce command | `src/drifter/shell_guard.py` — `guard.enforce()` raises on violation |
+| Tool interceptor | `src/drifter/plugin_api.py` — `ToolInterceptor` for integrations |
+| Add a reporter | `src/drifter/reporters/` — implement `Reporter` protocol |
+| Project config | `drifter.toml` (`[drifter]` section) or `pyproject.toml [tool.drifter]` |
 
 > **TODO**: Fill in this table so agents don't recreate existing functionality.
 
@@ -219,10 +227,15 @@ It produces a report card. If it fails, you are not done. Fix the violations.
 drifter check              # Run drift guard
 drifter preflight          # Run pre-flight checklist
 drifter conductor show     # Show active task
+drifter conductor init     # Initialize conductor
+drifter conductor done     # Mark task as done
+drifter conductor block    # Block a task
+drifter conductor next     # Show next ready task
 drifter validate           # Validate document types
 drifter audit              # Audit session for dangerous commands
-drifter init               # Initialize Drifter in a new project
+drifter log                # Log an action to session audit
 drifter session-report     # Generate session report card
+drifter init               # Initialize Drifter in a new project
 ```
 
 ## 10. If You're Stuck

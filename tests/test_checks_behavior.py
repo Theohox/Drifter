@@ -6,7 +6,6 @@ from drifter.config import Config
 from drifter.checks.agent_behavior import AgentSelfAuditCheck, GitCommitApprovalCheck
 from drifter.checks.code_quality import TomllibCompatibilityCheck
 from drifter.checks.sync import AuditCoverageCheck, ReporterCompletenessCheck
-from drifter.drift_guard import run_checks
 
 
 class TestAgentSelfAuditCheck:
@@ -183,5 +182,3 @@ class TestReporterCompletenessCheck:
         check = ReporterCompletenessCheck()
         issues = check.run(tmp_path, config)
         assert len(issues) == 0
-
-

@@ -36,3 +36,6 @@ id_rsa*
 
 # Drifter approval markers (local only)
 .git/approved
+
+# Drifter session audit logs (local only)
+.drifter/

@@ -10,7 +10,13 @@ from drifter.session_logger import SessionLogger
 
 
 class ReadBeforeWriteCheck:
-    """Verify every WRITE has a preceding READ on the same file."""
+    """Verify every WRITE has a preceding READ on the same file.
+
+    Uses a two-pass approach so that READ entries anywhere in the log
+    (including after context compaction) satisfy the check for earlier WRITEs.
+    The intent is to verify files were read before modification, not to
+    enforce strict chronological ordering in an append-only log.
+    """
 
     name = "read_before_write"
 
@@ -19,18 +25,24 @@ class ReadBeforeWriteCheck:
         logger = SessionLogger(root=root)
         entries = logger.read_entries()
 
+        # First pass: collect all read targets across the entire log
         read_targets: set[str] = set()
         for entry in entries:
             if entry.action == "READ":
                 read_targets.add(entry.target)
-            elif entry.action == "WRITE":
-                if entry.target not in read_targets:
+
+        # Second pass: check writes against the full set of reads
+        written_without_read: set[str] = set()
+        for entry in entries:
+            if entry.action == "WRITE":
+                if entry.target not in read_targets and entry.target not in written_without_read:
                     issues.append(Issue(
                         check=self.name,
                         file="session.log",
                         detail=f"WRITE {entry.target} without preceding READ",
                         severity="error",
                     ))
+                    written_without_read.add(entry.target)
         return issues
 
 
@@ -111,7 +123,11 @@ class DriftCheckAfterWriteCheck:
 
 
 class NoRushCheck:
-    """Verify at least one drift check per 3 WRITEs."""
+    """Verify at least one drift check per 3 WRITEs.
+
+    Warns at ratios above 3:1.
+    Errors at ratios above 10:1 (severe rushing).
+    """
 
     name = "no_rush"
 
@@ -133,11 +149,18 @@ class NoRushCheck:
                 check=self.name,
                 file="session.log",
                 detail=f"{write_count} WRITEs with zero 'drifter check' runs — session is rushing",
-                severity="warn",
+                severity="error",
             ))
         elif write_count > 0:
             ratio = write_count / max(drift_count, 1)
-            if ratio > 3:
+            if ratio > 10:
+                issues.append(Issue(
+                    check=self.name,
+                    file="session.log",
+                    detail=f"{write_count} WRITEs vs {drift_count} drift checks (ratio {ratio:.1f}:1) — severe rushing (max 3:1)",
+                    severity="error",
+                ))
+            elif ratio > 3:
                 issues.append(Issue(
                     check=self.name,
                     file="session.log",

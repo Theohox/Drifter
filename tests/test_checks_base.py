@@ -5,8 +5,6 @@ from pathlib import Path
 from drifter.config import Config
 from drifter.checks.docs import (
     ArchiveIntegrityCheck,
-    CrossDocConsistencyCheck,
-    DigestStalenessCheck,
     StaleReferenceCheck,
 )
 from drifter.checks.code_quality import HardcodedPathCheck

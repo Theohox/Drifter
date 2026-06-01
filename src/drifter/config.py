@@ -37,6 +37,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         {"name": "conductor_content", "enabled": True, "severity": "warn"},
         {"name": "architecture_doc_sync", "enabled": True, "severity": "warn"},
         {"name": "readme_completeness", "enabled": True, "severity": "warn"},
+        {"name": "doc_coverage", "enabled": True, "severity": "warn"},
         {"name": "pre_flight_sync", "enabled": True, "severity": "warn"},
         {"name": "credential_leak", "enabled": True, "severity": "error"},
         {"name": "dead_code", "enabled": True, "severity": "warn"},

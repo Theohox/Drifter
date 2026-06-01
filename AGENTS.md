@@ -31,9 +31,15 @@ Before any coding session:
 | Pre-flight runner | `src/drifter/pre_flight.py` | Don't add agent-specific logic. Universal rules only. |
 | Conductor manager | `src/drifter/conductor.py` | Don't auto-pick tasks. Humans/agents must explicitly choose. |
 | Document validator | `src/drifter/doc_validator.py` | Don't validate content, only structure and type rules. |
+| Config loader | `src/drifter/config.py` | Layered resolution: defaults → drifter.toml → pyproject.toml → CLI. |
+| Shell guard | `src/drifter/shell_guard.py` | Command classifier + enforcement. Plugin-agnostic. |
+| Session logger | `src/drifter/session_logger.py` | Per-project append-only audit log. |
+| CLI | `src/drifter/cli.py` | All CLI commands live here. Add new subcommands, not new files. |
 | Reporters | `src/drifter/reporters/` | Each reporter is independent. Don't couple output formats. |
 | Templates | `templates/` | Annotated templates, not generated content. |
 | Plugins | `plugins/` | Agent-specific integrations. Core must not depend on plugins. |
+| Enforcement exceptions | `src/drifter/errors.py` | Structured exceptions for blocked/approval-required commands. |
+| Plugin interceptor | `src/drifter/plugin_api.py` | `ToolInterceptor` for auto-logging + enforcement in integrations. |
 
 ## 3. What Already Exists (Don't Recreate)
 
@@ -43,9 +49,10 @@ Before any coding session:
 | Run pre-flight | `python -m drifter preflight` or `src/drifter/pre_flight.py` |
 | Manage conductor | `python -m drifter conductor` or `src/drifter/conductor.py` |
 | Validate docs | `python -m drifter validate` or `src/drifter/doc_validator.py` |
-| Add a new check | `src/drifter/drift_guard.py` — implement `Check` protocol |
 | Audit session | `drifter audit` or `src/drifter/shell_guard.py` |
-| Add a new check | `src/drifter/drift_guard.py` — implement `Check` protocol |
+| Enforce command | `src/drifter/shell_guard.py` — `guard.enforce()` raises on violation |
+| Tool interceptor | `src/drifter/plugin_api.py` — `ToolInterceptor` for integrations |
+| MCP server | `plugins/mcp-server/server.py` — MCP tools wrapping Drifter |
 | Add a reporter | `src/drifter/reporters/` — implement `Reporter` protocol |
 | Project config | `drifter.toml` (`[drifter]` section) or `pyproject.toml [tool.drifter]` |
 
@@ -105,12 +112,20 @@ This file is the canonical enforcement spec. It is not a suggestion. It is the s
 | `confirm_required` | ⚠️ Confirm with human | `sudo`, `rm -rf` |
 | `allowed` | ✅ Proceed | `git status`, `git diff` |
 
-**How to check:**
+**How to check (read-only):**
 ```python
 from drifter.shell_guard import ShellGuard
 guard = ShellGuard()
 print(guard.check("git commit -m x"))  # BLOCKED
 print(guard.check("git status"))       # ALLOWED
+```
+
+**How to enforce (raises on violation):**
+```python
+from drifter.shell_guard import ShellGuard
+guard = ShellGuard()
+guard.enforce("git commit -m x")   # Raises DangerousCommandError
+guard.enforce("git status")        # Returns Classification(action="allow")
 ```
 
 **If dangerous_patterns.toml does not exist, STOP and create it.** This file is as critical as AGENTS.md.
@@ -242,8 +257,14 @@ It produces a report card. If it fails, you are not done. Fix the violations.
 python -m drifter check              # Run drift guard
 python -m drifter preflight          # Run pre-flight checklist
 python -m drifter conductor show     # Show active task
+python -m drifter conductor init     # Initialize conductor
+python -m drifter conductor done     # Mark task as done
+python -m drifter conductor block    # Block a task
+python -m drifter conductor next     # Show next ready task
 python -m drifter validate           # Validate document types
 python -m drifter audit              # Audit session for dangerous commands
+python -m drifter log                # Log an action to session audit
+python -m drifter session-report     # Generate behavioral report card
 python -m drifter init               # Initialize Drifter in a new project
 python -m pytest tests/ -q           # Run tests
 ruff check src/ tests/               # Lint

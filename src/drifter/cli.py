@@ -79,7 +79,7 @@ def cmd_check(args: argparse.Namespace) -> int:
 
 def cmd_preflight(args: argparse.Namespace) -> int:
     config = Config.load(root=args.root)
-    result = run_pre_flight(root=args.root, config=config, task=args.task)
+    result = run_pre_flight(root=args.root, config=config, task=args.task, keyword=args.keyword)
     result.print_report()
 
     # Auto-update conductor timestamp after preflight
@@ -365,7 +365,7 @@ def cmd_session_report(args: argparse.Namespace) -> int:
 
     all_issues: list = []
     for check in checks:
-        all_issues.extend(check.run(args.root, config))
+        all_issues.extend(check.run(config.root, config))
 
     print(f"\n{'='*60}")
     print("  SESSION REPORT CARD")
@@ -423,6 +423,7 @@ def main(argv: list[str] | None = None) -> int:
     # preflight
     preflight_parser = subparsers.add_parser("preflight", help="Run pre-flight checklist")
     preflight_parser.add_argument("--task", default=None, help="Description of planned task")
+    preflight_parser.add_argument("--keyword", default=None, help="Keyword to grep for in src/ (pre-flight step 6)")
     preflight_parser.set_defaults(func=cmd_preflight)
 
     # conductor
