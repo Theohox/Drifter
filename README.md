@@ -73,6 +73,18 @@ Every session starts with this exact sequence:
 
 No exceptions. No "I'll just quickly fix this one thing."
 
+## Cost
+
+Drifter costs ~9,000 input tokens per session (the pre-flight docs). That's ~4.5% of a 200K context window.
+
+One prevented mistake pays for 1–3 sessions:
+- Hallucinated file → 3K–8K tokens to fix
+- Doc drift → 5K–15K tokens to fix
+- Scope creep → 4K–10K tokens to fix
+- Credential leak → 5K–20K tokens to fix
+
+**~9K tokens/session buys insurance against 3K–20K token mistakes.**
+
 ## Philosophy
 
 Reactive prompting fails because agents ignore long prompts under pressure. Proactive enforcement works because **scripts + structure > words**.

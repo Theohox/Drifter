@@ -4,7 +4,7 @@ type: guide
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-29T00:27:03Z'
+updated: '2026-06-04T19:24:00Z'
 ---
 
 # Drifter Adoption Guide
@@ -212,6 +212,40 @@ Ensure your agent:
 4. Declares scope before editing files
 5. Provides evidence before declaring "done"
 6. Updates the conductor after completing a task
+
+---
+
+## Token Overhead
+
+Drifter adds ~8,500–9,000 input tokens per session (the pre-flight docs an agent must read). Here's the breakdown:
+
+| Document | Characters | ≈ Tokens |
+|----------|-----------|----------|
+| `AGENTS.md` | 13,600 | ~3,400 |
+| `docs/session-protocol.md` | 5,900 | ~1,480 |
+| `docs/project-conductor.md` | 12,700 | ~3,180 |
+| `dangerous_patterns.toml` | 2,450 | ~610 |
+| `drifter check` output (clean) | 340 | ~85 |
+| `drifter check` output (with drift) | 1,500–3,000 | ~375–750 |
+
+**Context window impact:**
+- Claude 3.5 Sonnet (200K): ~4.5%
+- GPT-4o (128K): ~7%
+- Smaller models (32K): ~28%
+
+### The ROI
+
+One prevented mistake pays for 1–3 sessions of Drifter overhead:
+
+| Failure Mode | Typical Token Cost to Fix | Prevented By |
+|-------------|--------------------------|--------------|
+| Hallucinated file | 3K–8K | TreeIntegrityCheck, ManifestSyncCheck |
+| Doc drift (docs lie) | 5K–15K | StaleReferenceCheck, CrossDocConsistencyCheck |
+| Scope creep | 4K–10K | Conductor, Scope Boundary Rule |
+| Undocumented command | 2K–5K | GhostReferenceCheck, CliOutputCheck |
+| Credential leak | 5K–20K | CredentialLeakCheck |
+
+**~9K tokens/session buys insurance against 3K–20K token mistakes.**
 
 ---
 

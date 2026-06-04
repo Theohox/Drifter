@@ -84,7 +84,7 @@ required_dirs = [
 "json_reporter.py" = { layer = "reporters", max_lines = 100, purpose = "JSON reporter" }
 
 [tree.docs]
-"adoption-guide.md" = { type = "guide" }
+"adoption-guide.md" = { type = "guide", max_lines = 330 }
 "architecture.md" = { type = "snapshot" }
 "document-types.md" = { type = "reference" }
 "methodology.md" = { type = "constitution" }
