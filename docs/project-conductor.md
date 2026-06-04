@@ -4,7 +4,7 @@ type: backlog
 status: active
 phase: 1
 created: '2026-05-27T00:00:00Z'
-updated: '2026-06-01T15:08:00Z'
+updated: '2026-06-01T17:30:00Z'
 ---
 
 # Project Conductor — Master Plan & Active Task Tracker
@@ -50,7 +50,7 @@ updated: '2026-06-01T15:08:00Z'
 
 ---
 
-**Phase 2: Real Enforcement** 🟢 ACTIVE
+**Phase 2: Real Enforcement** ✅ COMPLETE
 
 **Goal**: Add enforcement primitives so integrations (MCP, Kimi, custom) can actually block dangerous commands.
 
@@ -66,16 +66,47 @@ updated: '2026-06-01T15:08:00Z'
 
 ---
 
+**Phase 3: Integration Hardening** ✅ COMPLETE
+
+**Goal**: Make Drifter usable by real integrations (MCP, Kimi, git hooks). Turn skeletons into products.
+
+**Exit Criteria**:
+- [x] MCP server has tests + error handling + README
+- [x] Cross-platform shell history (bash, zsh, fish)
+- [x] Git pre-commit hook install (`drifter install-hook`)
+- [ ] Kimi CLI plugin (stretch — deferred)
+- [x] All new code tested
+- [x] Drift score 100/100
+
+---
+
+**Phase 4: Systematic Cleanup** 🟢 ACTIVE
+
+**Goal**: Fix structural rot found during architectural review — Python 3.10 crash, document type drift, duplicate checks, zero-test coverage, manifest misalignment, stale references.
+
+**Exit Criteria**:
+- [x] Python 3.10 tomllib imports fixed
+- [x] AGENTS.md document type corrected
+- [x] Conductor state valid (no limbo)
+- [x] Manifest aligned with disk reality
+- [x] Duplicate checks merged
+- [x] All 34 checks have tests
+- [x] Templates match rendered files
+- [x] No stale references
+- [x] Drift score 100/100
+
+---
+
 ## Active Task
 
 | Field | Value |
 |-------|-------|
-| **ID** | ENFORCE-003 |
-| **Name** | Phase 2 enforcement primitives |
+| **ID** | CLEANUP-001 |
+| **Name** | Systematic Cleanup — architectural review fixes |
 | **Status** | ✅ COMPLETE |
-| **Pipeline** | enforcement |
+| **Pipeline** | cleanup |
 | **Depends On** | — |
-| **Evidence** | errors.py + enforce() + ToolInterceptor + MCP skeleton + keyword grep + NoRushCheck tighten. **139 tests pass.** Score 100/100. |
+| **Evidence** | Python 3.10 tomllib fix (shell_guard.py). AGENTS.md type: playbook. Conductor Phase 4 active, CLEANUP-001. Manifest aligned (MCP server types, memory dep removed, new files). Merged TestAfterWrite+DriftCheckAfterWrite shared logic. Extracted _walk_manifest_tree. Fixed TestCoverageCheck per-module verification. Fixed ClaimSyncCheck generic dot-notation. Added 26 tests: PipelineIntegrityCheck (9), GitSafetyCheck+DangerousPatternsCheck (11), CrossDocConsistencyCheck+DigestStalenessCheck (6). Fixed FileSizeCheck binary file handling. Fixed archive stale refs, template drift, test file rename. 216 tests pass. Score 100/100. |
 | **Next** | — |
 
 ---
@@ -86,11 +117,10 @@ Tasks waiting on something before they can start.
 
 | ID | Name | Pipeline | Blocked On | Reason |
 |----|------|----------|-----------|--------|
-| — | — | — | — | — |
-| ENFORCE-001 | AST-based import boundary validation | backlog | — | Manifest `[boundaries]` section exists but is not enforced by code. Need `ImportBoundaryCheck`. |
-| ENFORCE-002 | Circular import detection | backlog | — | No check validates that `src/drifter/` modules have no circular imports. |
-| FEAT-004 | Derived file auto-generation (`drifter generate`) | backlog | — | Manifest `[generated]` section declares 3 files that must be derived from manifest. No `generate` command exists yet. |
-| FEAT-005 | Trend-based file size enforcement | backlog | — | Current hard limits cause drift on legitimate growth. Replace with growth-percentage threshold (e.g., +10% from manifest baseline). |
+| ENFORCE-001 | AST-based import boundary validation | backlog | design | Manifest `[boundaries]` section exists but is not enforced by code. Need `ImportBoundaryCheck`. |
+| ENFORCE-002 | Circular import detection | backlog | design | No check validates that `src/drifter/` modules have no circular imports. |
+| FEAT-004 | Derived file auto-generation (`drifter generate`) | backlog | design | Manifest `[generated]` section declares 3 files that must be derived from manifest. No `generate` command exists yet. |
+| FEAT-005 | Trend-based file size enforcement | backlog | design | Current hard limits cause drift on legitimate growth. Replace with growth-percentage threshold. |
 
 ---
 
@@ -101,9 +131,7 @@ Planned workstreams not yet scheduled.
 | ID | Name | Pipeline | Depends On | Status | Docs |
 |----|------|----------|-----------|--------|------|
 | FEAT-002 | Future work placeholder | backlog | — | future | — |
-| FEAT-003 | Memory layer (claude-mem inspired) | backlog | — | future | `src/memory/` |
 | PLUG-001 | Kimi CLI plugin | backlog | — | future | `plugins/kimi-cli/` |
-| PLUG-002 | MCP server plugin | backlog | — | future | `plugins/mcp-server/` |
 
 ---
 
@@ -114,6 +142,7 @@ Historical record of done work. Preserved for context and forensic analysis.
 | ID | Name | Completed | Archive | Score |
 |----|------|-----------|---------|-------|
 | ENFORCE-003 | Phase 2 enforcement primitives | 2026-05-28 | see Active Task evidence | 100/100 |
+| INTEG-001 | Phase 3 Integration Hardening | 2026-06-01 | HistoryReader + MCP tests + git hooks | 100/100 |
 | FEAT-001 | Create project structure and foundation files | 2026-05-27 | [archive](archive/FEAT-001-foundation.md) | 100/100 |
 | CHECK-001 | Archive, pipeline, and skipped-file remediation | 2026-05-27 | [archive](archive/CHECK-001-archive-pipeline.md) | 100/100 |
 | CHECK-002 | Semantic-ID migration, phase metadata, and dependency tracking | 2026-05-27T18:52 | [archive](archive/CHECK-002-semantic-id-migration-phase-metadata-and-dependenc.md) | 100/100 |
@@ -157,6 +186,8 @@ If you find a NEW issue while working:
 | 2026-05-28T00:15 | 94/100 | 108 | Config sync resolved. 33 checks verified. 3 agent_self_audit warnings (bash history sudo). |
 | 2026-05-29T00:27 | 100/100 | 113 | FIX-001: per-project session logs, test isolation, fnmatch, doc frontmatter fixes. |
 | 2026-05-29T19:48 | 100/100 | 132 | Phase 2 enforcement primitives: errors.py, enforce(), ToolInterceptor, MCP server skeleton. |
+| 2026-06-01T16:30 | 100/100 | 190 | INTEG-001: HistoryReader (bash/zsh/fish), MCP server tests, git pre-commit hook. |
+| 2026-06-01T17:45 | 100/100 | 216 | CLEANUP-001: Python 3.10 fix, doc types, duplicate check merge, 26 new tests, manifest alignment, stale refs. |
 
 ---
 

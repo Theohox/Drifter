@@ -236,7 +236,7 @@ class PipelineIntegrityCheck:
                 if line.strip().startswith("|") and "| ID |" not in line and "---" not in line:
                     parts = [p.strip() for p in line.split("|")]
                     if len(parts) >= 6 and parts[1] and parts[1] != "—":
-                        blocked_on = parts[5] if len(parts) > 5 else ""
+                        blocked_on = parts[4] if len(parts) > 4 else ""
                         if not blocked_on or blocked_on == "—":
                             issues.append(Issue(
                                 check=self.name,

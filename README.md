@@ -13,6 +13,8 @@ Drifter is a `pip install` defense layer. It does not replace your agent. It con
 - **Command boundaries** — agents read `dangerous_patterns.toml` before running shell
 - **Real enforcement** — `ShellGuard.enforce()` raises `DangerousCommandError` or `ApprovalRequiredError` on violation
 - **Plugin API** — `ToolInterceptor` auto-logs and enforces before any tool call (MCP, Kimi, custom)
+- **Cross-platform shell history** — audit bash, zsh, and fish history with auto-detection
+- **Git pre-commit hook** — block commits that introduce drift (`drifter install-hook`)
 - **Session audit** — immutable log of reads, writes, and checks; append-only coding is detectable
 
 Drifter is not a prompt. It is a **system of enforced protocols**.
@@ -51,6 +53,8 @@ drifter preflight --task "fix login bug"
 | `drifter log` | Log agent actions (READ/WRITE/SHELL/CHECK) to per-project session audit. |
 | `drifter session-report` | Generate behavioral report card from session audit log. |
 | `drifter init` | Initialize Drifter in a new project. |
+| `drifter install-hook` | Install git pre-commit hook that blocks commits with drift. |
+| `drifter uninstall-hook` | Remove the Drifter pre-commit hook. |
 
 ## The 7-Step Pre-Flight
 
@@ -149,7 +153,12 @@ pip install fastmcp
 python server.py
 ```
 
-Exposes Drifter tools as MCP tools: `drifter_classify`, `drifter_enforce`, `drifter_log`, `drifter_preflight`, `drifter_check`.
+Exposes Drifter tools as MCP tools:
+- `drifter_classify` — classify a command without enforcing
+- `drifter_enforce` — enforce a command (blocked/approval_required/allowed)
+- `drifter_log` — log an action to the session audit
+- `drifter_preflight` — run the 7-step pre-flight checklist
+- `drifter_check` — run the full drift guard
 
 ## Documentation
 

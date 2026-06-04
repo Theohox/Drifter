@@ -8,6 +8,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from drifter._hook_commands import cmd_install_hook, cmd_uninstall_hook
 from drifter.config import Config
 from drifter.conductor import Conductor
 from drifter.doc_validator import validate_docs
@@ -176,6 +177,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
 
 
 def cmd_audit(args: argparse.Namespace) -> int:
+    from drifter.history_reader import HistoryReader
     from drifter.shell_guard import ShellGuard
 
     config = Config.load(root=args.root)
@@ -194,25 +196,30 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
     print("  dangerous_patterns.toml: ✓ Found")
 
-    # Try to read bash history for audit
-    history_path = Path.home() / ".bash_history"
+    # Read shell history via HistoryReader
     violations = []
     checked = 0
 
-    if history_path.exists() and not args.no_history:
-        lines = history_path.read_text(encoding="utf-8").strip().split("\n")
-        # Check last N commands (default 100)
-        window = args.window or 100
-        recent_lines = lines[-window:] if len(lines) > window else lines
+    if not args.no_history:
+        if config.history_path:
+            reader = HistoryReader(Path(config.history_path).expanduser())
+        else:
+            reader = HistoryReader.auto_detect()
 
-        for line in recent_lines:
-            line = line.strip()
-            if not line:
-                continue
-            checked += 1
-            classification = guard.classify(line)
-            if classification.action in ("block", "approval_required", "warn"):
-                violations.append((line, classification))
+        if reader is not None and reader.path is not None and reader.path.exists():
+            window = args.window or 100
+            recent = reader.read_commands(max_entries=window)
+            for line in recent:
+                line = line.strip()
+                if not line:
+                    continue
+                checked += 1
+                classification = guard.classify(line)
+                if classification.action in ("block", "approval_required", "warn"):
+                    violations.append((line, classification))
+            print(f"  History source: {reader.path} ({reader.shell})")
+        else:
+            print("  No shell history found (set history_path in drifter.toml or ensure $SHELL is set)")
 
     print(f"  Commands checked: {checked}")
 
@@ -233,6 +240,7 @@ def _doc_stub(title: str, doc_type: str, phase: str, now: str) -> str:
     return f"""---
 title: {title}
 type: {doc_type}
+version: "1.0"
 status: active
 phase: {phase}
 created: '{now}'
@@ -477,6 +485,14 @@ def main(argv: list[str] | None = None) -> int:
     # session-report
     report_parser = subparsers.add_parser("session-report", help="Generate session report card")
     report_parser.set_defaults(func=cmd_session_report)
+
+    # install-hook
+    install_hook_parser = subparsers.add_parser("install-hook", help="Install git pre-commit hook")
+    install_hook_parser.set_defaults(func=cmd_install_hook)
+
+    # uninstall-hook
+    uninstall_hook_parser = subparsers.add_parser("uninstall-hook", help="Uninstall git pre-commit hook")
+    uninstall_hook_parser.set_defaults(func=cmd_uninstall_hook)
 
     args = parser.parse_args(argv)
     return args.func(args)

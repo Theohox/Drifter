@@ -4,7 +4,7 @@ type: archive
 status: archived
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-29T00:27:03Z'
+updated: '2026-06-01T17:30:00Z'
 completed: '2026-05-27T17:36:00Z'
 score: 100
 task_id: FEAT-001
@@ -34,7 +34,6 @@ task_id: FEAT-001
 - `src/drifter/cli.py` — CLI entry point
 - `docs/methodology.md` — Drifter methodology
 - `docs/adoption-guide.md` — how to adopt Drifter
-- `docs/comparisons.md` — comparison with other tools
 - `docs/document-types.md` — document type reference
 - `docs/architecture.md` — system architecture
 - `templates/` — starter templates for all canonical files

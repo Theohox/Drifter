@@ -4,7 +4,7 @@ type: snapshot
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-06-01T14:21:00Z'
+updated: '2026-06-01T17:00:00Z'
 ---
 
 # Drifter Internal Architecture
@@ -185,6 +185,8 @@ Config is loaded in this priority order (later overrides earlier):
 | `drifter init` | < 1s | < 2s |
 | `drifter log` | < 10ms | < 100ms |
 | `drifter session-report` | < 100ms | < 500ms |
+| `drifter install-hook` | < 10ms | < 100ms |
+| `drifter uninstall-hook` | < 10ms | < 100ms |
 
 Performance strategies:
 - Checks run in parallel using `concurrent.futures`

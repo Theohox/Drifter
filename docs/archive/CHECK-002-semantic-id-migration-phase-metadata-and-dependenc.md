@@ -1,10 +1,10 @@
 ---
-title: "CHECK-002: Semantic ID migration, phase metadata, and dependency tracking |"
+title: "CHECK-002: Semantic ID migration, phase metadata, and dependency tracking"
 type: archive
 status: archived
 phase: 1
 created: '2026-05-27T18:52:13Z'
-updated: '2026-05-29T00:27:03Z'
+updated: '2026-06-01T17:30:00Z'
 completed: '2026-05-27T18:52:13Z'
 score: 100
 task_id: CHECK-002

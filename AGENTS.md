@@ -1,3 +1,13 @@
+---
+title: Drifter Agent Contract
+type: playbook
+version: "1.0"
+status: active
+phase: "0"
+created: '2026-05-27T00:00:00Z'
+updated: '2026-06-01T17:30:00Z'
+---
+
 # Drifter Agent Contract
 
 *Read this FIRST before touching any code. Every. Single. Time.*
@@ -40,6 +50,7 @@ Before any coding session:
 | Plugins | `plugins/` | Agent-specific integrations. Core must not depend on plugins. |
 | Enforcement exceptions | `src/drifter/errors.py` | Structured exceptions for blocked/approval-required commands. |
 | Plugin interceptor | `src/drifter/plugin_api.py` | `ToolInterceptor` for auto-logging + enforcement in integrations. |
+| History reader | `src/drifter/history_reader.py` | Cross-platform shell history (bash, zsh, fish). Auto-detects from $SHELL. |
 
 ## 3. What Already Exists (Don't Recreate)
 
@@ -51,6 +62,7 @@ Before any coding session:
 | Validate docs | `python -m drifter validate` or `src/drifter/doc_validator.py` |
 | Audit session | `drifter audit` or `src/drifter/shell_guard.py` |
 | Enforce command | `src/drifter/shell_guard.py` — `guard.enforce()` raises on violation |
+| Read shell history | `src/drifter/history_reader.py` — `HistoryReader` auto-detects bash/zsh/fish |
 | Tool interceptor | `src/drifter/plugin_api.py` — `ToolInterceptor` for integrations |
 | MCP server | `plugins/mcp-server/server.py` — MCP tools wrapping Drifter |
 | Add a reporter | `src/drifter/reporters/` — implement `Reporter` protocol |
@@ -266,6 +278,8 @@ python -m drifter audit              # Audit session for dangerous commands
 python -m drifter log                # Log an action to session audit
 python -m drifter session-report     # Generate behavioral report card
 python -m drifter init               # Initialize Drifter in a new project
+python -m drifter install-hook       # Install git pre-commit hook
+python -m drifter uninstall-hook     # Remove git pre-commit hook
 python -m pytest tests/ -q           # Run tests
 ruff check src/ tests/               # Lint
 mypy src/                            # Type check
@@ -280,10 +294,7 @@ mypy src/                            # Type check
 3. Check `docs/rules-reference.md` for the complete rule catalog.
 4. Grep the codebase.
 5. Read the README.
-
 **If you still need help:** Say exactly what you checked and found.
 
 ---
-
-*This is a living document. Canonical location: repo root (`AGENTS.md`).*
-*Created: 2026-05-27 | Purpose: Prevent agents from reinventing the drift guard.*
+*This is a living document. Canonical location: repo root (`AGENTS.md`). Created: 2026-05-27 | Purpose: Prevent agents from reinventing the drift guard.*

@@ -3,7 +3,11 @@
 from pathlib import Path
 
 from drifter.config import Config
-from drifter.checks.docs import TimestampStalenessCheck
+from drifter.checks.docs import (
+    CrossDocConsistencyCheck,
+    DigestStalenessCheck,
+    TimestampStalenessCheck,
+)
 from drifter.checks.project import ConductorContentCheck
 from drifter.checks.sync import ArchitectureDocSyncCheck
 
@@ -116,3 +120,70 @@ class TestArchitectureDocSyncCheck:
         issues = check.run(tmp_path, config)
         assert any("templates/drifter.toml.tmpl" in i.file for i in issues)
         assert any("claims 5 built-in checks" in i.detail for i in issues)
+
+
+class TestCrossDocConsistencyCheck:
+    def test_broken_link(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        doc = tmp_path / "docs" / "readme.md"
+        doc.parent.mkdir(parents=True)
+        doc.write_text("[broken link](missing.md)\n")
+        check = CrossDocConsistencyCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 1
+        assert "missing.md" in issues[0].detail
+
+    def test_valid_link_passes(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        doc = tmp_path / "docs" / "readme.md"
+        doc.parent.mkdir(parents=True)
+        target = tmp_path / "docs" / "target.md"
+        target.write_text("# Target\n")
+        doc.write_text("[valid link](target.md)\n")
+        check = CrossDocConsistencyCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 0
+
+    def test_external_link_skipped(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        doc = tmp_path / "docs" / "readme.md"
+        doc.parent.mkdir(parents=True)
+        doc.write_text("[external](https://example.com)\n")
+        check = CrossDocConsistencyCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 0
+
+
+class TestDigestStalenessCheck:
+    def test_stale_pending_items(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        digest = tmp_path / "docs" / "digests" / "old.md"
+        digest.parent.mkdir(parents=True)
+        digest.write_text(
+            "---\nupdated: '2020-01-01T00:00:00Z'\n---\n\n# Digest\n\nTODO: fix this\n"
+        )
+        check = DigestStalenessCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 1
+        assert "pending items" in issues[0].detail
+
+    def test_fresh_digest_passes(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        from datetime import datetime, timezone
+
+        now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        digest = tmp_path / "docs" / "digests" / "new.md"
+        digest.parent.mkdir(parents=True)
+        digest.write_text(f"---\nupdated: '{now}'\n---\n\n# Digest\n\nTODO: fix this\n")
+        check = DigestStalenessCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 0
+
+    def test_no_pending_items_passes(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        digest = tmp_path / "docs" / "digests" / "clean.md"
+        digest.parent.mkdir(parents=True)
+        digest.write_text("---\nupdated: '2020-01-01T00:00:00Z'\n---\n\n# Digest\n\nAll done.\n")
+        check = DigestStalenessCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 0

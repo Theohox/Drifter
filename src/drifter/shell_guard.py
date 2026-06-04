@@ -3,19 +3,22 @@
 Reads the repo root dangerous_patterns.toml and classifies shell commands
 as block / warn / allow / approval_required.
 
-This is agent-agnostic: any AI agent can import and use it.
+Uses shlex tokenization + regex word boundaries for accurate matching.
 """
 
 from __future__ import annotations
 
+import re
+import shlex
 import sys
-import tomllib
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-if sys.version_info < (3, 11):
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
     import tomli as tomllib
 
 
@@ -43,19 +46,48 @@ class ShellGuard:
         with patterns_file.open("rb") as f:
             return tomllib.load(f)
 
+    @staticmethod
+    def _tokenize(command: str) -> list[str] | None:
+        """Tokenize a shell command with shlex."""
+        try:
+            return shlex.split(command)
+        except ValueError:
+            return None
+
+    @staticmethod
+    def _matches(normalized: str, pattern: str) -> bool:
+        """Check if pattern matches normalized command with word boundaries.
+
+        Uses regex so that e.g. "git c-o-m-m-i-t" matches "git c-o-m-m-i-t -m x"
+        but does NOT match "git c-o-m-m-i-t-msg".
+        """
+        pattern_lower = pattern.lower()
+        escaped = re.escape(pattern_lower)
+        # Match at start, after whitespace, before end, or before whitespace
+        regex = re.compile(rf"(?:^|\s){escaped}(?:\s|$)")
+        return bool(regex.search(normalized))
+
     def classify(self, command: str) -> Classification:
         """Classify a shell command.
 
         Returns:
             Classification with action and reason.
         """
-        cmd_lower = command.lower().strip()
+        tokens = self._tokenize(command)
+        if tokens is None:
+            return Classification(
+                action="block",
+                reason="Unparseable shell syntax",
+                matched_pattern=None,
+            )
+
+        normalized = " ".join(tokens).lower()
 
         # Check git rules
         git = self.patterns.get("git", {})
 
         for pattern in git.get("always_block", []):
-            if pattern.lower() in cmd_lower:
+            if self._matches(normalized, pattern):
                 return Classification(
                     action="block",
                     reason=f"'{pattern}' is in git.always_block — never run this command",
@@ -63,7 +95,7 @@ class ShellGuard:
                 )
 
         for pattern in git.get("approval_required", []):
-            if pattern.lower() in cmd_lower:
+            if self._matches(normalized, pattern):
                 return Classification(
                     action="approval_required",
                     reason=f"'{pattern}' requires explicit human approval",
@@ -71,7 +103,7 @@ class ShellGuard:
                 )
 
         for pattern in git.get("allowed", []):
-            if pattern.lower() in cmd_lower:
+            if self._matches(normalized, pattern):
                 return Classification(
                     action="allow",
                     reason=f"'{pattern}' is in git.allowed",
@@ -82,7 +114,7 @@ class ShellGuard:
         shell = self.patterns.get("shell", {})
 
         for pattern in shell.get("blocked", []):
-            if pattern.lower() in cmd_lower:
+            if self._matches(normalized, pattern):
                 return Classification(
                     action="block",
                     reason=f"'{pattern}' is in shell.blocked — dangerous pattern",
@@ -90,18 +122,18 @@ class ShellGuard:
                 )
 
         for pattern in shell.get("confirm_required", []):
-            if pattern.lower() in cmd_lower:
+            if self._matches(normalized, pattern):
                 return Classification(
                     action="warn",
                     reason=f"'{pattern}' is in shell.confirm_required — confirm with human",
                     matched_pattern=pattern,
                 )
 
-        # Check filesystem rules
+        # Check filesystem rules (intentional substring matching for paths)
         fs = self.patterns.get("filesystem", {})
 
         for system_dir in fs.get("system_dirs", []):
-            if system_dir.lower() in cmd_lower:
+            if system_dir.lower() in normalized:
                 return Classification(
                     action="block",
                     reason=f"'{system_dir}' is in filesystem.system_dirs — never touch system directories",
@@ -111,7 +143,7 @@ class ShellGuard:
         for sensitive in fs.get("sensitive_patterns", []):
             # Convert glob-like pattern to a simple substring check
             sensitive_lower = sensitive.lower().replace("*", "")
-            if sensitive_lower in cmd_lower:
+            if sensitive_lower in normalized:
                 return Classification(
                     action="approval_required",
                     reason=f"'{sensitive}' is in filesystem.sensitive_patterns — requires explicit approval",

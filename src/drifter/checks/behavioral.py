@@ -46,6 +46,14 @@ class ReadBeforeWriteCheck:
         return issues
 
 
+def _find_last_write_index(entries: list) -> int:
+    """Return index of last WRITE entry, or -1 if none."""
+    for i in range(len(entries) - 1, -1, -1):
+        if entries[i].action == "WRITE":
+            return i
+    return -1
+
+
 class TestAfterWriteCheck:
     """Verify a test run happened after the most recent WRITE."""
 
@@ -56,32 +64,20 @@ class TestAfterWriteCheck:
         logger = SessionLogger(root=root)
         entries = logger.read_entries()
 
-        if not entries:
-            return issues
-
-        # Find the last write
-        last_write_idx = -1
-        for i, entry in enumerate(entries):
-            if entry.action == "WRITE":
-                last_write_idx = i
-
+        last_write_idx = _find_last_write_index(entries)
         if last_write_idx == -1:
             return issues
 
-        # Check if any test run happened after the last write
-        test_after_write = False
         for entry in entries[last_write_idx + 1 :]:
             if entry.action == "SHELL" and ("pytest" in entry.target or "python3 -m pytest" in entry.target):
-                test_after_write = True
-                break
+                return issues
 
-        if not test_after_write:
-            issues.append(Issue(
-                check=self.name,
-                file="session.log",
-                detail="Last WRITE not followed by a test run",
-                severity="error",
-            ))
+        issues.append(Issue(
+            check=self.name,
+            file="session.log",
+            detail="Last WRITE not followed by a test run",
+            severity="error",
+        ))
         return issues
 
 
@@ -95,30 +91,20 @@ class DriftCheckAfterWriteCheck:
         logger = SessionLogger(root=root)
         entries = logger.read_entries()
 
-        if not entries:
-            return issues
-
-        last_write_idx = -1
-        for i, entry in enumerate(entries):
-            if entry.action == "WRITE":
-                last_write_idx = i
-
+        last_write_idx = _find_last_write_index(entries)
         if last_write_idx == -1:
             return issues
 
-        drift_after = False
         for entry in entries[last_write_idx + 1 :]:
             if entry.action in ("SHELL", "CHECK") and "drifter check" in entry.target:
-                drift_after = True
-                break
+                return issues
 
-        if not drift_after:
-            issues.append(Issue(
-                check=self.name,
-                file="session.log",
-                detail="Last WRITE not followed by 'drifter check'",
-                severity="error",
-            ))
+        issues.append(Issue(
+            check=self.name,
+            file="session.log",
+            detail="Last WRITE not followed by 'drifter check'",
+            severity="error",
+        ))
         return issues
 
 

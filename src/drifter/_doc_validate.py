@@ -38,7 +38,6 @@ class DocIssue:
         return f"[{self.severity.upper()}] {self.file} — {self.detail}"
 
 
-
 def _parse_frontmatter(text: str) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for line in text.split("\n"):
@@ -100,6 +99,15 @@ def _validate_single(md_file: Path, root: Path) -> list[DocIssue]:
     for field in ("title", "created"):
         if field not in frontmatter:
             issues.append(DocIssue(file=rel_path, detail=f"Missing '{field}:' in frontmatter", severity="warn"))
+
+    if "version" in frontmatter:
+        version = frontmatter["version"]
+        if not re.match(r'^\d+\.\d+(\.\d+)?$', version):
+            issues.append(DocIssue(
+                file=rel_path,
+                detail=f"Invalid version '{version}'. Must be semver (e.g. 1.0 or 1.0.0).",
+                severity="warn",
+            ))
 
     if "updated" not in frontmatter:
         issues.append(DocIssue(file=rel_path, detail="Missing 'updated:' timestamp in frontmatter", severity="warn"))

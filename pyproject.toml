@@ -31,9 +31,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-memory = [
-    "sqlite-fts4",
-]
 dev = [
     "pytest",
     "pytest-cov",
@@ -46,5 +43,5 @@ drifter = "drifter.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/Theohox/Drifter"
-Documentation = "https://github.com/hox/drifter/tree/main/docs"
-Issues = "https://github.com/hox/drifter/issues"
+Documentation = "https://github.com/Theohox/Drifter/tree/main/docs"
+Issues = "https://github.com/Theohox/Drifter/issues"

@@ -2,6 +2,9 @@
 
 from pathlib import Path
 
+import pytest
+
+from drifter.errors import DangerousCommandError, ApprovalRequiredError
 from drifter.shell_guard import ShellGuard
 
 
@@ -113,11 +116,46 @@ sensitive_patterns = [".env"]
         assert result.action == "approval_required"
         assert ".env" in result.matched_pattern
 
+    def test_word_boundary_no_false_positive(self, tmp_path: Path) -> None:
+        """git commit should NOT match git commit-msg (word boundary)."""
+        patterns = tmp_path / "dangerous_patterns.toml"
+        patterns.write_text("""
+[git]
+always_block = ["git commit"]
+""")
+        guard = ShellGuard(root=tmp_path)
+
+        result = guard.classify("git commit-msg --edit")
+        assert result.action == "allow"
+
+    def test_word_boundary_allows_prefix(self, tmp_path: Path) -> None:
+        """sudo should NOT match sudoers or visudo (word boundary)."""
+        patterns = tmp_path / "dangerous_patterns.toml"
+        patterns.write_text("""
+[shell]
+confirm_required = ["sudo"]
+""")
+        guard = ShellGuard(root=tmp_path)
+
+        result = guard.classify("cat /etc/sudoers")
+        assert result.action == "allow"
+
+    def test_unparseable_shell_blocked(self, tmp_path: Path) -> None:
+        """Malformed shell syntax should be blocked."""
+        patterns = tmp_path / "dangerous_patterns.toml"
+        patterns.write_text("""
+[git]
+always_block = ["git commit"]
+""")
+        guard = ShellGuard(root=tmp_path)
+
+        result = guard.classify("echo 'unclosed string")
+        assert result.action == "block"
+        assert "Unparseable" in result.reason
+
 
 class TestShellGuardEnforce:
     def test_enforce_raises_on_blocked_command(self, tmp_path: Path) -> None:
-        from drifter.errors import DangerousCommandError
-
         patterns = tmp_path / "dangerous_patterns.toml"
         patterns.write_text("""
 [git]
@@ -132,8 +170,6 @@ always_block = ["git commit"]
         assert exc_info.value.pattern == "git commit"
 
     def test_enforce_raises_on_approval_required(self, tmp_path: Path) -> None:
-        from drifter.errors import ApprovalRequiredError
-
         patterns = tmp_path / "dangerous_patterns.toml"
         patterns.write_text("""
 [git]
@@ -176,7 +212,6 @@ confirm_required = ["sudo"]
 
     def test_enforce_blocked_never_reaches_subprocess(self, tmp_path: Path) -> None:
         from unittest.mock import patch
-        from drifter.errors import DangerousCommandError
 
         patterns = tmp_path / "dangerous_patterns.toml"
         patterns.write_text("""
@@ -189,6 +224,3 @@ always_block = ["git commit"]
             with pytest.raises(DangerousCommandError):
                 guard.enforce("git commit -m x")
             mock_run.assert_not_called()
-
-
-import pytest

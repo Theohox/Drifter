@@ -10,9 +10,10 @@ else:
 
 from drifter.checks._base import Check, Issue
 from drifter.config import Config
+from drifter.history_reader import HistoryReader
 
 class AgentSelfAuditCheck:
-    """Scan agent bash history for dangerous commands."""
+    """Scan agent shell history for dangerous commands."""
 
     name = "agent_self_audit"
 
@@ -31,12 +32,11 @@ class AgentSelfAuditCheck:
 
         if not config.history_path:
             return issues
-        history_path = Path(config.history_path).expanduser()
-        if not history_path.exists():
+        reader = HistoryReader(Path(config.history_path).expanduser())
+        if not reader.path.exists():
             return issues
 
-        lines = history_path.read_text(encoding="utf-8").strip().split("\n")
-        recent = lines[-50:] if len(lines) > 50 else lines
+        recent = reader.read_commands(max_entries=50)
 
         for line in recent:
             line = line.strip()
@@ -45,10 +45,10 @@ class AgentSelfAuditCheck:
             lower = line.lower()
             for pattern in always_report:
                 if pattern.lower() in lower:
-                    issues.append(Issue(check=self.name, file=str(history_path), detail=f"Agent ran '{pattern}' without approval: '{line[:80]}'", severity="error"))
+                    issues.append(Issue(check=self.name, file=str(reader.path), detail=f"Agent ran '{pattern}' without approval: '{line[:80]}'", severity="error"))
             for pattern in approval_required:
                 if pattern.lower() in lower:
-                    issues.append(Issue(check=self.name, file=str(history_path), detail=f"Agent ran '{pattern}' without logged approval: '{line[:80]}'", severity="warn"))
+                    issues.append(Issue(check=self.name, file=str(reader.path), detail=f"Agent ran '{pattern}' without logged approval: '{line[:80]}'", severity="warn"))
         return issues
 
 class GitCommitApprovalCheck:

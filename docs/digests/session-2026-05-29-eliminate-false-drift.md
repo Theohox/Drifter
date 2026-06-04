@@ -4,7 +4,7 @@ type: archive
 status: archived
 phase: 1
 created: '2026-05-29T00:24:00Z'
-updated: '2026-05-29T00:27:03Z'
+updated: '2026-06-01T17:30:00Z'
 ---
 
 # Session Digest — Eliminate False Drift
@@ -56,7 +56,7 @@ Human observed that Drifter was scoring 52/100 on its own project due to cross-p
 | `src/drifter/cli.py` | +3 | Pass `root` to `SessionLogger()` |
 | `tests/test_drift_guard.py` | 0 | Now passes (was failing) |
 | `tests/test_pre_flight.py` | 0 | Now passes (was failing) |
-| `tests/test_checks_behavior.py` | +8 | New test `test_history_path_disabled_by_default` |
+| `tests/test_checks_agent.py` | +8 | New test `test_history_path_disabled_by_default` |
 | `tests/test_config.py` | +5 | Expanded `is_ignored` edge cases |
 | `docs/digests/session-2026-05-27-manifest-and-audit-log.md` | +4 | Frontmatter fix |
 | `docs/archive/FEAT-001-foundation.md` | +1 | Added `updated:` |

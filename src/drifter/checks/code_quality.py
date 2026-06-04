@@ -90,16 +90,32 @@ class TestCoverageCheck:
             if config.is_ignored(py_file):
                 continue
 
-            # For check modules in src/drifter/checks/, look for drift guard test files
+            # For check modules, look for test_checks_{stem}.py or any test that imports it
             if "src/drifter/checks/" in str(py_file):
-                has_test = any((tests_dir / f).exists() for f in tests_dir.glob("test_*.py"))
-                if not has_test:
-                    issues.append(Issue(
-                        check=self.name,
-                        file=str(py_file.relative_to(root)),
-                        detail=f"no test file for checks package (expected tests/test_*.py)",
-                        severity="warn",
-                    ))
+                exact = tests_dir / f"test_checks_{py_file.stem}.py"
+                if exact.exists():
+                    continue
+                # Fallback 1: any test_checks_* file whose name contains the stem
+                name_match = any(
+                    py_file.stem in f.name
+                    for f in tests_dir.glob("test_checks_*.py")
+                )
+                if name_match:
+                    continue
+                # Fallback 2: any test file imports from this module
+                import_path = f"drifter.checks.{py_file.stem}"
+                import_match = any(
+                    import_path in test_file.read_text(encoding="utf-8")
+                    for test_file in tests_dir.glob("test_*.py")
+                )
+                if import_match:
+                    continue
+                issues.append(Issue(
+                    check=self.name,
+                    file=str(py_file.relative_to(root)),
+                    detail=f"no test file for {py_file.name} (expected tests/test_checks_{py_file.stem}.py or similar)",
+                    severity="warn",
+                ))
             else:
                 test_file = tests_dir / f"test_{py_file.name}"
                 if not test_file.exists():

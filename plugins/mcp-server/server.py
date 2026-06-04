@@ -24,6 +24,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from drifter.errors import ApprovalRequiredError, DangerousCommandError
 from drifter.plugin_api import ToolInterceptor
 from drifter.session_logger import SessionLogger
+from drifter.shell_guard import ShellGuard
 
 
 try:
@@ -44,8 +45,8 @@ def drifter_classify(command: str, root: str = ".") -> str:
 
     Returns: JSON with action, reason, matched_pattern.
     """
-    interceptor = ToolInterceptor(root=Path(root))
-    classification = interceptor.before_shell(command)
+    guard = ShellGuard(root=Path(root))
+    classification = guard.classify(command)
     return json.dumps({
         "action": classification.action,
         "reason": classification.reason,
@@ -62,7 +63,7 @@ def drifter_enforce(command: str, root: str = ".") -> str:
     """
     interceptor = ToolInterceptor(root=Path(root))
     try:
-        classification = interceptor.before_shell(command, enforce=True)
+        classification = interceptor.before_shell(command)
         return json.dumps({
             "action": classification.action,
             "reason": classification.reason,
@@ -87,8 +88,8 @@ def drifter_enforce(command: str, root: str = ".") -> str:
 @mcp.tool()
 def drifter_log(action: str, target: str, root: str = ".") -> str:
     """Log an action to the Drifter session audit log."""
-    interceptor = ToolInterceptor(root=Path(root))
-    interceptor.log_action(action, target)
+    logger = SessionLogger(root=Path(root))
+    logger.log(action, target)
     return json.dumps({"status": "logged", "action": action, "target": target})
 
 
