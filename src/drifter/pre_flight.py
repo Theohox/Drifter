@@ -6,7 +6,6 @@ Enforces the 7-step pre-flight protocol before any coding session.
 from __future__ import annotations
 
 import re
-import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,10 +23,10 @@ class PreFlightResult:
     errors: list[str] = field(default_factory=list)
 
     def print_report(self) -> None:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("  PRE-FLIGHT REPORT")
         print(f"  {datetime.now(timezone.utc).isoformat()}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         for step in self.step_results:
             status = "✓" if step["passed"] else "✗"
@@ -42,7 +41,7 @@ class PreFlightResult:
             for err in self.errors:
                 print(f"    • {err}")
 
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
 
 def run_pre_flight(
@@ -63,70 +62,92 @@ def run_pre_flight(
     # Step 1: AGENTS.md exists and is readable
     agents_md = root / "AGENTS.md"
     if agents_md.exists():
-        step_results.append({
-            "name": "Read AGENTS.md",
-            "passed": True,
-            "message": f"Found {agents_md.relative_to(root)}",
-        })
+        step_results.append(
+            {
+                "name": "Read AGENTS.md",
+                "passed": True,
+                "message": f"Found {agents_md.relative_to(root)}",
+            }
+        )
     else:
-        step_results.append({
-            "name": "Read AGENTS.md",
-            "passed": False,
-            "message": "AGENTS.md not found in repo root",
-        })
+        step_results.append(
+            {
+                "name": "Read AGENTS.md",
+                "passed": False,
+                "message": "AGENTS.md not found in repo root",
+            }
+        )
         errors.append("AGENTS.md is missing. Create it from templates/AGENTS.md.tmpl")
 
     # Step 2: Session protocol exists
     session_protocol = root / "docs" / "session-protocol.md"
     if session_protocol.exists():
-        step_results.append({
-            "name": "Read Session Protocol",
-            "passed": True,
-            "message": f"Found {session_protocol.relative_to(root)}",
-        })
+        step_results.append(
+            {
+                "name": "Read Session Protocol",
+                "passed": True,
+                "message": f"Found {session_protocol.relative_to(root)}",
+            }
+        )
     else:
-        step_results.append({
-            "name": "Read Session Protocol",
-            "passed": False,
-            "message": "docs/session-protocol.md not found",
-        })
-        errors.append("Session protocol is missing. Create it from templates/session-protocol.md.tmpl")
+        step_results.append(
+            {
+                "name": "Read Session Protocol",
+                "passed": False,
+                "message": "docs/session-protocol.md not found",
+            }
+        )
+        errors.append(
+            "Session protocol is missing. Create it from templates/session-protocol.md.tmpl"
+        )
 
     # Step 3: Conductor exists
     conductor = root / "docs" / "project-conductor.md"
     if not conductor.exists():
         conductor = root / "project-conductor.md"
     if conductor.exists():
-        step_results.append({
-            "name": "Read Conductor",
-            "passed": True,
-            "message": f"Found {conductor.relative_to(root)}",
-        })
+        step_results.append(
+            {
+                "name": "Read Conductor",
+                "passed": True,
+                "message": f"Found {conductor.relative_to(root)}",
+            }
+        )
     else:
-        step_results.append({
-            "name": "Read Conductor",
-            "passed": False,
-            "message": "project-conductor.md not found",
-        })
-        errors.append("Conductor is missing. Create it from templates/project-conductor.md.tmpl")
+        step_results.append(
+            {
+                "name": "Read Conductor",
+                "passed": False,
+                "message": "project-conductor.md not found",
+            }
+        )
+        errors.append(
+            "Conductor is missing. Create it from templates/project-conductor.md.tmpl"
+        )
 
     # Step 4: Run drift guard
     try:
         report = run_checks(root, config)
         drift_passed = report.score >= config.drift_threshold
-        step_results.append({
-            "name": "Run Drift Guard",
-            "passed": drift_passed,
-            "message": f"Score: {report.score}/100 ({report.errors} errors, {report.warns} warns)",
-        })
+        step_results.append(
+            {
+                "name": "Run Drift Guard",
+                "passed": drift_passed,
+                "message": f"Score: {report.score}/100 ({report.errors} errors, {report.warns} warns)",
+            }
+        )
         if not drift_passed:
-            errors.append(f"Drift score {report.score} is below threshold {config.drift_threshold}")
+            errors.append(
+                f"Drift score {report.score} is below threshold {config.drift_threshold}"
+            )
     except Exception as e:
-        step_results.append({
-            "name": "Run Drift Guard",
-            "passed": False,
-            "message": f"Failed to run: {e}",
-        })
+        step_results.append(
+            {
+                "name": "Run Drift Guard",
+                "passed": False,
+                "message": f"Failed to run: {e}",
+            }
+        )
         errors.append(f"Drift guard failed: {e}")
         report = None
 
@@ -134,26 +155,31 @@ def run_pre_flight(
     if conductor.exists():
         text = conductor.read_text(encoding="utf-8")
         has_active = "**Active Task**" in text or "## Active Task" in text
-        has_blocked = "## Blocked Tasks" in text or "**Blocked Tasks**" in text
         if has_active:
-            step_results.append({
-                "name": "Pick Active Task",
-                "passed": True,
-                "message": "Conductor has an active task section",
-            })
+            step_results.append(
+                {
+                    "name": "Pick Active Task",
+                    "passed": True,
+                    "message": "Conductor has an active task section",
+                }
+            )
         else:
-            step_results.append({
-                "name": "Pick Active Task",
-                "passed": False,
-                "message": "Conductor has no active task",
-            })
+            step_results.append(
+                {
+                    "name": "Pick Active Task",
+                    "passed": False,
+                    "message": "Conductor has no active task",
+                }
+            )
             errors.append("No active task in conductor. Add one before coding.")
     else:
-        step_results.append({
-            "name": "Pick Active Task",
-            "passed": False,
-            "message": "Cannot check without conductor",
-        })
+        step_results.append(
+            {
+                "name": "Pick Active Task",
+                "passed": False,
+                "message": "Cannot check without conductor",
+            }
+        )
 
     # Step 6: Grep for existing code (native Python — no subprocess)
     if keyword:
@@ -170,45 +196,59 @@ def run_pre_flight(
                     except Exception:
                         continue
             if matches:
-                step_results.append({
-                    "name": "Grep for Existing Code",
-                    "passed": True,
-                    "message": f"Found {matches} file(s) matching '{keyword}' in src/",
-                })
+                step_results.append(
+                    {
+                        "name": "Grep for Existing Code",
+                        "passed": True,
+                        "message": f"Found {matches} file(s) matching '{keyword}' in src/",
+                    }
+                )
             else:
-                step_results.append({
+                step_results.append(
+                    {
+                        "name": "Grep for Existing Code",
+                        "passed": True,
+                        "message": f"No matches for '{keyword}' in src/ — safe to create new",
+                    }
+                )
+        except Exception as e:
+            step_results.append(
+                {
                     "name": "Grep for Existing Code",
                     "passed": True,
-                    "message": f"No matches for '{keyword}' in src/ — safe to create new",
-                })
-        except Exception as e:
-            step_results.append({
+                    "message": f"Search failed: {e}",
+                }
+            )
+    else:
+        step_results.append(
+            {
                 "name": "Grep for Existing Code",
                 "passed": True,
-                "message": f"Search failed: {e}",
-            })
-    else:
-        step_results.append({
-            "name": "Grep for Existing Code",
-            "passed": True,
-            "message": "Reminder: search codebase before writing new code (pass --keyword to search)",
-        })
+                "message": "Reminder: search codebase before writing new code (pass --keyword to search)",
+            }
+        )
 
     # Step 7: Verify dangerous_patterns.toml exists
     dp_file = root / "dangerous_patterns.toml"
     if dp_file.exists():
-        step_results.append({
-            "name": "Dangerous Patterns",
-            "passed": True,
-            "message": "dangerous_patterns.toml found",
-        })
+        step_results.append(
+            {
+                "name": "Dangerous Patterns",
+                "passed": True,
+                "message": "dangerous_patterns.toml found",
+            }
+        )
     else:
-        errors.append("dangerous_patterns.toml not found — agents have no command boundaries")
-        step_results.append({
-            "name": "Dangerous Patterns",
-            "passed": False,
-            "message": "dangerous_patterns.toml not found — agents have no command boundaries",
-        })
+        errors.append(
+            "dangerous_patterns.toml not found — agents have no command boundaries"
+        )
+        step_results.append(
+            {
+                "name": "Dangerous Patterns",
+                "passed": False,
+                "message": "dangerous_patterns.toml not found — agents have no command boundaries",
+            }
+        )
 
     passed = len(errors) == 0
 

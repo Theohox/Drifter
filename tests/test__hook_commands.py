@@ -15,7 +15,9 @@ class Namespace:
 
 class TestInstallHook:
     def test_installs_hook(self, tmp_path: Path) -> None:
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True, check=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True, check=True
+        )
         args = Namespace(root=tmp_path)
         assert cmd_install_hook(args) == 0
         hook = tmp_path / ".git" / "hooks" / "pre-commit"
@@ -28,7 +30,9 @@ class TestInstallHook:
         assert cmd_install_hook(args) == 1
 
     def test_fails_if_hook_already_exists(self, tmp_path: Path) -> None:
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True, check=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True, check=True
+        )
         hook = tmp_path / ".git" / "hooks" / "pre-commit"
         hook.parent.mkdir(parents=True, exist_ok=True)
         hook.write_text("#!/bin/sh\necho existing\n")
@@ -38,7 +42,9 @@ class TestInstallHook:
 
 class TestUninstallHook:
     def test_uninstalls_drifter_hook(self, tmp_path: Path) -> None:
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True, check=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True, check=True
+        )
         args = Namespace(root=tmp_path)
         cmd_install_hook(args)
         assert cmd_uninstall_hook(args) == 0
@@ -46,12 +52,16 @@ class TestUninstallHook:
         assert not hook.exists()
 
     def test_succeeds_if_no_hook(self, tmp_path: Path) -> None:
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True, check=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True, check=True
+        )
         args = Namespace(root=tmp_path)
         assert cmd_uninstall_hook(args) == 0
 
     def test_refuses_to_remove_foreign_hook(self, tmp_path: Path) -> None:
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True, check=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True, check=True
+        )
         hook = tmp_path / ".git" / "hooks" / "pre-commit"
         hook.parent.mkdir(parents=True, exist_ok=True)
         hook.write_text("#!/bin/sh\necho foreign\n")

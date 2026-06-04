@@ -29,9 +29,7 @@ class TestPreFlight:
             "## Current Phase\n**Phase 1** 🟢 ACTIVE\n"
             "## Active Task\n| ID | Name |\n| 1 | Task |\n"
         )
-        (tmp_path / "dangerous_patterns.toml").write_text(
-            "[git]\nalways_block = []\n"
-        )
+        (tmp_path / "dangerous_patterns.toml").write_text("[git]\nalways_block = []\n")
         result = run_pre_flight(root=tmp_path, config=config)
         assert result.passed
         assert len(result.step_results) == 7
@@ -52,8 +50,7 @@ class TestPreFlight:
         result = run_pre_flight(root=tmp_path, config=config)
         assert not result.passed
         assert any(
-            "dangerous_patterns.toml" in step["message"]
-            for step in result.step_results
+            "dangerous_patterns.toml" in step["message"] for step in result.step_results
         )
 
     def test_print_report_no_crash(self, tmp_path: Path) -> None:
@@ -74,9 +71,7 @@ class TestPreFlight:
             "## Current Phase\n**Phase 1** 🟢 ACTIVE\n"
             "## Active Task\n| ID | Name |\n| 1 | Task |\n"
         )
-        (tmp_path / "dangerous_patterns.toml").write_text(
-            "[git]\nalways_block = []\n"
-        )
+        (tmp_path / "dangerous_patterns.toml").write_text("[git]\nalways_block = []\n")
         src = tmp_path / "src"
         src.mkdir()
         # A keyword that would be dangerous if passed to shell

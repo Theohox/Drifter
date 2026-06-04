@@ -25,7 +25,9 @@ class Report:
     infos: int
     health: str = "excellent"
     issues: list[Issue] = field(default_factory=list)
-    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    )
 
     def __repr__(self) -> str:
         return (
@@ -52,28 +54,34 @@ def run_checks(root: Path | None = None, config: Config | None = None) -> Report
 
     if len(checks_to_run) > 1:
         with ThreadPoolExecutor(max_workers=min(len(checks_to_run), 4)) as executor:
-            futures = [executor.submit(check.run, root, config) for check in checks_to_run]
+            futures = [
+                executor.submit(check.run, root, config) for check in checks_to_run
+            ]
             for future in futures:
                 try:
                     all_issues.extend(future.result())
                 except Exception as e:
-                    all_issues.append(Issue(
-                        check="engine",
-                        file="drift_guard.py",
-                        detail=f"Check failed with exception: {e}",
-                        severity="error",
-                    ))
+                    all_issues.append(
+                        Issue(
+                            check="engine",
+                            file="drift_guard.py",
+                            detail=f"Check failed with exception: {e}",
+                            severity="error",
+                        )
+                    )
     else:
         for check in checks_to_run:
             try:
                 all_issues.extend(check.run(root, config))
             except Exception as e:
-                all_issues.append(Issue(
-                    check="engine",
-                    file="drift_guard.py",
-                    detail=f"Check failed with exception: {e}",
-                    severity="error",
-                ))
+                all_issues.append(
+                    Issue(
+                        check="engine",
+                        file="drift_guard.py",
+                        detail=f"Check failed with exception: {e}",
+                        severity="error",
+                    )
+                )
 
     errors = sum(1 for i in all_issues if i.severity == "error")
     warns = sum(1 for i in all_issues if i.severity == "warn")

@@ -16,10 +16,14 @@ class TestConfigSyncCheck:
         src = tmp_path / "src" / "drifter"
         src.mkdir(parents=True)
         config_py = src / "config.py"
-        config_py.write_text('DEFAULT_CONFIG = {"checks": [{"name": "stale_reference"}]}\n')
+        config_py.write_text(
+            'DEFAULT_CONFIG = {"checks": [{"name": "stale_reference"}]}\n'
+        )
         # Create drifter.toml with matching check
         drifter_toml = tmp_path / "drifter.toml"
-        drifter_toml.write_text('[drifter]\n[[drifter.checks]]\nname = "stale_reference"\n')
+        drifter_toml.write_text(
+            '[drifter]\n[[drifter.checks]]\nname = "stale_reference"\n'
+        )
         check = ConfigSyncCheck()
         issues = check.run(tmp_path, config)
         assert len(issues) == 0

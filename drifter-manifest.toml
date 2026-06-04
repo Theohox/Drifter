@@ -43,14 +43,14 @@ required_dirs = [
 
 [tree.src.drifter]
 "__init__.py" = { layer = "package", max_lines = 50, purpose = "Package init" }
-"cli.py" = { layer = "cli", max_lines = 550, imports = ["config", "checks", "conductor", "doc_validator", "pre_flight", "reporters"] }
+"cli.py" = { layer = "cli", max_lines = 570, imports = ["config", "checks", "conductor", "doc_validator", "pre_flight", "reporters"] }
 "config.py" = { layer = "core", max_lines = 220, purpose = "Config loader" }
 "conductor.py" = { layer = "core", max_lines = 300, purpose = "Conductor manager" }
 "_conductor_helpers.py" = { layer = "core", max_lines = 150, purpose = "Conductor helpers" }
 "doc_validator.py" = { layer = "core", max_lines = 150, purpose = "Doc validator" }
-"_doc_validate.py" = { layer = "core", max_lines = 140, purpose = "Doc validation internals" }
-"drift_guard.py" = { layer = "engine", max_lines = 110, purpose = "Check runner" }
-"pre_flight.py" = { layer = "core", max_lines = 230, purpose = "Pre-flight runner" }
+"_doc_validate.py" = { layer = "core", max_lines = 180, purpose = "Doc validation internals" }
+"drift_guard.py" = { layer = "engine", max_lines = 120, purpose = "Check runner" }
+"pre_flight.py" = { layer = "core", max_lines = 270, purpose = "Pre-flight runner" }
 "shell_guard.py" = { layer = "core", max_lines = 200, purpose = "Command classifier" }
 "errors.py" = { layer = "core", max_lines = 50, purpose = "Enforcement exceptions" }
 "plugin_api.py" = { layer = "core", max_lines = 80, purpose = "Plugin interceptor API" }
@@ -58,18 +58,19 @@ required_dirs = [
 "history_reader.py" = { layer = "core", max_lines = 150, purpose = "Cross-platform shell history reader" }
 "_hook_commands.py" = { layer = "core", max_lines = 100, purpose = "Git hook install/uninstall helpers" }
 "_toml_utils.py" = { layer = "core", max_lines = 50, purpose = "Safe TOML loading" }
+"__main__.py" = { layer = "cli", max_lines = 10, purpose = "Module entry point for python -m drifter" }
 
 [tree.src.drifter.checks]
 "__init__.py" = { layer = "checks", max_lines = 100, purpose = "Check registry" }
 "_base.py" = { layer = "checks", max_lines = 50, purpose = "Protocol and dataclasses" }
-"agent_behavior.py" = { layer = "checks", max_lines = 130, purpose = "Agent behavior checks" }
-"code_quality.py" = { layer = "checks", max_lines = 220, purpose = "Code quality checks" }
-"docs.py" = { layer = "checks", max_lines = 300, purpose = "Documentation checks" }
-"project.py" = { layer = "checks", max_lines = 320, purpose = "Project state checks" }
-"security.py" = { layer = "checks", max_lines = 230, purpose = "Security checks" }
-"structure.py" = { layer = "checks", max_lines = 300, purpose = "Manifest structural checks" }
-"sync.py" = { layer = "checks", max_lines = 470, purpose = "Sync verification checks" }
-"config_sync.py" = { layer = "checks", max_lines = 120, purpose = "Config sync check" }
+"agent_behavior.py" = { layer = "checks", max_lines = 165, purpose = "Agent behavior checks" }
+"code_quality.py" = { layer = "checks", max_lines = 260, purpose = "Code quality checks" }
+"docs.py" = { layer = "checks", max_lines = 320, purpose = "Documentation checks" }
+"project.py" = { layer = "checks", max_lines = 380, purpose = "Project state checks" }
+"security.py" = { layer = "checks", max_lines = 280, purpose = "Security checks" }
+"structure.py" = { layer = "checks", max_lines = 330, purpose = "Manifest structural checks" }
+"sync.py" = { layer = "checks", max_lines = 520, purpose = "Sync verification checks" }
+"config_sync.py" = { layer = "checks", max_lines = 150, purpose = "Config sync check" }
 "behavioral.py" = { layer = "checks", max_lines = 180, purpose = "Behavioral audit checks" }
 
 [tree.src.drifter.reporters]
@@ -126,6 +127,7 @@ required_dirs = [
 "test_mcp_server.py" = { tests = "mcp_server" }
 "test__hook_commands.py" = { tests = "hook_commands" }
 "test__toml_utils.py" = { tests = "toml_utils" }
+"test___main__.py" = { tests = "main_entry_point" }
 "test_pipeline_integrity.py" = { tests = "pipeline_integrity" }
 "test_checks_security.py" = { tests = "security_checks" }
 "__init__.py" = { type = "package" }

@@ -19,7 +19,7 @@ class TestCliOutputCheck:
         cli = tmp_path / "src" / "drifter" / "cli.py"
         cli.parent.mkdir(parents=True)
         cli.write_text(
-            'def cmd_init(args):\n'
+            "def cmd_init(args):\n"
             '    print("AGENTS.md")\n'
             '    print("session-protocol.md")\n'
             '    print("project-conductor.md")\n'
@@ -33,7 +33,7 @@ class TestCliOutputCheck:
         cli = tmp_path / "src" / "drifter" / "cli.py"
         cli.parent.mkdir(parents=True)
         cli.write_text(
-            'def cmd_init(args):\n'
+            "def cmd_init(args):\n"
             '    print("AGENTS.md")\n'
             '    print("dangerous_patterns.toml")\n'
             '    print("session-protocol.md")\n'
@@ -89,14 +89,18 @@ class TestTreeIntegrityCheck:
         manifest.write_text('[tree.src]\n"missing.py" = {}\n')
         check = TreeIntegrityCheck()
         issues = check.run(tmp_path, config)
-        assert any("missing.py" in i.file and "missing from disk" in i.detail for i in issues)
+        assert any(
+            "missing.py" in i.file and "missing from disk" in i.detail for i in issues
+        )
 
 
 class TestFileSizeCheck:
     def test_oversized_file(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
         manifest = tmp_path / "drifter-manifest.toml"
-        manifest.write_text('[structure]\nmax_file_lines = 5\n[tree.src]\n"big.py" = {}\n')
+        manifest.write_text(
+            '[structure]\nmax_file_lines = 5\n[tree.src]\n"big.py" = {}\n'
+        )
         src = tmp_path / "src"
         src.mkdir()
         big = src / "big.py"
@@ -109,7 +113,9 @@ class TestFileSizeCheck:
     def test_file_within_limit(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
         manifest = tmp_path / "drifter-manifest.toml"
-        manifest.write_text('[structure]\nmax_file_lines = 100\n[tree.src]\n"small.py" = {}\n')
+        manifest.write_text(
+            '[structure]\nmax_file_lines = 100\n[tree.src]\n"small.py" = {}\n'
+        )
         src = tmp_path / "src"
         src.mkdir()
         small = src / "small.py"
@@ -134,7 +140,7 @@ class TestClaimSyncCheck:
         config = Config.load(root=tmp_path)
         manifest = tmp_path / "drifter-manifest.toml"
         manifest.write_text(
-            '[checks]\ncount = 42\n'
+            "[checks]\ncount = 42\n"
             '[claims]\n"README.md" = [{ pattern = "{count} checks", value = "checks.count" }]\n'
         )
         readme = tmp_path / "README.md"
@@ -148,7 +154,7 @@ class TestClaimSyncCheck:
         config = Config.load(root=tmp_path)
         manifest = tmp_path / "drifter-manifest.toml"
         manifest.write_text(
-            '[checks]\ncount = 5\n'
+            "[checks]\ncount = 5\n"
             '[claims]\n"README.md" = [{ pattern = "{count} checks", value = "checks.count" }]\n'
         )
         readme = tmp_path / "README.md"

@@ -5,7 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 
 from drifter.config import Config
-from drifter.checks.security import CredentialLeakCheck, DangerousPatternsCheck, GitSafetyCheck
+from drifter.checks.security import (
+    CredentialLeakCheck,
+    DangerousPatternsCheck,
+    GitSafetyCheck,
+)
 
 
 class TestGitSafetyCheck:
@@ -42,7 +46,7 @@ class TestGitSafetyCheck:
         config = Config.load(root=tmp_path)
         src = tmp_path / "src" / "main.py"
         src.parent.mkdir(parents=True)
-        src.write_text('# git commit is blocked\n')
+        src.write_text("# git commit is blocked\n")
         check = GitSafetyCheck()
         issues = check.run(tmp_path, config)
         assert len(issues) == 0
@@ -142,7 +146,7 @@ class TestCredentialLeakCheck:
         config = Config.load(root=tmp_path)
         src = tmp_path / "src" / "main.py"
         src.parent.mkdir(parents=True)
-        src.write_text('-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA...\n')
+        src.write_text("-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA...\n")
         check = CredentialLeakCheck()
         issues = check.run(tmp_path, config)
         assert any("Private key" in i.detail for i in issues)

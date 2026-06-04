@@ -15,7 +15,6 @@ from drifter.session_logger import SessionLogger
 class TestNoRushCheck:
     def test_zero_writes_no_issue(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
-        logger = SessionLogger(root=tmp_path)
         # No entries
         check = NoRushCheck()
         issues = check.run(tmp_path, config)

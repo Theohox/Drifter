@@ -97,7 +97,9 @@ class SessionLogger:
                         expected = self._sign(body)
                         if hmac.compare_digest(expected, sig):
                             ts, pid_str, action, target = body.split("|", 3)
-                            entries.append(LogEntry(ts, action, target, int(pid_str), True))
+                            entries.append(
+                                LogEntry(ts, action, target, int(pid_str), True)
+                            )
                         # else: tampered entry — silently skip
                         continue
                 # Legacy format: [timestamp] action target

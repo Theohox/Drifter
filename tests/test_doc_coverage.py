@@ -11,7 +11,9 @@ class TestDocCoverageCheck:
         config = Config.load(root=tmp_path)
         # Create AGENTS.md without any module mentions
         agents = tmp_path / "AGENTS.md"
-        agents.write_text("# Agent Contract\n\n## 2. Architecture\n\n| Component | Location |\n|---|---|\n")
+        agents.write_text(
+            "# Agent Contract\n\n## 2. Architecture\n\n| Component | Location |\n|---|---|\n"
+        )
         # Create src/drifter/fancy_module.py
         src = tmp_path / "src" / "drifter"
         src.mkdir(parents=True)
@@ -58,11 +60,12 @@ class TestDocCoverageCheck:
         (src / "__init__.py").write_text("")
         agents = tmp_path / "AGENTS.md"
         agents.write_text(
-            "# Agent Contract\n\n## 9. Quick Reference\n\n"
-            "```bash\ndrifter check\n```\n"
+            "# Agent Contract\n\n## 9. Quick Reference\n\n```bash\ndrifter check\n```\n"
         )
         readme = tmp_path / "README.md"
-        readme.write_text("# Project\n\nenforcement dangerous_patterns session audit pre-flight conductor\n")
+        readme.write_text(
+            "# Project\n\nenforcement dangerous_patterns session audit pre-flight conductor\n"
+        )
 
         check = DocCoverageCheck()
         issues = check.run(tmp_path, config)
@@ -83,7 +86,9 @@ class TestDocCoverageCheck:
             "```bash\ndrifter check\ndrifter preflight\n```\n"
         )
         readme = tmp_path / "README.md"
-        readme.write_text("# Project\n\nenforcement dangerous_patterns session audit pre-flight conductor\n")
+        readme.write_text(
+            "# Project\n\nenforcement dangerous_patterns session audit pre-flight conductor\n"
+        )
 
         check = DocCoverageCheck()
         issues = check.run(tmp_path, config)
@@ -97,8 +102,7 @@ class TestDocCoverageCheck:
         (src / "__init__.py").write_text("")
         agents = tmp_path / "AGENTS.md"
         agents.write_text(
-            "# Agent Contract\n\n## 9. Quick Reference\n\n"
-            "```bash\ndrifter check\n```\n"
+            "# Agent Contract\n\n## 9. Quick Reference\n\n```bash\ndrifter check\n```\n"
         )
         readme = tmp_path / "README.md"
         readme.write_text("# Project\n\nSome text.\n")
@@ -114,22 +118,28 @@ class TestDocCoverageCheck:
         (tmp_path / "dangerous_patterns.toml").write_text("[git]\nalways_block = []\n")
         templates = tmp_path / "templates"
         templates.mkdir()
-        (templates / "dangerous_patterns.toml.tmpl").write_text("[git]\nalways_block = [\"git commit\"]\n")
+        (templates / "dangerous_patterns.toml.tmpl").write_text(
+            '[git]\nalways_block = ["git commit"]\n'
+        )
         src = tmp_path / "src" / "drifter"
         src.mkdir(parents=True)
         (src / "cli.py").write_text("subparsers.add_parser('check')\n")
         (src / "__init__.py").write_text("")
         agents = tmp_path / "AGENTS.md"
         agents.write_text(
-            "# Agent Contract\n\n## 9. Quick Reference\n\n"
-            "```bash\ndrifter check\n```\n"
+            "# Agent Contract\n\n## 9. Quick Reference\n\n```bash\ndrifter check\n```\n"
         )
         readme = tmp_path / "README.md"
-        readme.write_text("# Project\n\nenforcement dangerous_patterns session audit pre-flight conductor\n")
+        readme.write_text(
+            "# Project\n\nenforcement dangerous_patterns session audit pre-flight conductor\n"
+        )
 
         check = DocCoverageCheck()
         issues = check.run(tmp_path, config)
-        assert any("dangerous_patterns.toml" in i.file and "diverges from template" in i.detail for i in issues)
+        assert any(
+            "dangerous_patterns.toml" in i.file and "diverges from template" in i.detail
+            for i in issues
+        )
 
     def test_template_in_sync(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
@@ -137,19 +147,25 @@ class TestDocCoverageCheck:
         (tmp_path / "dangerous_patterns.toml").write_text("[git]\nalways_block = []\n")
         templates = tmp_path / "templates"
         templates.mkdir()
-        (templates / "dangerous_patterns.toml.tmpl").write_text("[git]\nalways_block = []\n")
+        (templates / "dangerous_patterns.toml.tmpl").write_text(
+            "[git]\nalways_block = []\n"
+        )
         src = tmp_path / "src" / "drifter"
         src.mkdir(parents=True)
         (src / "cli.py").write_text("subparsers.add_parser('check')\n")
         (src / "__init__.py").write_text("")
         agents = tmp_path / "AGENTS.md"
         agents.write_text(
-            "# Agent Contract\n\n## 9. Quick Reference\n\n"
-            "```bash\ndrifter check\n```\n"
+            "# Agent Contract\n\n## 9. Quick Reference\n\n```bash\ndrifter check\n```\n"
         )
         readme = tmp_path / "README.md"
-        readme.write_text("# Project\n\nenforcement dangerous_patterns session audit pre-flight conductor\n")
+        readme.write_text(
+            "# Project\n\nenforcement dangerous_patterns session audit pre-flight conductor\n"
+        )
 
         check = DocCoverageCheck()
         issues = check.run(tmp_path, config)
-        assert not any("dangerous_patterns.toml" in i.file and "diverges from template" in i.detail for i in issues)
+        assert not any(
+            "dangerous_patterns.toml" in i.file and "diverges from template" in i.detail
+            for i in issues
+        )

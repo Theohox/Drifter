@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from drifter.checks._base import Check, Issue
+from drifter.checks._base import Check, Issue as Issue
 from drifter.checks.agent_behavior import AgentSelfAuditCheck, GitCommitApprovalCheck
 from drifter.checks.behavioral import (
     DriftCheckAfterWriteCheck,
@@ -35,7 +35,12 @@ from drifter.checks.security import (
     GitignoreCheck,
 )
 from drifter.checks.config_sync import ConfigSyncCheck
-from drifter.checks.structure import ClaimSyncCheck, FileSizeCheck, ManifestSyncCheck, TreeIntegrityCheck
+from drifter.checks.structure import (
+    ClaimSyncCheck,
+    FileSizeCheck,
+    ManifestSyncCheck,
+    TreeIntegrityCheck,
+)
 from drifter.checks.sync import (
     ArchitectureDocSyncCheck,
     AuditCoverageCheck,

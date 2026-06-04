@@ -108,13 +108,7 @@ class TestArchiveIntegrityCheck:
         config = Config.load(root=tmp_path)
         archive = tmp_path / "docs" / "archive" / "FEAT-001-foundation.md"
         archive.parent.mkdir(parents=True)
-        archive.write_text(
-            "---\n"
-            "type: backlog\n"
-            "task_id: FEAT-001\n"
-            "---\n\n"
-            "# FEAT-001\n"
-        )
+        archive.write_text("---\ntype: backlog\ntask_id: FEAT-001\n---\n\n# FEAT-001\n")
         check = ArchiveIntegrityCheck()
         issues = check.run(tmp_path, config)
         assert len(issues) == 1
@@ -124,13 +118,7 @@ class TestArchiveIntegrityCheck:
         config = Config.load(root=tmp_path)
         archive = tmp_path / "docs" / "archive" / "FEAT-001-foundation.md"
         archive.parent.mkdir(parents=True)
-        archive.write_text(
-            "---\n"
-            "type: archive\n"
-            "task_id: WRONG-ID\n"
-            "---\n\n"
-            "# FEAT-001\n"
-        )
+        archive.write_text("---\ntype: archive\ntask_id: WRONG-ID\n---\n\n# FEAT-001\n")
         check = ArchiveIntegrityCheck()
         issues = check.run(tmp_path, config)
         assert len(issues) == 1

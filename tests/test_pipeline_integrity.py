@@ -34,7 +34,10 @@ class TestPipelineIntegrityCheck:
         )
         check = PipelineIntegrityCheck()
         issues = check.run(tmp_path, config)
-        assert any("FOO-001" in i.detail and "both Active and Blocked" in i.detail for i in issues)
+        assert any(
+            "FOO-001" in i.detail and "both Active and Blocked" in i.detail
+            for i in issues
+        )
 
     def test_task_in_active_and_future(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
@@ -50,7 +53,10 @@ class TestPipelineIntegrityCheck:
         )
         check = PipelineIntegrityCheck()
         issues = check.run(tmp_path, config)
-        assert any("FOO-001" in i.detail and "both Active and Future" in i.detail for i in issues)
+        assert any(
+            "FOO-001" in i.detail and "both Active and Future" in i.detail
+            for i in issues
+        )
 
     def test_missing_depends_on_reference(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
@@ -62,7 +68,9 @@ class TestPipelineIntegrityCheck:
         )
         check = PipelineIntegrityCheck()
         issues = check.run(tmp_path, config)
-        assert any("BAR-999" in i.detail and "does not exist" in i.detail for i in issues)
+        assert any(
+            "BAR-999" in i.detail and "does not exist" in i.detail for i in issues
+        )
 
     def test_circular_dependency(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
@@ -101,7 +109,9 @@ class TestPipelineIntegrityCheck:
         )
         check = PipelineIntegrityCheck()
         issues = check.run(tmp_path, config)
-        assert any("FOO-001" in i.detail and "empty 'Blocked On'" in i.detail for i in issues)
+        assert any(
+            "FOO-001" in i.detail and "empty 'Blocked On'" in i.detail for i in issues
+        )
 
     def test_completed_task_empty_evidence(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
@@ -114,7 +124,9 @@ class TestPipelineIntegrityCheck:
         )
         check = PipelineIntegrityCheck()
         issues = check.run(tmp_path, config)
-        assert any("FOO-001" in i.detail and "empty evidence" in i.detail for i in issues)
+        assert any(
+            "FOO-001" in i.detail and "empty evidence" in i.detail for i in issues
+        )
 
     def test_valid_conductor_passes(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)

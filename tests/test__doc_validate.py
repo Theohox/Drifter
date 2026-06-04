@@ -26,6 +26,8 @@ class TestValidateSingle:
 
     def test_valid_frontmatter_passes(self, tmp_path: Path) -> None:
         doc = tmp_path / "readme.md"
-        doc.write_text("---\ntype: guide\nstatus: active\ntitle: T\ncreated: '2026-01-01'\nupdated: '2026-01-01'\n---\n# Hello\n")
+        doc.write_text(
+            "---\ntype: guide\nstatus: active\ntitle: T\ncreated: '2026-01-01'\nupdated: '2026-01-01'\n---\n# Hello\n"
+        )
         issues = _validate_single(doc, tmp_path)
         assert len(issues) == 0

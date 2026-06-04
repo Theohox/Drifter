@@ -8,7 +8,9 @@ class TestConsoleReporter:
     def test_report_formats_issues(self) -> None:
         reporter = ConsoleReporter()
         issues = [
-            Issue(check="test", file="foo.py", detail="something wrong", severity="error"),
+            Issue(
+                check="test", file="foo.py", detail="something wrong", severity="error"
+            ),
             Issue(check="test2", file="bar.py", detail="warning here", severity="warn"),
         ]
         output = reporter.report(issues)

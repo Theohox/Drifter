@@ -67,13 +67,20 @@ class Conductor:
             if in_history:
                 if line.strip().startswith("## "):
                     break
-                if line.strip().startswith("|") and "Timestamp" not in line and "---" not in line:
+                if (
+                    line.strip().startswith("|")
+                    and "Timestamp" not in line
+                    and "---" not in line
+                ):
                     if "—" not in line:
                         last_data_idx = i
         if header_idx < 0:
             return
         sep_idx = -1
-        for i in range(header_idx, min(last_data_idx + 2 if last_data_idx >= 0 else len(lines), len(lines))):
+        for i in range(
+            header_idx,
+            min(last_data_idx + 2 if last_data_idx >= 0 else len(lines), len(lines)),
+        ):
             if "|---" in lines[i] or "| -" in lines[i]:
                 sep_idx = i
                 break
@@ -105,7 +112,11 @@ class Conductor:
                 "status": task_match.group(3).strip(),
                 "evidence": task_match.group(4).strip(),
             }
-        return {"phase": phase, "active_task": task, "file": str(self.path.relative_to(self.root))}
+        return {
+            "phase": phase,
+            "active_task": task,
+            "file": str(self.path.relative_to(self.root)),
+        }
 
     def mark_done(self, task_id: str, evidence: str) -> bool:
         if not self.exists():
@@ -121,9 +132,14 @@ class Conductor:
         task_name = task_match.group(2).strip()
         phase_match = re.search(r"phase:\s*(\d+)", text)
         phase = phase_match.group(1) if phase_match else "0"
-        archive_path = create_archive_file(self.root, task_id, task_name, evidence, phase)
+        archive_path = create_archive_file(
+            self.root, task_id, task_name, evidence, phase
+        )
         archive_rel = f"archive/{archive_path.name}" if archive_path else ""
-        old_pattern = re.compile(r"(\*\*Status\*\*\s*\|\s*)(.+?)(\n.*?\*\*Evidence\*\*\s*\|\s*)(.*?)(\n)", re.DOTALL)
+        old_pattern = re.compile(
+            r"(\*\*Status\*\*\s*\|\s*)(.+?)(\n.*?\*\*Evidence\*\*\s*\|\s*)(.*?)(\n)",
+            re.DOTALL,
+        )
 
         def replacer(m: re.Match[str]) -> str:
             return f"{m.group(1)}✅ COMPLETE{m.group(3)}{evidence}{m.group(5)}"
@@ -146,12 +162,21 @@ class Conductor:
             if in_completed:
                 if line.strip().startswith("## "):
                     break
-                if line.strip().startswith("|") and "| ID |" not in line and "---" not in line:
+                if (
+                    line.strip().startswith("|")
+                    and "| ID |" not in line
+                    and "---" not in line
+                ):
                     if "—" not in line:
                         last_data_idx = i
         if header_idx >= 0:
             sep_idx = -1
-            for i in range(header_idx, min(last_data_idx + 2 if last_data_idx >= 0 else len(lines), len(lines))):
+            for i in range(
+                header_idx,
+                min(
+                    last_data_idx + 2 if last_data_idx >= 0 else len(lines), len(lines)
+                ),
+            ):
                 if "|---" in lines[i] or "| -" in lines[i]:
                     sep_idx = i
                     break
@@ -179,13 +204,20 @@ class Conductor:
             if in_blocked:
                 if line.strip().startswith("## "):
                     break
-                if line.strip().startswith("|") and "| ID |" not in line and "---" not in line:
+                if (
+                    line.strip().startswith("|")
+                    and "| ID |" not in line
+                    and "---" not in line
+                ):
                     if "—" not in line:
                         last_data_idx = i
         if header_idx < 0:
             return False
         sep_idx = -1
-        for i in range(header_idx, min(last_data_idx + 2 if last_data_idx >= 0 else len(lines), len(lines))):
+        for i in range(
+            header_idx,
+            min(last_data_idx + 2 if last_data_idx >= 0 else len(lines), len(lines)),
+        ):
             if "|---" in lines[i] or "| -" in lines[i]:
                 sep_idx = i
                 break
@@ -216,9 +248,15 @@ class Conductor:
     def init(self, force: bool = False) -> Path:
         if self.exists() and not force:
             return self.path
-        template_path = Path(__file__).parent.parent.parent / "templates" / "project-conductor.md.tmpl"
+        template_path = (
+            Path(__file__).parent.parent.parent
+            / "templates"
+            / "project-conductor.md.tmpl"
+        )
         if not template_path.exists():
-            template_path = Path(__file__).parent.parent / "templates" / "project-conductor.md.tmpl"
+            template_path = (
+                Path(__file__).parent.parent / "templates" / "project-conductor.md.tmpl"
+            )
         if template_path.exists():
             content = template_path.read_text(encoding="utf-8")
         else:

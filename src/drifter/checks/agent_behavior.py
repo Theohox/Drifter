@@ -6,9 +6,10 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from drifter._toml_utils import safe_load_toml
-from drifter.checks._base import Check, Issue
+from drifter.checks._base import Issue
 from drifter.config import Config
 from drifter.history_reader import HistoryReader
+
 
 class AgentSelfAuditCheck:
     """Scan agent shell history for dangerous commands."""
@@ -23,12 +24,14 @@ class AgentSelfAuditCheck:
 
         data = safe_load_toml(patterns_file)
         if data is None:
-            issues.append(Issue(
-                check=self.name,
-                file="dangerous_patterns.toml",
-                detail="Cannot parse dangerous_patterns.toml — file may be corrupted",
-                severity="error",
-            ))
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file="dangerous_patterns.toml",
+                    detail="Cannot parse dangerous_patterns.toml — file may be corrupted",
+                    severity="error",
+                )
+            )
             return issues
 
         agent_rules = data.get("agent", {})
@@ -38,7 +41,7 @@ class AgentSelfAuditCheck:
         if not config.history_path:
             return issues
         reader = HistoryReader(Path(config.history_path).expanduser())
-        if not reader.path.exists():
+        if reader.path is None or not reader.path.exists():
             return issues
 
         # Wrap history read in a timeout to avoid DoS from huge files
@@ -47,12 +50,14 @@ class AgentSelfAuditCheck:
                 future = executor.submit(reader.read_commands, max_entries=50)
                 recent = future.result(timeout=10)
         except Exception:
-            issues.append(Issue(
-                check=self.name,
-                file=str(reader.path),
-                detail="Timeout reading shell history — file may be too large",
-                severity="warn",
-            ))
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file=str(reader.path),
+                    detail="Timeout reading shell history — file may be too large",
+                    severity="warn",
+                )
+            )
             return issues
 
         for line in recent:
@@ -62,11 +67,26 @@ class AgentSelfAuditCheck:
             lower = line.lower()
             for pattern in always_report:
                 if pattern.lower() in lower:
-                    issues.append(Issue(check=self.name, file=str(reader.path), detail=f"Agent ran '{pattern}' without approval: '{line[:80]}'", severity="error"))
+                    issues.append(
+                        Issue(
+                            check=self.name,
+                            file=str(reader.path),
+                            detail=f"Agent ran '{pattern}' without approval: '{line[:80]}'",
+                            severity="error",
+                        )
+                    )
             for pattern in approval_required:
                 if pattern.lower() in lower:
-                    issues.append(Issue(check=self.name, file=str(reader.path), detail=f"Agent ran '{pattern}' without logged approval: '{line[:80]}'", severity="warn"))
+                    issues.append(
+                        Issue(
+                            check=self.name,
+                            file=str(reader.path),
+                            detail=f"Agent ran '{pattern}' without logged approval: '{line[:80]}'",
+                            severity="warn",
+                        )
+                    )
         return issues
+
 
 class GitCommitApprovalCheck:
     """Verify recent commits have approval markers.
@@ -88,14 +108,25 @@ class GitCommitApprovalCheck:
             # Verify root is actually a git repo before checking log
             repo_check = subprocess.run(
                 ["git", "-C", str(root), "rev-parse", "--git-dir"],
-                capture_output=True, text=True, timeout=5,
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
             if repo_check.returncode != 0:
                 return issues
 
             result = subprocess.run(
-                ["git", "-C", str(root), "log", f"-{self.COMMIT_CHECK_WINDOW}", "--pretty=%H|%s|%B%x00"],
-                capture_output=True, text=True, timeout=5,
+                [
+                    "git",
+                    "-C",
+                    str(root),
+                    "log",
+                    f"-{self.COMMIT_CHECK_WINDOW}",
+                    "--pretty=%H|%s|%B%x00",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
             if result.returncode != 0:
                 return issues
@@ -115,12 +146,14 @@ class GitCommitApprovalCheck:
                     unapproved_destructive.append(f"{hash_short}: {subject}")
 
             if unapproved_destructive:
-                issues.append(Issue(
-                    check=self.name,
-                    file="git",
-                    detail=f"Unapproved destructive commits: {unapproved_destructive}",
-                    severity="error",
-                ))
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file="git",
+                        detail=f"Unapproved destructive commits: {unapproved_destructive}",
+                        severity="error",
+                    )
+                )
         except Exception:
             pass
         return issues

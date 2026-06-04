@@ -10,7 +10,6 @@ Resolves config from (in priority order):
 from __future__ import annotations
 
 import fnmatch
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -90,6 +89,7 @@ class CheckConfig:
 class IgnoreConfig:
     paths: list[str] = field(default_factory=list)
 
+
 @dataclass
 class Config:
     root: Path
@@ -100,7 +100,9 @@ class Config:
     ignore: IgnoreConfig = field(default_factory=IgnoreConfig)
 
     @classmethod
-    def load(cls, root: Path | None = None, overrides: dict[str, Any] | None = None) -> Config:
+    def load(
+        cls, root: Path | None = None, overrides: dict[str, Any] | None = None
+    ) -> Config:
         """Load configuration from defaults, files, and overrides."""
         raw = dict(DEFAULT_CONFIG)
 
@@ -173,7 +175,11 @@ class Config:
                 return True
             if pattern.endswith("/"):
                 dir_name = pattern.rstrip("/")
-                if dir_name in path.parts or f"/{dir_name}/" in str_path or str_path.endswith(f"/{dir_name}"):
+                if (
+                    dir_name in path.parts
+                    or f"/{dir_name}/" in str_path
+                    or str_path.endswith(f"/{dir_name}")
+                ):
                     return True
             elif fnmatch.fnmatch(path.name, pattern):
                 return True

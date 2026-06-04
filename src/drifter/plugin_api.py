@@ -10,7 +10,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from drifter.config import Config
-from drifter.errors import DangerousCommandError
 from drifter.session_logger import SessionLogger
 from drifter.shell_guard import Classification, ShellGuard
 

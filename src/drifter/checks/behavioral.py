@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from drifter.checks._base import Check, Issue
+from drifter.checks._base import Issue
 from drifter.config import Config
 from drifter.session_logger import SessionLogger
 
@@ -35,13 +35,18 @@ class ReadBeforeWriteCheck:
         written_without_read: set[str] = set()
         for entry in entries:
             if entry.action == "WRITE":
-                if entry.target not in read_targets and entry.target not in written_without_read:
-                    issues.append(Issue(
-                        check=self.name,
-                        file="session.log",
-                        detail=f"WRITE {entry.target} without preceding READ",
-                        severity="error",
-                    ))
+                if (
+                    entry.target not in read_targets
+                    and entry.target not in written_without_read
+                ):
+                    issues.append(
+                        Issue(
+                            check=self.name,
+                            file="session.log",
+                            detail=f"WRITE {entry.target} without preceding READ",
+                            severity="error",
+                        )
+                    )
                     written_without_read.add(entry.target)
         return issues
 
@@ -69,15 +74,19 @@ class TestAfterWriteCheck:
             return issues
 
         for entry in entries[last_write_idx + 1 :]:
-            if entry.action == "SHELL" and ("pytest" in entry.target or "python3 -m pytest" in entry.target):
+            if entry.action == "SHELL" and (
+                "pytest" in entry.target or "python3 -m pytest" in entry.target
+            ):
                 return issues
 
-        issues.append(Issue(
-            check=self.name,
-            file="session.log",
-            detail="Last WRITE not followed by a test run",
-            severity="error",
-        ))
+        issues.append(
+            Issue(
+                check=self.name,
+                file="session.log",
+                detail="Last WRITE not followed by a test run",
+                severity="error",
+            )
+        )
         return issues
 
 
@@ -99,12 +108,14 @@ class DriftCheckAfterWriteCheck:
             if entry.action in ("SHELL", "CHECK") and "drifter check" in entry.target:
                 return issues
 
-        issues.append(Issue(
-            check=self.name,
-            file="session.log",
-            detail="Last WRITE not followed by 'drifter check'",
-            severity="error",
-        ))
+        issues.append(
+            Issue(
+                check=self.name,
+                file="session.log",
+                detail="Last WRITE not followed by 'drifter check'",
+                severity="error",
+            )
+        )
         return issues
 
 
@@ -131,26 +142,32 @@ class NoRushCheck:
                 drift_count += 1
 
         if write_count > 0 and drift_count == 0:
-            issues.append(Issue(
-                check=self.name,
-                file="session.log",
-                detail=f"{write_count} WRITEs with zero 'drifter check' runs — session is rushing",
-                severity="error",
-            ))
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file="session.log",
+                    detail=f"{write_count} WRITEs with zero 'drifter check' runs — session is rushing",
+                    severity="error",
+                )
+            )
         elif write_count > 0:
             ratio = write_count / max(drift_count, 1)
             if ratio > 10:
-                issues.append(Issue(
-                    check=self.name,
-                    file="session.log",
-                    detail=f"{write_count} WRITEs vs {drift_count} drift checks (ratio {ratio:.1f}:1) — severe rushing (max 3:1)",
-                    severity="error",
-                ))
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file="session.log",
+                        detail=f"{write_count} WRITEs vs {drift_count} drift checks (ratio {ratio:.1f}:1) — severe rushing (max 3:1)",
+                        severity="error",
+                    )
+                )
             elif ratio > 3:
-                issues.append(Issue(
-                    check=self.name,
-                    file="session.log",
-                    detail=f"{write_count} WRITEs vs {drift_count} drift checks (ratio {ratio:.1f}:1) — max 3:1",
-                    severity="warn",
-                ))
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file="session.log",
+                        detail=f"{write_count} WRITEs vs {drift_count} drift checks (ratio {ratio:.1f}:1) — max 3:1",
+                        severity="warn",
+                    )
+                )
         return issues

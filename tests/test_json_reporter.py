@@ -10,7 +10,9 @@ class TestJsonReporter:
     def test_report_is_valid_json(self) -> None:
         reporter = JsonReporter()
         issues = [
-            Issue(check="test", file="foo.py", detail="something wrong", severity="error"),
+            Issue(
+                check="test", file="foo.py", detail="something wrong", severity="error"
+            ),
         ]
         output = reporter.report(issues)
         data = json.loads(output)

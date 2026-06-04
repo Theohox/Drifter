@@ -3,15 +3,15 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
-from typing import Any
 
 if sys.version_info >= (3, 11):
-    import tomllib
+    pass
 else:
-    import tomli as tomllib
+    pass
 
-from drifter.checks._base import Check, Issue
+from drifter.checks._base import Issue
 from drifter.config import Config
+
 
 class ArchitectureDocSyncCheck:
     """Verify architecture.md reflects current number of checks and CLI commands."""
@@ -43,25 +43,31 @@ class ArchitectureDocSyncCheck:
 
         listed_checks = len(re.findall(r"•\s+\w+Check", arch_text))
         if listed_checks > 0 and actual_checks != listed_checks:
-            issues.append(Issue(
-                check=self.name,
-                file="docs/architecture.md",
-                detail=f"lists {listed_checks} checks but checks package has {actual_checks}",
-                severity="warn",
-            ))
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file="docs/architecture.md",
+                    detail=f"lists {listed_checks} checks but checks package has {actual_checks}",
+                    severity="warn",
+                )
+            )
 
         cli_file = root / "src" / "drifter" / "cli.py"
         if cli_file.exists():
             cli_text = cli_file.read_text(encoding="utf-8")
-            actual_commands = len(re.findall(r'subparsers\.add_parser\("([^"]+)"', cli_text))
+            actual_commands = len(
+                re.findall(r'subparsers\.add_parser\(\s*"([^"]+)"', cli_text)
+            )
             listed_commands = len(re.findall(r"`drifter [\w-]+`", arch_text))
             if listed_commands > 0 and actual_commands != listed_commands:
-                issues.append(Issue(
-                    check=self.name,
-                    file="docs/architecture.md",
-                    detail=f"lists {listed_commands} CLI commands but cli.py has {actual_commands}",
-                    severity="warn",
-                ))
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file="docs/architecture.md",
+                        detail=f"lists {listed_commands} CLI commands but cli.py has {actual_commands}",
+                        severity="warn",
+                    )
+                )
 
         # Check templates/drifter.toml.tmpl for hardcoded check counts
         toml_tmpl = root / "templates" / "drifter.toml.tmpl"
@@ -71,14 +77,17 @@ class ArchitectureDocSyncCheck:
             if check_count_match:
                 listed = int(check_count_match.group(1))
                 if listed != actual_checks:
-                    issues.append(Issue(
-                        check=self.name,
-                        file="templates/drifter.toml.tmpl",
-                        detail=f"claims {listed} built-in checks but checks package has {actual_checks}",
-                        severity="warn",
-                    ))
+                    issues.append(
+                        Issue(
+                            check=self.name,
+                            file="templates/drifter.toml.tmpl",
+                            detail=f"claims {listed} built-in checks but checks package has {actual_checks}",
+                            severity="warn",
+                        )
+                    )
 
         return issues
+
 
 class PreFlightSyncCheck:
     """Verify pre_flight.py and session-protocol.md agree on step count and dangerous_patterns."""
@@ -97,15 +106,19 @@ class PreFlightSyncCheck:
         preflight_steps = len(re.findall(r"# Step \d+:", preflight_text))
 
         # Check pre_flight.py docstrings for step count consistency
-        for match in re.finditer(r"(\d+)-step pre-flight", preflight_text, re.IGNORECASE):
+        for match in re.finditer(
+            r"(\d+)-step pre-flight", preflight_text, re.IGNORECASE
+        ):
             listed = int(match.group(1))
             if listed != preflight_steps:
-                issues.append(Issue(
-                    check=self.name,
-                    file="src/drifter/pre_flight.py",
-                    detail=f"docstring claims {listed}-step pre-flight but file has {preflight_steps} steps",
-                    severity="warn",
-                ))
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file="src/drifter/pre_flight.py",
+                        detail=f"docstring claims {listed}-step pre-flight but file has {preflight_steps} steps",
+                        severity="warn",
+                    )
+                )
                 break
 
         # Check session-protocol.md
@@ -122,63 +135,82 @@ class PreFlightSyncCheck:
                 if in_preflight and re.match(r"^\d+\.\s+(READ|RUN|PICK|GREP)", line):
                     protocol_steps += 1
 
-            if preflight_steps != protocol_steps and preflight_steps > 0 and protocol_steps > 0:
-                issues.append(Issue(
-                    check=self.name,
-                    file="docs/session-protocol.md",
-                    detail=f"pre_flight.py has {preflight_steps} steps but protocol lists {protocol_steps}",
-                    severity="warn",
-                ))
+            if (
+                preflight_steps != protocol_steps
+                and preflight_steps > 0
+                and protocol_steps > 0
+            ):
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file="docs/session-protocol.md",
+                        detail=f"pre_flight.py has {preflight_steps} steps but protocol lists {protocol_steps}",
+                        severity="warn",
+                    )
+                )
 
             dp_in_protocol = "dangerous_patterns.toml" in protocol_text
             if not dp_in_protocol:
-                issues.append(Issue(
-                    check=self.name,
-                    file="docs/session-protocol.md",
-                    detail="does not mention dangerous_patterns.toml in pre-flight steps",
-                    severity="warn",
-                ))
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file="docs/session-protocol.md",
+                        detail="does not mention dangerous_patterns.toml in pre-flight steps",
+                        severity="warn",
+                    )
+                )
 
         # Check methodology.md for step count consistency
         methodology_file = root / "docs" / "methodology.md"
         if methodology_file.exists():
             methodology_text = methodology_file.read_text(encoding="utf-8")
-            for match in re.finditer(r"(\d+)-step pre-flight", methodology_text, re.IGNORECASE):
+            for match in re.finditer(
+                r"(\d+)-step pre-flight", methodology_text, re.IGNORECASE
+            ):
                 listed = int(match.group(1))
                 if listed != preflight_steps:
-                    issues.append(Issue(
-                        check=self.name,
-                        file="docs/methodology.md",
-                        detail=f"claims {listed}-step pre-flight but pre_flight.py has {preflight_steps} steps",
-                        severity="warn",
-                    ))
+                    issues.append(
+                        Issue(
+                            check=self.name,
+                            file="docs/methodology.md",
+                            detail=f"claims {listed}-step pre-flight but pre_flight.py has {preflight_steps} steps",
+                            severity="warn",
+                        )
+                    )
                     break
 
         # Check README.md for step count consistency
         readme_file = root / "README.md"
         if readme_file.exists():
             readme_text = readme_file.read_text(encoding="utf-8")
-            for match in re.finditer(r"(\d+)-step pre-flight", readme_text, re.IGNORECASE):
+            for match in re.finditer(
+                r"(\d+)-step pre-flight", readme_text, re.IGNORECASE
+            ):
                 listed = int(match.group(1))
                 if listed != preflight_steps:
-                    issues.append(Issue(
-                        check=self.name,
-                        file="README.md",
-                        detail=f"claims {listed}-step pre-flight but pre_flight.py has {preflight_steps} steps",
-                        severity="warn",
-                    ))
+                    issues.append(
+                        Issue(
+                            check=self.name,
+                            file="README.md",
+                            detail=f"claims {listed}-step pre-flight but pre_flight.py has {preflight_steps} steps",
+                            severity="warn",
+                        )
+                    )
                     break
 
         dp_in_preflight = "dangerous_patterns.toml" in preflight_text
         if not dp_in_preflight:
-            issues.append(Issue(
-                check=self.name,
-                file="src/drifter/pre_flight.py",
-                detail="does not verify dangerous_patterns.toml exists",
-                severity="warn",
-            ))
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file="src/drifter/pre_flight.py",
+                    detail="does not verify dangerous_patterns.toml exists",
+                    severity="warn",
+                )
+            )
 
         return issues
+
 
 class ReadmeCompletenessCheck:
     """Verify README.md mentions all canonical artifacts and CLI commands."""
@@ -202,12 +234,14 @@ class ReadmeCompletenessCheck:
         issues: list[Issue] = []
         readme = root / "README.md"
         if not readme.exists():
-            issues.append(Issue(
-                check=self.name,
-                file="README.md",
-                detail="README.md does not exist",
-                severity="warn",
-            ))
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file="README.md",
+                    detail="README.md does not exist",
+                    severity="warn",
+                )
+            )
             return issues
 
         # If README predates Drifter installation, be lenient — the user may not
@@ -232,14 +266,17 @@ class ReadmeCompletenessCheck:
         text = readme.read_text(encoding="utf-8")
         for mention in self._REQUIRED_MENTIONS:
             if mention not in text:
-                issues.append(Issue(
-                    check=self.name,
-                    file="README.md",
-                    detail=f"does not mention '{mention}'",
-                    severity="warn",
-                ))
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file="README.md",
+                        detail=f"does not mention '{mention}'",
+                        severity="warn",
+                    )
+                )
 
         return issues
+
 
 class CliOutputCheck:
     """Verify CLI output (especially init) mentions all canonical files."""
@@ -260,21 +297,26 @@ class CliOutputCheck:
             return issues
 
         cli_text = cli_file.read_text(encoding="utf-8")
-        init_match = re.search(r"def cmd_init\([^)]*\):(.*?)(?=\ndef |\nclass |\Z)", cli_text, re.DOTALL)
+        init_match = re.search(
+            r"def cmd_init\([^)]*\):(.*?)(?=\ndef |\nclass |\Z)", cli_text, re.DOTALL
+        )
         if not init_match:
             return issues
 
         init_text = init_match.group(1)
         for mention in self._REQUIRED_MENTIONS:
             if mention not in init_text:
-                issues.append(Issue(
-                    check=self.name,
-                    file="src/drifter/cli.py",
-                    detail=f"cmd_init output does not mention '{mention}'",
-                    severity="warn",
-                ))
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file="src/drifter/cli.py",
+                        detail=f"cmd_init output does not mention '{mention}'",
+                        severity="warn",
+                    )
+                )
 
         return issues
+
 
 class AuditCoverageCheck:
     """Verify cmd_audit handles all ShellGuard action types."""
@@ -298,21 +340,26 @@ class AuditCoverageCheck:
         action_values.discard("allow")
 
         # Find cmd_audit function
-        audit_match = re.search(r"def cmd_audit\(.*?\n(?=\ndef |\nclass |\Z)", cli_text, re.DOTALL)
+        audit_match = re.search(
+            r"def cmd_audit\(.*?\n(?=\ndef |\nclass |\Z)", cli_text, re.DOTALL
+        )
         if not audit_match:
             return issues
 
         audit_text = audit_match.group(0)
         for action in action_values:
             if f'"{action}"' not in audit_text:
-                issues.append(Issue(
-                    check=self.name,
-                    file="src/drifter/cli.py",
-                    detail=f"cmd_audit does not handle ShellGuard action '{action}'",
-                    severity="error",
-                ))
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file="src/drifter/cli.py",
+                        detail=f"cmd_audit does not handle ShellGuard action '{action}'",
+                        severity="error",
+                    )
+                )
 
         return issues
+
 
 class ReporterCompletenessCheck:
     """Verify console reporter handles all severity levels explicitly."""
@@ -329,7 +376,9 @@ class ReporterCompletenessCheck:
 
         # Find console formatter
         formatter_match = re.search(
-            r"def _format_issues_console\(.*?\n(?=\ndef |\nclass |\Z)", cli_text, re.DOTALL
+            r"def _format_issues_console\(.*?\n(?=\ndef |\nclass |\Z)",
+            cli_text,
+            re.DOTALL,
         )
         if not formatter_match:
             return issues
@@ -338,12 +387,14 @@ class ReporterCompletenessCheck:
         severities = ["error", "warn", "info"]
         for sev in severities:
             if sev not in formatter_text:
-                issues.append(Issue(
-                    check=self.name,
-                    file="src/drifter/cli.py",
-                    detail=f"_format_issues_console() does not reference severity '{sev}'",
-                    severity="error",
-                ))
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file="src/drifter/cli.py",
+                        detail=f"_format_issues_console() does not reference severity '{sev}'",
+                        severity="error",
+                    )
+                )
 
         return issues
 
@@ -388,38 +439,47 @@ class DocCoverageCheck:
                         continue
                     module_name = py_file.name
                     if module_name not in agents_text:
-                        issues.append(Issue(
-                            check=self.name,
-                            file="AGENTS.md",
-                            detail=f"does not mention module '{module_name}'",
-                            severity="warn",
-                        ))
+                        issues.append(
+                            Issue(
+                                check=self.name,
+                                file="AGENTS.md",
+                                detail=f"does not mention module '{module_name}'",
+                                severity="warn",
+                            )
+                        )
 
         # --- 2. AGENTS.md Quick Reference CLI coverage ---
         cli_file = root / "src" / "drifter" / "cli.py"
         if cli_file.exists() and agents_md.exists():
             cli_text = cli_file.read_text(encoding="utf-8")
             # Extract top-level subparser commands (exclude conductor_sub)
-            commands = re.findall(r'(?<!conductor_sub\.)add_parser\("([^"]+)"', cli_text)
+            commands = re.findall(
+                r'(?<!conductor_sub\.)add_parser\("([^"]+)"', cli_text
+            )
             # Also extract conductor sub-commands
-            conductor_subs = re.findall(r'conductor_sub\.add_parser\("([^"]+)"', cli_text)
-            all_commands = commands + conductor_subs
+            conductor_subs = re.findall(
+                r'conductor_sub\.add_parser\("([^"]+)"', cli_text
+            )
             for cmd in commands:
                 if f"drifter {cmd}" not in agents_text:
-                    issues.append(Issue(
-                        check=self.name,
-                        file="AGENTS.md",
-                        detail=f"Quick Reference missing CLI command 'drifter {cmd}'",
-                        severity="warn",
-                    ))
+                    issues.append(
+                        Issue(
+                            check=self.name,
+                            file="AGENTS.md",
+                            detail=f"Quick Reference missing CLI command 'drifter {cmd}'",
+                            severity="warn",
+                        )
+                    )
             for cmd in conductor_subs:
                 if f"drifter conductor {cmd}" not in agents_text:
-                    issues.append(Issue(
-                        check=self.name,
-                        file="AGENTS.md",
-                        detail=f"Quick Reference missing CLI command 'drifter conductor {cmd}'",
-                        severity="warn",
-                    ))
+                    issues.append(
+                        Issue(
+                            check=self.name,
+                            file="AGENTS.md",
+                            detail=f"Quick Reference missing CLI command 'drifter conductor {cmd}'",
+                            severity="warn",
+                        )
+                    )
 
         # --- 3. README.md feature coverage ---
         readme = root / "README.md"
@@ -427,24 +487,30 @@ class DocCoverageCheck:
             readme_text = readme.read_text(encoding="utf-8").lower()
             for feature in self._README_FEATURES:
                 if feature.lower() not in readme_text:
-                    issues.append(Issue(
-                        check=self.name,
-                        file="README.md",
-                        detail=f"does not mention feature '{feature}'",
-                        severity="warn",
-                    ))
+                    issues.append(
+                        Issue(
+                            check=self.name,
+                            file="README.md",
+                            detail=f"does not mention feature '{feature}'",
+                            severity="warn",
+                        )
+                    )
 
         # --- 4. Template sync ---
         for rendered_name, template_name in self._TEMPLATE_PAIRS:
             rendered = root / rendered_name
             template = root / template_name
             if rendered.exists() and template.exists():
-                if rendered.read_text(encoding="utf-8") != template.read_text(encoding="utf-8"):
-                    issues.append(Issue(
-                        check=self.name,
-                        file=rendered_name,
-                        detail=f"diverges from template '{template_name}'",
-                        severity="warn",
-                    ))
+                if rendered.read_text(encoding="utf-8") != template.read_text(
+                    encoding="utf-8"
+                ):
+                    issues.append(
+                        Issue(
+                            check=self.name,
+                            file=rendered_name,
+                            detail=f"diverges from template '{template_name}'",
+                            severity="warn",
+                        )
+                    )
 
         return issues

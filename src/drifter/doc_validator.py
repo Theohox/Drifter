@@ -34,7 +34,12 @@ def validate_docs(root: Path | None = None, config: Config | None = None) -> Doc
     for md_file in md_files:
         if config.is_ignored(md_file):
             continue
-        if md_file.parent == root and md_file.name in ("README.md", "AGENTS.md", "LICENSE", "CONTRIBUTING.md"):
+        if md_file.parent == root and md_file.name in (
+            "README.md",
+            "AGENTS.md",
+            "LICENSE",
+            "CONTRIBUTING.md",
+        ):
             continue
         issues.extend(_validate_single(md_file, root))
 

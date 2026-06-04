@@ -50,12 +50,32 @@ class TestGitCommitApprovalCheck:
     def test_missing_approval_marker_destructive(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
         import subprocess
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True, check=True)
-        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=str(tmp_path), capture_output=True, check=True)
-        subprocess.run(["git", "config", "user.name", "Test"], cwd=str(tmp_path), capture_output=True, check=True)
+
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True, check=True
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"],
+            cwd=str(tmp_path),
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test"],
+            cwd=str(tmp_path),
+            capture_output=True,
+            check=True,
+        )
         (tmp_path / "file.txt").write_text("hello")
-        subprocess.run(["git", "add", "."], cwd=str(tmp_path), capture_output=True, check=True)
-        subprocess.run(["git", "commit", "-m", "delete old files"], cwd=str(tmp_path), capture_output=True, check=True)
+        subprocess.run(
+            ["git", "add", "."], cwd=str(tmp_path), capture_output=True, check=True
+        )
+        subprocess.run(
+            ["git", "commit", "-m", "delete old files"],
+            cwd=str(tmp_path),
+            capture_output=True,
+            check=True,
+        )
 
         check = GitCommitApprovalCheck()
         issues = check.run(tmp_path, config)
@@ -65,12 +85,32 @@ class TestGitCommitApprovalCheck:
     def test_benign_commit_without_marker_ok(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
         import subprocess
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True, check=True)
-        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=str(tmp_path), capture_output=True, check=True)
-        subprocess.run(["git", "config", "user.name", "Test"], cwd=str(tmp_path), capture_output=True, check=True)
+
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True, check=True
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"],
+            cwd=str(tmp_path),
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test"],
+            cwd=str(tmp_path),
+            capture_output=True,
+            check=True,
+        )
         (tmp_path / "file.txt").write_text("hello")
-        subprocess.run(["git", "add", "."], cwd=str(tmp_path), capture_output=True, check=True)
-        subprocess.run(["git", "commit", "-m", "no approval"], cwd=str(tmp_path), capture_output=True, check=True)
+        subprocess.run(
+            ["git", "add", "."], cwd=str(tmp_path), capture_output=True, check=True
+        )
+        subprocess.run(
+            ["git", "commit", "-m", "no approval"],
+            cwd=str(tmp_path),
+            capture_output=True,
+            check=True,
+        )
 
         check = GitCommitApprovalCheck()
         issues = check.run(tmp_path, config)
@@ -79,12 +119,32 @@ class TestGitCommitApprovalCheck:
     def test_with_approval_marker(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
         import subprocess
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True, check=True)
-        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=str(tmp_path), capture_output=True, check=True)
-        subprocess.run(["git", "config", "user.name", "Test"], cwd=str(tmp_path), capture_output=True, check=True)
+
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True, check=True
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "test@test.com"],
+            cwd=str(tmp_path),
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test"],
+            cwd=str(tmp_path),
+            capture_output=True,
+            check=True,
+        )
         (tmp_path / "file.txt").write_text("hello")
-        subprocess.run(["git", "add", "."], cwd=str(tmp_path), capture_output=True, check=True)
-        subprocess.run(["git", "commit", "-m", "[APPROVED BY HOX] fix bug"], cwd=str(tmp_path), capture_output=True, check=True)
+        subprocess.run(
+            ["git", "add", "."], cwd=str(tmp_path), capture_output=True, check=True
+        )
+        subprocess.run(
+            ["git", "commit", "-m", "[APPROVED BY HOX] fix bug"],
+            cwd=str(tmp_path),
+            capture_output=True,
+            check=True,
+        )
 
         check = GitCommitApprovalCheck()
         issues = check.run(tmp_path, config)
@@ -130,17 +190,13 @@ class TestAuditCoverageCheck:
         cli = tmp_path / "src" / "drifter" / "cli.py"
         cli.parent.mkdir(parents=True)
         cli.write_text(
-            'def cmd_audit(args):\n'
+            "def cmd_audit(args):\n"
             '    if classification.action in ("block", "approval_required"):\n'
-            '        violations.append((line, classification))\n'
+            "        violations.append((line, classification))\n"
         )
         guard = tmp_path / "src" / "drifter" / "shell_guard.py"
         guard.parent.mkdir(parents=True, exist_ok=True)
-        guard.write_text(
-            'action="block"\n'
-            'action="approval_required"\n'
-            'action="warn"\n'
-        )
+        guard.write_text('action="block"\naction="approval_required"\naction="warn"\n')
         check = AuditCoverageCheck()
         issues = check.run(tmp_path, config)
         assert any("'warn'" in i.detail for i in issues)
@@ -150,17 +206,13 @@ class TestAuditCoverageCheck:
         cli = tmp_path / "src" / "drifter" / "cli.py"
         cli.parent.mkdir(parents=True)
         cli.write_text(
-            'def cmd_audit(args):\n'
+            "def cmd_audit(args):\n"
             '    if classification.action in ("block", "approval_required", "warn"):\n'
-            '        violations.append((line, classification))\n'
+            "        violations.append((line, classification))\n"
         )
         guard = tmp_path / "src" / "drifter" / "shell_guard.py"
         guard.parent.mkdir(parents=True, exist_ok=True)
-        guard.write_text(
-            'action="block"\n'
-            'action="approval_required"\n'
-            'action="warn"\n'
-        )
+        guard.write_text('action="block"\naction="approval_required"\naction="warn"\n')
         check = AuditCoverageCheck()
         issues = check.run(tmp_path, config)
         assert len(issues) == 0
@@ -172,8 +224,8 @@ class TestReporterCompletenessCheck:
         cli = tmp_path / "src" / "drifter" / "cli.py"
         cli.parent.mkdir(parents=True)
         cli.write_text(
-            'def _format_issues_console(issues, score=None):\n'
-            '    for issue in issues:\n'
+            "def _format_issues_console(issues, score=None):\n"
+            "    for issue in issues:\n"
             '        if issue.severity == "error":\n'
             '            print(f"ERROR: {issue}")\n'
             '        elif issue.severity == "warn":\n'
@@ -188,7 +240,7 @@ class TestReporterCompletenessCheck:
         cli = tmp_path / "src" / "drifter" / "cli.py"
         cli.parent.mkdir(parents=True)
         cli.write_text(
-            'def _format_issues_console(issues, score=None):\n'
+            "def _format_issues_console(issues, score=None):\n"
             '    errors = [i for i in issues if i.severity == "error"]\n'
             '    warns = [i for i in issues if i.severity == "warn"]\n'
             '    infos = [i for i in issues if i.severity == "info"]\n'

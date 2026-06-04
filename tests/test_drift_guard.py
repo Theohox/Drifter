@@ -24,9 +24,13 @@ type: backlog
 | 1 | Task |
 """)
         patterns = tmp_path / "dangerous_patterns.toml"
-        patterns.write_text("[git]\nalways_block = [\"git commit\"]\n[shell]\nblocked = []\n")
+        patterns.write_text(
+            '[git]\nalways_block = ["git commit"]\n[shell]\nblocked = []\n'
+        )
         agents = tmp_path / "AGENTS.md"
-        agents.write_text("# AGENTS.md\n\nRead dangerous_patterns.toml before running commands.\n")
+        agents.write_text(
+            "# AGENTS.md\n\nRead dangerous_patterns.toml before running commands.\n"
+        )
         readme = tmp_path / "README.md"
         readme.write_text(
             "# Project\n"

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from drifter.session_logger import LogEntry, SessionLogger
+from drifter.session_logger import SessionLogger
 
 
 class TestSessionLogger:
@@ -53,7 +53,9 @@ class TestSessionLogger:
     def test_legacy_format_fallback(self, tmp_path: Path) -> None:
         log_file = tmp_path / "session.log"
         log_file.parent.mkdir(parents=True, exist_ok=True)
-        log_file.write_text("[2026-01-01T00:00:00+00:00] READ src/legacy.py\n", encoding="utf-8")
+        log_file.write_text(
+            "[2026-01-01T00:00:00+00:00] READ src/legacy.py\n", encoding="utf-8"
+        )
         logger = SessionLogger(path=log_file)
         entries = logger.read_entries()
         assert len(entries) == 1

@@ -10,7 +10,6 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import pytest
 
 # Mock fastmcp before importing the server
 _fake_fastmcp = MagicMock()
@@ -39,6 +38,7 @@ class TestMcpAuth:
 
     def test_invalid_token_rejected(self) -> None:
         import server as _server
+
         original = _server._EXPECTED_TOKEN
         try:
             _server._EXPECTED_TOKEN = "secret123"
@@ -50,10 +50,13 @@ class TestMcpAuth:
 
     def test_classify_rejects_bad_token(self, tmp_path: Path) -> None:
         import server as _server
+
         original = _server._EXPECTED_TOKEN
         try:
             _server._EXPECTED_TOKEN = "secret123"
-            result = json.loads(_server.drifter_classify("git status", root=str(tmp_path), token="bad"))
+            result = json.loads(
+                _server.drifter_classify("git status", root=str(tmp_path), token="bad")
+            )
             assert result["status"] == "error"
         finally:
             _server._EXPECTED_TOKEN = original
@@ -63,8 +66,7 @@ class TestDrifterClassify:
     def test_classifies_safe_command(self, tmp_path: Path) -> None:
         dp = tmp_path / "dangerous_patterns.toml"
         dp.write_text(
-            '[git]\nalways_block = ["git commit"]\n'
-            '[shell]\nblocked = ["rm -rf /"]\n'
+            '[git]\nalways_block = ["git commit"]\n[shell]\nblocked = ["rm -rf /"]\n'
         )
         result = json.loads(drifter_classify("git status", root=str(tmp_path)))
         assert result["action"] == "allow"
@@ -123,7 +125,9 @@ class TestDrifterPreflight:
     def test_with_keyword(self, tmp_path: Path) -> None:
         dp = tmp_path / "dangerous_patterns.toml"
         dp.write_text('[git]\nalways_block = ["git commit"]\n')
-        result = json.loads(drifter_preflight(task="test", keyword="TODO", root=str(tmp_path)))
+        result = json.loads(
+            drifter_preflight(task="test", keyword="TODO", root=str(tmp_path))
+        )
         assert "passed" in result
 
 

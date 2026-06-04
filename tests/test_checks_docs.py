@@ -78,9 +78,7 @@ class TestArchitectureDocSyncCheck:
         config = Config.load(root=tmp_path)
         arch = tmp_path / "docs" / "architecture.md"
         arch.parent.mkdir(parents=True)
-        arch.write_text(
-            "# Architecture\n• StaleReferenceCheck\n• HardcodedPathCheck\n"
-        )
+        arch.write_text("# Architecture\n• StaleReferenceCheck\n• HardcodedPathCheck\n")
         guard = tmp_path / "src" / "drifter" / "drift_guard.py"
         guard.parent.mkdir(parents=True)
         guard.write_text(
@@ -93,7 +91,9 @@ class TestArchitectureDocSyncCheck:
         cli.write_text('subparsers.add_parser("check")')
         check = ArchitectureDocSyncCheck()
         issues = check.run(tmp_path, config)
-        assert any("lists 2 checks but checks package has 3" in i.detail for i in issues)
+        assert any(
+            "lists 2 checks but checks package has 3" in i.detail for i in issues
+        )
 
     def test_no_architecture_doc(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
@@ -183,7 +183,9 @@ class TestDigestStalenessCheck:
         config = Config.load(root=tmp_path)
         digest = tmp_path / "docs" / "digests" / "clean.md"
         digest.parent.mkdir(parents=True)
-        digest.write_text("---\nupdated: '2020-01-01T00:00:00Z'\n---\n\n# Digest\n\nAll done.\n")
+        digest.write_text(
+            "---\nupdated: '2020-01-01T00:00:00Z'\n---\n\n# Digest\n\nAll done.\n"
+        )
         check = DigestStalenessCheck()
         issues = check.run(tmp_path, config)
         assert len(issues) == 0

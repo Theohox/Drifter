@@ -3,15 +3,15 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
-from typing import Any
 
 if sys.version_info >= (3, 11):
-    import tomllib
+    pass
 else:
-    import tomli as tomllib
+    pass
 
-from drifter.checks._base import Check, Issue
+from drifter.checks._base import Issue
 from drifter.config import Config
+
 
 class ConductorHealthCheck:
     """Verify the Conductor file has exactly one active task and valid phase."""
@@ -25,12 +25,14 @@ class ConductorHealthCheck:
             # Also check root-level legacy location
             conductor = root / "project-conductor.md"
         if not conductor.exists():
-            issues.append(Issue(
-                check=self.name,
-                file="project-conductor.md",
-                detail="Conductor file does not exist",
-                severity="error",
-            ))
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file="project-conductor.md",
+                    detail="Conductor file does not exist",
+                    severity="error",
+                )
+            )
             return issues
 
         text = conductor.read_text(encoding="utf-8")
@@ -38,30 +40,37 @@ class ConductorHealthCheck:
         # Count active tasks
         active_count = text.count("**Active Task**") + text.count("## Active Task")
         if active_count == 0:
-            issues.append(Issue(
-                check=self.name,
-                file=str(conductor.relative_to(root)),
-                detail="No active task section found",
-                severity="error",
-            ))
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file=str(conductor.relative_to(root)),
+                    detail="No active task section found",
+                    severity="error",
+                )
+            )
         elif active_count > 1:
-            issues.append(Issue(
-                check=self.name,
-                file=str(conductor.relative_to(root)),
-                detail=f"Found {active_count} active task sections (expected exactly 1)",
-                severity="error",
-            ))
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file=str(conductor.relative_to(root)),
+                    detail=f"Found {active_count} active task sections (expected exactly 1)",
+                    severity="error",
+                )
+            )
 
         # Check current phase is marked active
         if "🟢 ACTIVE" not in text and "🟡 ACTIVE" not in text and "ACTIVE" not in text:
-            issues.append(Issue(
-                check=self.name,
-                file=str(conductor.relative_to(root)),
-                detail="No phase marked as ACTIVE",
-                severity="warn",
-            ))
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file=str(conductor.relative_to(root)),
+                    detail="No phase marked as ACTIVE",
+                    severity="warn",
+                )
+            )
 
         return issues
+
 
 class PipelineIntegrityCheck:
     """Verify conductor task references are consistent and tasks don't exist in multiple states."""
@@ -97,7 +106,11 @@ class PipelineIntegrityCheck:
         blocked_section = re.search(r"## Blocked Tasks.*?(?=## |\Z)", text, re.DOTALL)
         if blocked_section:
             for line in blocked_section.group(0).split("\n"):
-                if line.strip().startswith("|") and "| ID |" not in line and "---" not in line:
+                if (
+                    line.strip().startswith("|")
+                    and "| ID |" not in line
+                    and "---" not in line
+                ):
                     parts = [p.strip() for p in line.split("|")]
                     if len(parts) >= 2 and parts[1] and parts[1] != "—":
                         blocked_ids.add(parts[1])
@@ -107,17 +120,27 @@ class PipelineIntegrityCheck:
         future_section = re.search(r"## Future Tasks.*?(?=## |\Z)", text, re.DOTALL)
         if future_section:
             for line in future_section.group(0).split("\n"):
-                if line.strip().startswith("|") and "| ID |" not in line and "---" not in line:
+                if (
+                    line.strip().startswith("|")
+                    and "| ID |" not in line
+                    and "---" not in line
+                ):
                     parts = [p.strip() for p in line.split("|")]
                     if len(parts) >= 2 and parts[1] and parts[1] != "—":
                         future_ids.add(parts[1])
                         all_ids.add(parts[1])
 
         # Extract IDs from Completed Tasks table
-        completed_section = re.search(r"## Completed Tasks.*?(?=## |\Z)", text, re.DOTALL)
+        completed_section = re.search(
+            r"## Completed Tasks.*?(?=## |\Z)", text, re.DOTALL
+        )
         if completed_section:
             for line in completed_section.group(0).split("\n"):
-                if line.strip().startswith("|") and "| ID |" not in line and "---" not in line:
+                if (
+                    line.strip().startswith("|")
+                    and "| ID |" not in line
+                    and "---" not in line
+                ):
                     parts = [p.strip() for p in line.split("|")]
                     if len(parts) >= 2 and parts[1] and parts[1] != "—":
                         completed_ids.add(parts[1])
@@ -126,21 +149,25 @@ class PipelineIntegrityCheck:
         # Check for tasks in multiple states
         active_blocked = active_ids & blocked_ids
         if active_blocked:
-            issues.append(Issue(
-                check=self.name,
-                file=str(conductor.relative_to(root)),
-                detail=f"Task(s) {active_blocked} appear in both Active and Blocked",
-                severity="error",
-            ))
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file=str(conductor.relative_to(root)),
+                    detail=f"Task(s) {active_blocked} appear in both Active and Blocked",
+                    severity="error",
+                )
+            )
 
         active_future = active_ids & future_ids
         if active_future:
-            issues.append(Issue(
-                check=self.name,
-                file=str(conductor.relative_to(root)),
-                detail=f"Task(s) {active_future} appear in both Active and Future",
-                severity="warn",
-            ))
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file=str(conductor.relative_to(root)),
+                    detail=f"Task(s) {active_future} appear in both Active and Future",
+                    severity="warn",
+                )
+            )
 
         # Collect all "Depends On" references from all tables
         depends_on_refs: list[str] = []
@@ -156,12 +183,14 @@ class PipelineIntegrityCheck:
         # Validate Depends On references exist
         for ref_id in depends_on_refs:
             if ref_id not in all_ids:
-                issues.append(Issue(
-                    check=self.name,
-                    file=str(conductor.relative_to(root)),
-                    detail=f"Task 'Depends On' references '{ref_id}' which does not exist in any task section",
-                    severity="warn",
-                ))
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file=str(conductor.relative_to(root)),
+                        detail=f"Task 'Depends On' references '{ref_id}' which does not exist in any task section",
+                        severity="warn",
+                    )
+                )
 
         # Detect circular dependencies in Depends On
         adjacency: dict[str, set[str]] = {}
@@ -171,7 +200,11 @@ class PipelineIntegrityCheck:
             id_match = re.search(r"\*\*ID\*\*\s*\|\s*([^|\n]+?)\s*\|", preceding)
             if id_match:
                 owner_id = id_match.group(1).strip()
-                deps = {d.strip() for d in match.group(1).strip().split(",") if d.strip() and d.strip() != "—"}
+                deps = {
+                    d.strip()
+                    for d in match.group(1).strip().split(",")
+                    if d.strip() and d.strip() != "—"
+                }
                 if owner_id and owner_id != "—":
                     adjacency[owner_id] = deps
 
@@ -180,13 +213,19 @@ class PipelineIntegrityCheck:
             if section_match:
                 lines = section_match.group(0).split("\n")
                 for line in lines:
-                    if line.strip().startswith("|") and "| ID |" not in line and "---" not in line:
+                    if (
+                        line.strip().startswith("|")
+                        and "| ID |" not in line
+                        and "---" not in line
+                    ):
                         parts = [p.strip() for p in line.split("|")]
                         if len(parts) >= 5 and parts[1] and parts[1] != "—":
                             task_id = parts[1]
                             deps_str = parts[4] if len(parts) > 4 else "—"
                             if deps_str != "—":
-                                deps = {d.strip() for d in deps_str.split(",") if d.strip()}
+                                deps = {
+                                    d.strip() for d in deps_str.split(",") if d.strip()
+                                }
                                 adjacency[task_id] = deps
 
         # Detect cycles using DFS
@@ -208,12 +247,14 @@ class PipelineIntegrityCheck:
         for node in adjacency:
             if node not in visited:
                 if has_cycle(node):
-                    issues.append(Issue(
-                        check=self.name,
-                        file=str(conductor.relative_to(root)),
-                        detail="Circular dependency detected in task graph: check 'Depends On' references",
-                        severity="error",
-                    ))
+                    issues.append(
+                        Issue(
+                            check=self.name,
+                            file=str(conductor.relative_to(root)),
+                            detail="Circular dependency detected in task graph: check 'Depends On' references",
+                            severity="error",
+                        )
+                    )
                     break
 
         # Check that "Next" references exist
@@ -223,44 +264,59 @@ class PipelineIntegrityCheck:
             if next_val != "—" and ":" in next_val:
                 ref_id = next_val.split(":")[0].strip()
                 if ref_id and ref_id not in all_ids:
-                    issues.append(Issue(
-                        check=self.name,
-                        file=str(conductor.relative_to(root)),
-                        detail=f"Active Task 'Next' references '{ref_id}' which does not exist in any task section",
-                        severity="warn",
-                    ))
+                    issues.append(
+                        Issue(
+                            check=self.name,
+                            file=str(conductor.relative_to(root)),
+                            detail=f"Active Task 'Next' references '{ref_id}' which does not exist in any task section",
+                            severity="warn",
+                        )
+                    )
 
         # Check blocked tasks have non-empty Blocked On
         if blocked_section:
             for line in blocked_section.group(0).split("\n"):
-                if line.strip().startswith("|") and "| ID |" not in line and "---" not in line:
+                if (
+                    line.strip().startswith("|")
+                    and "| ID |" not in line
+                    and "---" not in line
+                ):
                     parts = [p.strip() for p in line.split("|")]
                     if len(parts) >= 6 and parts[1] and parts[1] != "—":
                         blocked_on = parts[4] if len(parts) > 4 else ""
                         if not blocked_on or blocked_on == "—":
-                            issues.append(Issue(
-                                check=self.name,
-                                file=str(conductor.relative_to(root)),
-                                detail=f"Blocked task '{parts[1]}' has empty 'Blocked On' field",
-                                severity="warn",
-                            ))
+                            issues.append(
+                                Issue(
+                                    check=self.name,
+                                    file=str(conductor.relative_to(root)),
+                                    detail=f"Blocked task '{parts[1]}' has empty 'Blocked On' field",
+                                    severity="warn",
+                                )
+                            )
 
         # Check completed tasks have non-empty evidence
         if completed_section:
             for line in completed_section.group(0).split("\n"):
-                if line.strip().startswith("|") and "| ID |" not in line and "---" not in line:
+                if (
+                    line.strip().startswith("|")
+                    and "| ID |" not in line
+                    and "---" not in line
+                ):
                     parts = [p.strip() for p in line.split("|")]
                     if len(parts) >= 5 and parts[1] and parts[1] != "—":
                         evidence = parts[4] if len(parts) > 4 else ""
                         if not evidence or evidence == "—":
-                            issues.append(Issue(
-                                check=self.name,
-                                file=str(conductor.relative_to(root)),
-                                detail=f"Completed task '{parts[1]}' has empty evidence",
-                                severity="warn",
-                            ))
+                            issues.append(
+                                Issue(
+                                    check=self.name,
+                                    file=str(conductor.relative_to(root)),
+                                    detail=f"Completed task '{parts[1]}' has empty evidence",
+                                    severity="warn",
+                                )
+                            )
 
         return issues
+
 
 class ConductorContentCheck:
     """Verify conductor contains current data (non-empty evidence, score history)."""
@@ -278,23 +334,28 @@ class ConductorContentCheck:
         text = conductor.read_text(encoding="utf-8")
 
         # Check drift score history is not empty
-        history_match = re.search(r"## Drift Score History.*?(?=## |\Z)", text, re.DOTALL)
+        history_match = re.search(
+            r"## Drift Score History.*?(?=## |\Z)", text, re.DOTALL
+        )
         if history_match:
             history_text = history_match.group(0)
             data_rows = [
-                line for line in history_text.split("\n")
+                line
+                for line in history_text.split("\n")
                 if line.strip().startswith("|")
                 and "—" not in line
                 and "Timestamp" not in line
                 and "---" not in line
             ]
             if not data_rows:
-                issues.append(Issue(
-                    check=self.name,
-                    file=str(conductor.relative_to(root)),
-                    detail="Drift Score History is empty — run 'drifter check' to populate",
-                    severity="warn",
-                ))
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file=str(conductor.relative_to(root)),
+                        detail="Drift Score History is empty — run 'drifter check' to populate",
+                        severity="warn",
+                    )
+                )
 
         # Check active task evidence isn't just a placeholder
         for line in text.split("\n"):
@@ -304,12 +365,14 @@ class ConductorContentCheck:
                 if evidence_vals:
                     evidence = evidence_vals[0]
                     if evidence in ("—", "-", ""):
-                        issues.append(Issue(
-                            check=self.name,
-                            file=str(conductor.relative_to(root)),
-                            detail="Active Task evidence is empty",
-                            severity="warn",
-                        ))
+                        issues.append(
+                            Issue(
+                                check=self.name,
+                                file=str(conductor.relative_to(root)),
+                                detail="Active Task evidence is empty",
+                                severity="warn",
+                            )
+                        )
                 break
 
         return issues

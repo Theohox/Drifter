@@ -3,15 +3,15 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
-from typing import Any
 
 if sys.version_info >= (3, 11):
-    import tomllib
+    pass
 else:
-    import tomli as tomllib
+    pass
 
-from drifter.checks._base import Check, Issue
+from drifter.checks._base import Issue
 from drifter.config import Config
+
 
 class DeadCodeCheck:
     """Flag Python modules with zero imports from the rest of the codebase."""
@@ -24,7 +24,11 @@ class DeadCodeCheck:
         if not src_dir.exists():
             return issues
 
-        py_files = [f for f in src_dir.rglob("*.py") if f.name != "__init__.py" and not config.is_ignored(f)]
+        py_files = [
+            f
+            for f in src_dir.rglob("*.py")
+            if f.name != "__init__.py" and not config.is_ignored(f)
+        ]
 
         all_source = ""
         init_source = ""
@@ -62,14 +66,17 @@ class DeadCodeCheck:
                 test_file = root / "tests" / f"test_{py_file.name}"
                 has_tests = test_file.exists()
                 if not has_tests:
-                    issues.append(Issue(
-                        check=self.name,
-                        file=str(py_file.relative_to(root)),
-                        detail=f"module '{module_name}' has zero imports and zero tests",
-                        severity="warn",
-                    ))
+                    issues.append(
+                        Issue(
+                            check=self.name,
+                            file=str(py_file.relative_to(root)),
+                            detail=f"module '{module_name}' has zero imports and zero tests",
+                            severity="warn",
+                        )
+                    )
 
         return issues
+
 
 class TestCoverageCheck:
     """Verify every source module has a corresponding test file."""
@@ -97,8 +104,7 @@ class TestCoverageCheck:
                     continue
                 # Fallback 1: any test_checks_* file whose name contains the stem
                 name_match = any(
-                    py_file.stem in f.name
-                    for f in tests_dir.glob("test_checks_*.py")
+                    py_file.stem in f.name for f in tests_dir.glob("test_checks_*.py")
                 )
                 if name_match:
                     continue
@@ -110,23 +116,28 @@ class TestCoverageCheck:
                 )
                 if import_match:
                     continue
-                issues.append(Issue(
-                    check=self.name,
-                    file=str(py_file.relative_to(root)),
-                    detail=f"no test file for {py_file.name} (expected tests/test_checks_{py_file.stem}.py or similar)",
-                    severity="warn",
-                ))
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file=str(py_file.relative_to(root)),
+                        detail=f"no test file for {py_file.name} (expected tests/test_checks_{py_file.stem}.py or similar)",
+                        severity="warn",
+                    )
+                )
             else:
                 test_file = tests_dir / f"test_{py_file.name}"
                 if not test_file.exists():
-                    issues.append(Issue(
-                        check=self.name,
-                        file=str(py_file.relative_to(root)),
-                        detail=f"no test file for {py_file.name} (expected tests/test_{py_file.name})",
-                        severity="warn",
-                    ))
+                    issues.append(
+                        Issue(
+                            check=self.name,
+                            file=str(py_file.relative_to(root)),
+                            detail=f"no test file for {py_file.name} (expected tests/test_{py_file.name})",
+                            severity="warn",
+                        )
+                    )
 
         return issues
+
 
 class TomllibCompatibilityCheck:
     """Scan for bare 'import tomllib' without Python 3.11 version guard."""
@@ -152,13 +163,16 @@ class TomllibCompatibilityCheck:
             # that's also acceptable as long as there's a version guard somewhere
             if "import tomli as tomllib" in text:
                 continue
-            issues.append(Issue(
-                check=self.name,
-                file=str(py_file.relative_to(root)),
-                detail="bare 'import tomllib' found without Python 3.11 version guard — will crash on Python 3.10",
-                severity="error",
-            ))
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file=str(py_file.relative_to(root)),
+                    detail="bare 'import tomllib' found without Python 3.11 version guard — will crash on Python 3.10",
+                    severity="error",
+                )
+            )
         return issues
+
 
 class HardcodedPathCheck:
     """Scan source files for hardcoded paths and verify they exist."""
@@ -170,14 +184,33 @@ class HardcodedPathCheck:
     )
 
     _SKIP_PATTERNS = {
-        "example", "agent_name", "skill_name", "your_", "my_",
-        "yyyy-mm-dd", "YYYY-MM-DD", "nonexistent", "not_found",
-        "not found", "missing_",
+        "example",
+        "agent_name",
+        "skill_name",
+        "your_",
+        "my_",
+        "yyyy-mm-dd",
+        "YYYY-MM-DD",
+        "nonexistent",
+        "not_found",
+        "not found",
+        "missing_",
     }
 
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
-        source_exts = (".py", ".rs", ".js", ".ts", ".go", ".java", ".sh", ".toml", ".yaml", ".yml")
+        source_exts = (
+            ".py",
+            ".rs",
+            ".js",
+            ".ts",
+            ".go",
+            ".java",
+            ".sh",
+            ".toml",
+            ".yaml",
+            ".yml",
+        )
 
         for ext in source_exts:
             for src_file in root.rglob(f"*{ext}"):
@@ -196,14 +229,20 @@ class HardcodedPathCheck:
                         continue
                     candidate = root / path_str
                     if not candidate.exists():
-                        candidate = root / "docs" / path_str if (root / "docs").exists() else candidate
+                        candidate = (
+                            root / "docs" / path_str
+                            if (root / "docs").exists()
+                            else candidate
+                        )
                     if not candidate.exists():
-                        issues.append(Issue(
-                            check=self.name,
-                            file=str(src_file.relative_to(root)),
-                            detail=f"hardcodes '{path_str}' which does not exist",
-                            severity="error",
-                        ))
+                        issues.append(
+                            Issue(
+                                check=self.name,
+                                file=str(src_file.relative_to(root)),
+                                detail=f"hardcodes '{path_str}' which does not exist",
+                                severity="error",
+                            )
+                        )
         return issues
 
     def _should_skip(self, path_str: str) -> bool:

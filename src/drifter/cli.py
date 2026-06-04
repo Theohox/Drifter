@@ -18,13 +18,13 @@ from drifter.session_logger import SessionLogger
 
 
 def _format_issues_console(issues: list, score: int | None = None) -> None:
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("  DRIFT GUARD REPORT")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     if score is not None:
         print(f"  Score: {score}/100")
     print(f"  Issues: {len(issues)}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     if issues:
         errors = [i for i in issues if i.severity == "error"]
@@ -45,7 +45,7 @@ def _format_issues_console(issues: list, score: int | None = None) -> None:
     else:
         print("\n  ✓ No drift detected. System is clean.")
 
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
 
 def cmd_check(args: argparse.Namespace) -> int:
@@ -53,19 +53,26 @@ def cmd_check(args: argparse.Namespace) -> int:
     report = run_checks(root=args.root, config=config)
 
     if args.score:
-        print(f"DRIFT: {report.total} issues | {report.errors} errors | {report.warns} warns | SCORE: {report.score}%")
+        print(
+            f"DRIFT: {report.total} issues | {report.errors} errors | {report.warns} warns | SCORE: {report.score}%"
+        )
         return 1 if report.errors > 0 else 0
 
     if args.json:
-        print(json.dumps({
-            "score": report.score,
-            "total": report.total,
-            "errors": report.errors,
-            "warns": report.warns,
-            "infos": report.infos,
-            "issues": [repr(i) for i in report.issues],
-            "timestamp": report.timestamp,
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "score": report.score,
+                    "total": report.total,
+                    "errors": report.errors,
+                    "warns": report.warns,
+                    "infos": report.infos,
+                    "issues": [repr(i) for i in report.issues],
+                    "timestamp": report.timestamp,
+                },
+                indent=2,
+            )
+        )
         return 1 if report.errors > 0 else 0
 
     if args.format == "github":
@@ -80,7 +87,9 @@ def cmd_check(args: argparse.Namespace) -> int:
 
 def cmd_preflight(args: argparse.Namespace) -> int:
     config = Config.load(root=args.root)
-    result = run_pre_flight(root=args.root, config=config, task=args.task, keyword=args.keyword)
+    result = run_pre_flight(
+        root=args.root, config=config, task=args.task, keyword=args.keyword
+    )
     result.print_report()
 
     # Auto-update conductor timestamp after preflight
@@ -108,18 +117,18 @@ def cmd_conductor(args: argparse.Namespace) -> int:
         if "error" in info:
             print(f"Error: {info['error']}")
             return 1
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("  CONDUCTOR")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"  Phase: {info['phase']}")
         if info.get("active_task"):
             task = info["active_task"]
-            print(f"\n  Active Task:")
+            print("\n  Active Task:")
             print(f"    ID:       {task['id']}")
             print(f"    Name:     {task['name']}")
             print(f"    Status:   {task['status']}")
             print(f"    Evidence: {task['evidence']}")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
         return 0
 
     if args.conductor_command == "done":
@@ -159,11 +168,11 @@ def cmd_validate(args: argparse.Namespace) -> int:
     config = Config.load(root=args.root)
     report = validate_docs(root=args.root, config=config)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("  DOCUMENT VALIDATION")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"  Issues: {report.total} ({report.errors} errors, {report.warns} warnings)")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     if report.issues:
         print("\n  Issues found:")
@@ -172,7 +181,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
     else:
         print("\n  ✓ All documents valid.")
 
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
     return 1 if report.errors > 0 else 0
 
 
@@ -183,15 +192,15 @@ def cmd_audit(args: argparse.Namespace) -> int:
     config = Config.load(root=args.root)
     guard = ShellGuard(root=args.root)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("  SESSION AUDIT")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # Check if dangerous_patterns.toml exists
     patterns_file = config.root / "dangerous_patterns.toml"
     if not patterns_file.exists():
         print("  ✗ dangerous_patterns.toml not found — cannot audit without rules")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
         return 1
 
     print("  dangerous_patterns.toml: ✓ Found")
@@ -201,6 +210,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
     checked = 0
 
     if not args.no_history:
+        reader: HistoryReader | None
         if config.history_path:
             reader = HistoryReader(Path(config.history_path).expanduser())
         else:
@@ -219,7 +229,9 @@ def cmd_audit(args: argparse.Namespace) -> int:
                     violations.append((line, classification))
             print(f"  History source: {reader.path} ({reader.shell})")
         else:
-            print("  No shell history found (set history_path in drifter.toml or ensure $SHELL is set)")
+            print(
+                "  No shell history found (set history_path in drifter.toml or ensure $SHELL is set)"
+            )
 
     print(f"  Commands checked: {checked}")
 
@@ -231,7 +243,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
     else:
         print("\n  ✓ No violations detected.")
 
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
     return 1 if violations else 0
 
 
@@ -287,7 +299,9 @@ def cmd_init(args: argparse.Namespace) -> int:
         docs_dir / "methodology.md": _doc_stub("Methodology", "constitution", "0", now),
         docs_dir / "architecture.md": _doc_stub("Architecture", "snapshot", "0", now),
         docs_dir / "adoption-guide.md": _doc_stub("Adoption Guide", "guide", "0", now),
-        docs_dir / "rules-reference.md": _doc_stub("Rules Reference", "reference", "0", now),
+        docs_dir / "rules-reference.md": _doc_stub(
+            "Rules Reference", "reference", "0", now
+        ),
     }
 
     created = []
@@ -317,32 +331,30 @@ def cmd_init(args: argparse.Namespace) -> int:
         dest.write_text(content, encoding="utf-8")
         created.append(str(dest.relative_to(root)))
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("  DRIFTER INIT")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"  Root: {root}")
     mode = "full" if args.full else "minimal"
     print(f"  Mode: {mode} ({len(created)} created, {len(skipped)} skipped)")
     if created:
-        print(f"\n  Created:")
+        print("\n  Created:")
         for f in created:
             print(f"    ✓ {f}")
     if skipped:
-        print(f"\n  Skipped (already exist, use --force to overwrite):")
+        print("\n  Skipped (already exist, use --force to overwrite):")
         for f in skipped:
             print(f"    • {f}")
-    print(f"\n  Next steps:")
-    print(f"    1. Edit AGENTS.md with your project specifics")
-    print(f"    2. Edit docs/session-protocol.md with your rules")
-    print(f"    3. Edit docs/project-conductor.md with your active task")
-    print(f"    4. Run 'drifter check' to verify")
+    print("\n  Next steps:")
+    print("    1. Edit AGENTS.md with your project specifics")
+    print("    2. Edit docs/session-protocol.md with your rules")
+    print("    3. Edit docs/project-conductor.md with your active task")
+    print("    4. Run 'drifter check' to verify")
     if skipped:
-        print(f"\n  To refresh existing files with latest templates:")
-        print(f"    drifter init --force")
-    print(f"{'='*60}\n")
+        print("\n  To refresh existing files with latest templates:")
+        print("    drifter init --force")
+    print(f"{'=' * 60}\n")
     return 0
-
-
 
 
 def cmd_log(args: argparse.Namespace) -> int:
@@ -364,7 +376,7 @@ def cmd_session_report(args: argparse.Namespace) -> int:
     from drifter.config import Config
 
     config = Config.load(root=args.root)
-    checks = [
+    checks: list = [
         ReadBeforeWriteCheck(),
         TestAfterWriteCheck(),
         DriftCheckAfterWriteCheck(),
@@ -375,9 +387,9 @@ def cmd_session_report(args: argparse.Namespace) -> int:
     for check in checks:
         all_issues.extend(check.run(config.root, config))
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("  SESSION REPORT CARD")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     logger = SessionLogger(root=config.root)
     entries = logger.read_entries()
@@ -404,42 +416,66 @@ def cmd_session_report(args: argparse.Namespace) -> int:
             print(f"\n  Warnings ({len(warns)}):")
             for issue in warns:
                 print(f"    • {issue}")
-        print(f"\n  ✗ SESSION REPORT CARD FAILED. Fix violations before declaring done.")
-        print(f"{'='*60}\n")
+        print("\n  ✗ SESSION REPORT CARD FAILED. Fix violations before declaring done.")
+        print(f"{'=' * 60}\n")
         return 1
     else:
-        print(f"\n  ✓ SESSION REPORT CARD PASSED. You may declare done.")
-        print(f"{'='*60}\n")
+        print("\n  ✓ SESSION REPORT CARD PASSED. You may declare done.")
+        print(f"{'=' * 60}\n")
         return 0
+
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="drifter",
         description="Universal drift guard for AI agents",
     )
-    parser.add_argument("--root", type=Path, default=None, help="Project root directory")
+    parser.add_argument(
+        "--root", type=Path, default=None, help="Project root directory"
+    )
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # check
     check_parser = subparsers.add_parser("check", help="Run drift guard")
-    check_parser.add_argument("--score", action="store_true", help="Print one-line score only")
+    check_parser.add_argument(
+        "--score", action="store_true", help="Print one-line score only"
+    )
     check_parser.add_argument("--json", action="store_true", help="Output JSON report")
-    check_parser.add_argument("--format", choices=["console", "github"], default="console", help="Output format")
+    check_parser.add_argument(
+        "--format",
+        choices=["console", "github"],
+        default="console",
+        help="Output format",
+    )
     check_parser.set_defaults(func=cmd_check)
 
     # preflight
-    preflight_parser = subparsers.add_parser("preflight", help="Run pre-flight checklist")
-    preflight_parser.add_argument("--task", default=None, help="Description of planned task")
-    preflight_parser.add_argument("--keyword", default=None, help="Keyword to grep for in src/ (pre-flight step 6)")
+    preflight_parser = subparsers.add_parser(
+        "preflight", help="Run pre-flight checklist"
+    )
+    preflight_parser.add_argument(
+        "--task", default=None, help="Description of planned task"
+    )
+    preflight_parser.add_argument(
+        "--keyword",
+        default=None,
+        help="Keyword to grep for in src/ (pre-flight step 6)",
+    )
     preflight_parser.set_defaults(func=cmd_preflight)
 
     # conductor
-    conductor_parser = subparsers.add_parser("conductor", help="Manage project conductor")
-    conductor_sub = conductor_parser.add_subparsers(dest="conductor_command", required=True)
+    conductor_parser = subparsers.add_parser(
+        "conductor", help="Manage project conductor"
+    )
+    conductor_sub = conductor_parser.add_subparsers(
+        dest="conductor_command", required=True
+    )
 
     conductor_init = conductor_sub.add_parser("init", help="Initialize conductor")
-    conductor_init.add_argument("--force", action="store_true", help="Overwrite existing")
+    conductor_init.add_argument(
+        "--force", action="store_true", help="Overwrite existing"
+    )
     conductor_init.set_defaults(func=cmd_conductor)
 
     conductor_show = conductor_sub.add_parser("show", help="Show active task")
@@ -465,33 +501,58 @@ def main(argv: list[str] | None = None) -> int:
     validate_parser.set_defaults(func=cmd_validate)
 
     # audit
-    audit_parser = subparsers.add_parser("audit", help="Audit session for dangerous command violations")
-    audit_parser.add_argument("--window", type=int, default=100, help="Number of recent history commands to check")
-    audit_parser.add_argument("--no-history", action="store_true", help="Skip bash history check")
+    audit_parser = subparsers.add_parser(
+        "audit", help="Audit session for dangerous command violations"
+    )
+    audit_parser.add_argument(
+        "--window",
+        type=int,
+        default=100,
+        help="Number of recent history commands to check",
+    )
+    audit_parser.add_argument(
+        "--no-history", action="store_true", help="Skip bash history check"
+    )
     audit_parser.set_defaults(func=cmd_audit)
 
     # init
     init_parser = subparsers.add_parser("init", help="Initialize Drifter in a project")
-    init_parser.add_argument("--force", action="store_true", help="Overwrite existing files")
-    init_parser.add_argument("--full", action="store_true", help="Also create optional doc stubs (methodology, architecture, adoption-guide, rules-reference)")
+    init_parser.add_argument(
+        "--force", action="store_true", help="Overwrite existing files"
+    )
+    init_parser.add_argument(
+        "--full",
+        action="store_true",
+        help="Also create optional doc stubs (methodology, architecture, adoption-guide, rules-reference)",
+    )
     init_parser.set_defaults(func=cmd_init)
 
     # log
-    log_parser = subparsers.add_parser("log", help="Log an action to the session audit log")
-    log_parser.add_argument("action", choices=["READ", "WRITE", "SHELL", "CHECK"], help="Action type")
+    log_parser = subparsers.add_parser(
+        "log", help="Log an action to the session audit log"
+    )
+    log_parser.add_argument(
+        "action", choices=["READ", "WRITE", "SHELL", "CHECK"], help="Action type"
+    )
     log_parser.add_argument("target", help="Target file or command")
     log_parser.set_defaults(func=cmd_log)
 
     # session-report
-    report_parser = subparsers.add_parser("session-report", help="Generate session report card")
+    report_parser = subparsers.add_parser(
+        "session-report", help="Generate session report card"
+    )
     report_parser.set_defaults(func=cmd_session_report)
 
     # install-hook
-    install_hook_parser = subparsers.add_parser("install-hook", help="Install git pre-commit hook")
+    install_hook_parser = subparsers.add_parser(
+        "install-hook", help="Install git pre-commit hook"
+    )
     install_hook_parser.set_defaults(func=cmd_install_hook)
 
     # uninstall-hook
-    uninstall_hook_parser = subparsers.add_parser("uninstall-hook", help="Uninstall git pre-commit hook")
+    uninstall_hook_parser = subparsers.add_parser(
+        "uninstall-hook", help="Uninstall git pre-commit hook"
+    )
     uninstall_hook_parser.set_defaults(func=cmd_uninstall_hook)
 
     args = parser.parse_args(argv)

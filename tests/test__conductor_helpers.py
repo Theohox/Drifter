@@ -2,7 +2,11 @@
 
 from pathlib import Path
 
-from drifter._conductor_helpers import _slugify, create_archive_file, default_conductor_content
+from drifter._conductor_helpers import (
+    _slugify,
+    create_archive_file,
+    default_conductor_content,
+)
 
 
 class TestSlugify:

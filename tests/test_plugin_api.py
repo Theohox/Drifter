@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from drifter.plugin_api import ToolInterceptor
 from drifter.session_logger import SessionLogger
 
@@ -50,6 +52,3 @@ class TestToolInterceptor:
         logger = SessionLogger(root=tmp_path)
         entries = logger.read_entries()
         assert any(e.action == "SHELL" and e.target == "git status" for e in entries)
-
-
-import pytest

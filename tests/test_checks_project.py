@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from drifter.config import Config
-from drifter.checks.security import CredentialLeakCheck, GitignoreCheck
+from drifter.checks.security import CredentialLeakCheck
 from drifter.checks.code_quality import DeadCodeCheck, TestCoverageCheck
 from drifter.checks.sync import ReadmeCompletenessCheck, PreFlightSyncCheck
 
@@ -55,7 +55,9 @@ class TestPreFlightSyncCheck:
         )
         check = PreFlightSyncCheck()
         issues = check.run(tmp_path, config)
-        assert any("pre_flight.py has 7 steps but protocol lists 6" in i.detail for i in issues)
+        assert any(
+            "pre_flight.py has 7 steps but protocol lists 6" in i.detail for i in issues
+        )
 
     def test_synced_steps_pass(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
