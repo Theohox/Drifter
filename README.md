@@ -7,7 +7,7 @@ AI coding agents generate code faster than teams can review it. The result is pr
 Drifter is a `pip install` defense layer. It does not replace your agent. It constrains it.
 
 - **Pre-flight checklist** — 7 enforced steps before any code change
-- **34 automated drift checks** — stale refs, doc drift, credential leaks, dead code, file-size bloat, and more
+- **35 automated drift checks** — stale refs, doc drift, credential leaks, dead code, file-size bloat, ghost references, and more
 - **Document type system** — every doc knows its mutation rules; docs don't become lies
 - **Project conductor** — one active task at a time; scope creep is structurally prevented
 - **Command boundaries** — agents read `dangerous_patterns.toml` before running shell
@@ -48,7 +48,7 @@ drifter preflight --task "fix login bug"
 | `docs/session-protocol.md` | Hard rules: scope, evidence, no-recreation, stop rule. |
 | `docs/project-conductor.md` | Single source of truth: what's active, blocked, done. |
 | `docs/archive/README.md` | Completed task records. One file per finished task. |
-| `drifter check` | 34 automated checks: stale refs, hardcoded paths, doc drift, credential leaks, dead code, and more. |
+| `drifter check` | 35 automated checks: stale refs, hardcoded paths, doc drift, credential leaks, dead code, ghost references, and more. |
 | `drifter preflight` | Enforced 7-step pre-flight before any code change. |
 | `drifter conductor` | CLI for managing active tasks and phase state. |
 | `drifter validate` | Validate document types and frontmatter. |

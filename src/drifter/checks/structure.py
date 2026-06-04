@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import json
 import re
 from pathlib import Path
 
@@ -244,6 +245,93 @@ class ManifestSyncCheck:
                     severity="warn",
                 )
             )
+
+        # Validate capability manifest matches reality if it exists
+        cap_manifest_path = root / ".drifter" / "capability-manifest.json"
+        if cap_manifest_path.exists():
+            try:
+                cap_manifest = json.loads(cap_manifest_path.read_text(encoding="utf-8"))
+            except Exception:
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file=".drifter/capability-manifest.json",
+                        detail="cannot parse capability manifest",
+                        severity="error",
+                    )
+                )
+                return issues
+
+            # Validate command count
+            cmd_names = {cmd["name"] for cmd in cap_manifest.get("commands", [])}
+            # Parse CLI for actual commands (match manifest generator logic)
+            cli_file = root / "src" / "drifter" / "cli.py"
+            actual_cmds: set[str] = set()
+            if cli_file.exists():
+                try:
+                    cli_text = cli_file.read_text(encoding="utf-8")
+                    for match in re.finditer(
+                        r'subparsers\.add_parser\(\s*"([^"]+)"', cli_text
+                    ):
+                        actual_cmds.add(match.group(1))
+                    for match in re.finditer(
+                        r'conductor_sub\.add_parser\(\s*"([^"]+)"', cli_text
+                    ):
+                        actual_cmds.add(f"conductor {match.group(1)}")
+                except Exception:
+                    pass
+            missing_cmds = actual_cmds - cmd_names
+            if missing_cmds:
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file=".drifter/capability-manifest.json",
+                        detail=f"commands missing from capability manifest: {sorted(missing_cmds)}",
+                        severity="error",
+                    )
+                )
+            extra_cmds = cmd_names - actual_cmds
+            if extra_cmds:
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file=".drifter/capability-manifest.json",
+                        detail=f"ghost commands in capability manifest: {sorted(extra_cmds)}",
+                        severity="warn",
+                    )
+                )
+
+            # Validate MCP tool count
+            mcp_names = {tool["name"] for tool in cap_manifest.get("mcp_tools", [])}
+            mcp_file = root / "plugins" / "mcp-server" / "server.py"
+            actual_mcp: set[str] = set()
+            if mcp_file.exists():
+                try:
+                    mcp_text = mcp_file.read_text(encoding="utf-8")
+                    for match in re.finditer(r"def\s+(drifter_\w+)\s*\(", mcp_text):
+                        actual_mcp.add(match.group(1))
+                except Exception:
+                    pass
+            missing_mcp = actual_mcp - mcp_names
+            if missing_mcp:
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file=".drifter/capability-manifest.json",
+                        detail=f"MCP tools missing from capability manifest: {sorted(missing_mcp)}",
+                        severity="error",
+                    )
+                )
+            extra_mcp = mcp_names - actual_mcp
+            if extra_mcp:
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file=".drifter/capability-manifest.json",
+                        detail=f"ghost MCP tools in capability manifest: {sorted(extra_mcp)}",
+                        severity="warn",
+                    )
+                )
 
         return issues
 

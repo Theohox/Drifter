@@ -365,6 +365,26 @@ def cmd_log(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_manifest(args: argparse.Namespace) -> int:
+    from drifter.manifest_generator import write_manifest
+
+    config = Config.load(root=args.root)
+    path = write_manifest(root=config.root)
+    print(f"✓ Capability manifest written: {path}")
+    return 0
+
+
+def cmd_describe(args: argparse.Namespace) -> int:
+    from drifter.manifest_generator import describe_json, describe_markdown
+
+    config = Config.load(root=args.root)
+    if args.format == "markdown":
+        print(describe_markdown(root=config.root))
+    else:
+        print(describe_json(root=config.root))
+    return 0
+
+
 def cmd_session_report(args: argparse.Namespace) -> int:
     """Generate session report card from audit log."""
     from drifter.checks.behavioral import (
@@ -554,6 +574,24 @@ def main(argv: list[str] | None = None) -> int:
         "uninstall-hook", help="Uninstall git pre-commit hook"
     )
     uninstall_hook_parser.set_defaults(func=cmd_uninstall_hook)
+
+    # manifest
+    manifest_parser = subparsers.add_parser(
+        "manifest", help="Generate capability manifest"
+    )
+    manifest_parser.set_defaults(func=cmd_manifest)
+
+    # describe
+    describe_parser = subparsers.add_parser(
+        "describe", help="Describe project capabilities for LLMs"
+    )
+    describe_parser.add_argument(
+        "--format",
+        choices=["json", "markdown"],
+        default="json",
+        help="Output format",
+    )
+    describe_parser.set_defaults(func=cmd_describe)
 
     args = parser.parse_args(argv)
     return args.func(args)

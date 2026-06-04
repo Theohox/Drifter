@@ -4,7 +4,7 @@ type: snapshot
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-06-01T17:00:00Z'
+updated: '2026-06-04T17:22:00Z'
 ---
 
 # Drifter Internal Architecture
@@ -44,7 +44,7 @@ How Drifter is built. For contributors and advanced users.
 │         │                │                     │             │
 │         ▼                ▼                     ▼             │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │              Built-in Checks (34)                    │   │
+│  │              Built-in Checks (35)                    │   │
 │  │  • StaleReferenceCheck                               │   │
 │  │  • HardcodedPathCheck                                │   │
 │  │  • DigestStalenessCheck                              │   │
@@ -78,6 +78,7 @@ How Drifter is built. For contributors and advanced users.
 │  │  • DriftCheckAfterWriteCheck                         │   │
 │  │  • NoRushCheck                                       │   │
 │  │  • ConfigSyncCheck                                   │   │
+│  │  • GhostReferenceCheck                               │   │
 │  │  • DocCoverageCheck                                  │   │
 │  └──────────────────────────────────────────────────────┘   │
 │         │                                                    │
@@ -187,6 +188,8 @@ Config is loaded in this priority order (later overrides earlier):
 | `drifter session-report` | < 100ms | < 500ms |
 | `drifter install-hook` | < 10ms | < 100ms |
 | `drifter uninstall-hook` | < 10ms | < 100ms |
+| `drifter manifest` | < 1s | < 5s |
+| `drifter describe` | < 100ms | < 500ms |
 
 Performance strategies:
 - Checks run in parallel using `concurrent.futures`

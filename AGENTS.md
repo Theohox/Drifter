@@ -51,6 +51,7 @@ Before any coding session:
 | Enforcement exceptions | `src/drifter/errors.py` | Structured exceptions for blocked/approval-required commands. |
 | Plugin interceptor | `src/drifter/plugin_api.py` | `ToolInterceptor` for auto-logging + enforcement in integrations. |
 | History reader | `src/drifter/history_reader.py` | Cross-platform shell history (bash, zsh, fish). Auto-detects from $SHELL. |
+| Manifest generator | `src/drifter/manifest_generator.py` | Scans codebase and emits capability manifest for LLM consumption. |
 
 ## 3. What Already Exists (Don't Recreate)
 
@@ -64,6 +65,8 @@ Before any coding session:
 | Enforce command | `src/drifter/shell_guard.py` — `guard.enforce()` raises on violation |
 | Read shell history | `src/drifter/history_reader.py` — `HistoryReader` auto-detects bash/zsh/fish |
 | Tool interceptor | `src/drifter/plugin_api.py` — `ToolInterceptor` for integrations |
+| Generate manifest | `drifter manifest` or `src/drifter/manifest_generator.py` |
+| Describe project | `drifter describe` — machine-readable project description for LLMs |
 | MCP server | `plugins/mcp-server/server.py` — MCP tools wrapping Drifter |
 | Add a reporter | `src/drifter/reporters/` — implement `Reporter` protocol |
 | Project config | `drifter.toml` (`[drifter]` section) or `pyproject.toml [tool.drifter]` |

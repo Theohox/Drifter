@@ -13,6 +13,7 @@ Run:
 
 from __future__ import annotations
 
+import functools
 import hmac
 import json
 import os
@@ -40,6 +41,7 @@ except ImportError as exc:
 
 mcp = FastMCP("drifter")
 
+_MCP_REGISTRY: list[str] = []
 _EXPECTED_TOKEN = os.environ.get("DRIFTER_MCP_TOKEN")
 
 
@@ -51,7 +53,26 @@ def _require_auth(token: str) -> dict | None:
     return None
 
 
-@mcp.tool()
+def mcp_tool(func=None, **kwargs):
+    """Self-registering decorator for MCP tools.
+
+    Automatically registers the decorated function name to _MCP_REGISTRY
+    and applies the underlying @mcp.tool() decorator.
+    """
+    def decorator(f):
+        _MCP_REGISTRY.append(f.__name__)
+        return mcp.tool(**kwargs)(f)
+    if func is not None:
+        return decorator(func)
+    return decorator
+
+
+def get_registered_tools() -> list[str]:
+    """Return the list of registered MCP tool names."""
+    return list(_MCP_REGISTRY)
+
+
+@mcp_tool()
 def drifter_classify(command: str, root: str = ".", token: str = "") -> str:
     auth_error = _require_auth(token)
     if auth_error:
@@ -69,7 +90,7 @@ def drifter_classify(command: str, root: str = ".", token: str = "") -> str:
     })
 
 
-@mcp.tool()
+@mcp_tool()
 def drifter_enforce(command: str, root: str = ".", token: str = "") -> str:
     auth_error = _require_auth(token)
     if auth_error:
@@ -103,7 +124,7 @@ def drifter_enforce(command: str, root: str = ".", token: str = "") -> str:
         })
 
 
-@mcp.tool()
+@mcp_tool()
 def drifter_log(action: str, target: str, root: str = ".", token: str = "") -> str:
     auth_error = _require_auth(token)
     if auth_error:
@@ -114,7 +135,7 @@ def drifter_log(action: str, target: str, root: str = ".", token: str = "") -> s
     return json.dumps({"status": "logged", "action": action, "target": target})
 
 
-@mcp.tool()
+@mcp_tool()
 def drifter_preflight(task: str | None = None, keyword: str | None = None, root: str = ".", token: str = "") -> str:
     auth_error = _require_auth(token)
     if auth_error:
@@ -137,7 +158,7 @@ def drifter_preflight(task: str | None = None, keyword: str | None = None, root:
     })
 
 
-@mcp.tool()
+@mcp_tool()
 def drifter_check(root: str = ".", token: str = "") -> str:
     auth_error = _require_auth(token)
     if auth_error:

@@ -56,6 +56,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         {"name": "drift_check_after_write", "enabled": True, "severity": "error"},
         {"name": "no_rush", "enabled": True, "severity": "warn"},
         {"name": "config_sync", "enabled": True, "severity": "error"},
+        {"name": "ghost_reference", "enabled": True, "severity": "warn"},
     ],
     "history_path": None,
     "ignore": {

@@ -35,6 +35,7 @@ from drifter.checks.security import (
     GitignoreCheck,
 )
 from drifter.checks.config_sync import ConfigSyncCheck
+from drifter.checks.ghost_reference import GhostReferenceCheck
 from drifter.checks.structure import (
     ClaimSyncCheck,
     FileSizeCheck,
@@ -86,4 +87,5 @@ BUILTIN_CHECKS: dict[str, type[Check]] = {
     "drift_check_after_write": DriftCheckAfterWriteCheck,
     "no_rush": NoRushCheck,
     "config_sync": ConfigSyncCheck,
+    "ghost_reference": GhostReferenceCheck,
 }

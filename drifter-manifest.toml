@@ -37,13 +37,14 @@ required_dirs = [
 "drifter.toml" = { type = "config" }
 ".drifter/session.log" = { type = "log", note = "Per-project session audit log, .gitignored" }
 ".drifter/.session_secret" = { type = "secret", note = "HMAC secret for session log integrity, .gitignored" }
+".drifter/capability-manifest.json" = { type = "generated", note = "Auto-generated capability manifest, .gitignored" }
 ".gitignore" = { type = "config", note = "Git ignore rules" }
 ".github/workflows/ci.yml" = { type = "config", note = "GitHub Actions CI workflow" }
 "pyproject.toml" = { type = "config" }
 
 [tree.src.drifter]
 "__init__.py" = { layer = "package", max_lines = 50, purpose = "Package init" }
-"cli.py" = { layer = "cli", max_lines = 570, imports = ["config", "checks", "conductor", "doc_validator", "pre_flight", "reporters"] }
+"cli.py" = { layer = "cli", max_lines = 610, imports = ["config", "checks", "conductor", "doc_validator", "pre_flight", "reporters"] }
 "config.py" = { layer = "core", max_lines = 220, purpose = "Config loader" }
 "conductor.py" = { layer = "core", max_lines = 300, purpose = "Conductor manager" }
 "_conductor_helpers.py" = { layer = "core", max_lines = 150, purpose = "Conductor helpers" }
@@ -59,6 +60,7 @@ required_dirs = [
 "_hook_commands.py" = { layer = "core", max_lines = 100, purpose = "Git hook install/uninstall helpers" }
 "_toml_utils.py" = { layer = "core", max_lines = 50, purpose = "Safe TOML loading" }
 "__main__.py" = { layer = "cli", max_lines = 10, purpose = "Module entry point for python -m drifter" }
+"manifest_generator.py" = { layer = "core", max_lines = 330, purpose = "Capability manifest generator" }
 
 [tree.src.drifter.checks]
 "__init__.py" = { layer = "checks", max_lines = 100, purpose = "Check registry" }
@@ -68,10 +70,11 @@ required_dirs = [
 "docs.py" = { layer = "checks", max_lines = 320, purpose = "Documentation checks" }
 "project.py" = { layer = "checks", max_lines = 380, purpose = "Project state checks" }
 "security.py" = { layer = "checks", max_lines = 280, purpose = "Security checks" }
-"structure.py" = { layer = "checks", max_lines = 330, purpose = "Manifest structural checks" }
+"structure.py" = { layer = "checks", max_lines = 420, purpose = "Manifest structural checks" }
 "sync.py" = { layer = "checks", max_lines = 520, purpose = "Sync verification checks" }
 "config_sync.py" = { layer = "checks", max_lines = 150, purpose = "Config sync check" }
 "behavioral.py" = { layer = "checks", max_lines = 180, purpose = "Behavioral audit checks" }
+"ghost_reference.py" = { layer = "checks", max_lines = 110, purpose = "Ghost reference detection" }
 
 [tree.src.drifter.reporters]
 "__init__.py" = { layer = "reporters", max_lines = 50, purpose = "Reporter package" }
@@ -115,6 +118,8 @@ required_dirs = [
 "test_checks_project.py" = { tests = "checks" }
 "test_checks_structure.py" = { tests = "checks" }
 "test_checks_config_sync.py" = { tests = "checks" }
+"test_checks_ghost_reference.py" = { tests = "checks" }
+"test_manifest_generator.py" = { tests = "manifest_generator" }
 "test_github_actions.py" = { tests = "reporters/github_actions" }
 "test_json_reporter.py" = { tests = "reporters/json_reporter" }
 "test_pre_flight.py" = { tests = "pre_flight" }
@@ -181,7 +186,7 @@ may_import = ["all"]
 # Plugins are leaf nodes — src/drifter may NOT import plugins
 
 [checks]
-count = 34
+count = 35
 names = [
     "stale_reference",
     "hardcoded_path",
@@ -217,6 +222,7 @@ names = [
     "drift_check_after_write",
     "no_rush",
     "config_sync",
+    "ghost_reference",
 ]
 
 [pre_flight]
