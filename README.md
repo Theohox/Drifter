@@ -22,6 +22,8 @@ Drifter is not a prompt. It is a **system of enforced protocols**.
 
 ## Quick Start
 
+Requires **Python 3.10+**.
+
 ```bash
 # Install
 pip install drifter
@@ -168,6 +170,27 @@ Optional token authentication via `DRIFTER_MCP_TOKEN` environment variable.
 - [`docs/methodology.md`](docs/methodology.md) — The "why" in detail
 - [`docs/adoption-guide.md`](docs/adoption-guide.md) — Step-by-step for any project
 - [`docs/rules-reference.md`](docs/rules-reference.md) — Complete rule catalog
+
+## Development
+
+```bash
+# Clone and install in editable mode with dev dependencies
+git clone https://github.com/Theohox/Drifter.git
+cd Drifter
+pip install -e ".[dev]"
+
+# Run tests
+python -m pytest tests/ -q
+
+# Run drift guard on itself
+drifter check
+
+# Lint
+ruff check src/ tests/
+
+# Type check
+mypy src/
+```
 
 ## License
 
