@@ -5,7 +5,7 @@ version: "1.0"
 status: active
 phase: "0"
 created: '2026-05-27T00:00:00Z'
-updated: '2026-06-04T15:30:00Z'
+updated: '2026-06-05T10:00:00Z'
 ---
 
 # Drifter Agent Contract
@@ -25,7 +25,7 @@ Before any coding session:
 - [ ] **Read this prompt** (you are here)
 - [ ] **Read the Session Protocol**: `docs/session-protocol.md`
 - [ ] **Read the Conductor**: `docs/project-conductor.md`
-- [ ] **Run Drift Guard**: `python -m drifter check`
+- [ ] **Run Drift Guard**: `drifter check`
 - [ ] **Check the digest index**: `docs/digests/index.md`
 - [ ] **Grep for existing functionality**: `grep -r "your_idea" src/ tests/`
 - [ ] **Run tests**: `python -m pytest tests/ -q`
@@ -56,10 +56,10 @@ Before any coding session:
 
 | What You Need | Where It Already Exists |
 |---------------|------------------------|
-| Run drift guard | `python -m drifter check` or `src/drifter/drift_guard.py` |
-| Run pre-flight | `python -m drifter preflight` or `src/drifter/pre_flight.py` |
-| Manage conductor | `python -m drifter conductor` or `src/drifter/conductor.py` |
-| Validate docs | `python -m drifter validate` or `src/drifter/doc_validator.py` |
+| Run drift guard | `drifter check` or `python -m drifter check` |
+| Run pre-flight | `drifter preflight` or `python -m drifter preflight` |
+| Manage conductor | `drifter conductor` or `python -m drifter conductor` |
+| Validate docs | `drifter validate` or `python -m drifter validate` |
 | Audit session | `drifter audit` or `src/drifter/shell_guard.py` |
 | Enforce command | `src/drifter/shell_guard.py` — `guard.enforce()` raises on violation |
 | Read shell history | `src/drifter/history_reader.py` — `HistoryReader` auto-detects bash/zsh/fish |
@@ -283,20 +283,20 @@ It produces a report card. If it fails, you are not done. Fix the violations.
 ## 9. Quick Reference
 
 ```bash
-python -m drifter check              # Run drift guard
-python -m drifter preflight          # Run pre-flight checklist
-python -m drifter conductor show     # Show active task
-python -m drifter conductor init     # Initialize conductor
-python -m drifter conductor done     # Mark task as done
-python -m drifter conductor block    # Block a task
-python -m drifter conductor next     # Show next ready task
-python -m drifter validate           # Validate document types
-python -m drifter audit              # Audit session for dangerous commands
-python -m drifter log                # Log an action to session audit
-python -m drifter session-report     # Generate behavioral report card
-python -m drifter init               # Initialize Drifter in a new project
-python -m drifter install-hook       # Install git pre-commit hook
-python -m drifter uninstall-hook     # Remove git pre-commit hook
+drifter check              # Run drift guard
+drifter preflight          # Run pre-flight checklist
+drifter conductor show     # Show active task
+drifter conductor init     # Initialize conductor
+drifter conductor done     # Mark task as done
+drifter conductor block    # Block a task
+drifter conductor next     # Show next ready task
+drifter validate           # Validate document types
+drifter audit              # Audit session for dangerous commands
+drifter log                # Log an action to session audit
+drifter session-report     # Generate behavioral report card
+drifter init               # Initialize Drifter in a new project
+drifter install-hook       # Install git pre-commit hook
+drifter uninstall-hook     # Remove git pre-commit hook
 python -m pytest tests/ -q           # Run tests
 ruff check src/ tests/               # Lint
 mypy src/                            # Type check

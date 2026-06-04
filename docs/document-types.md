@@ -4,7 +4,7 @@ type: reference
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-29T00:27:03Z'
+updated: '2026-06-05T10:00:00Z'
 ---
 
 # Document Type System
@@ -34,7 +34,6 @@ The document type system makes these violations **detectable**.
 
 **Examples:**
 - `docs/methodology.md` — why Drifter exists and what problems it solves
-- `AGENTS.md` — what the system is and is not
 
 **Mutation Rules:**
 - Amend, don't rewrite. Additions should be rare and justified.

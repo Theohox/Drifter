@@ -195,6 +195,9 @@ python -m pytest tests/ -q
 # Run drift guard on itself
 drifter check
 
+# Or run from source without installing
+python -m drifter check
+
 # Lint
 ruff check src/ tests/
 
