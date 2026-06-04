@@ -47,7 +47,22 @@ class TestAgentSelfAuditCheck:
 
 
 class TestGitCommitApprovalCheck:
-    def test_missing_approval_marker(self, tmp_path: Path) -> None:
+    def test_missing_approval_marker_destructive(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        import subprocess
+        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True, check=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=str(tmp_path), capture_output=True, check=True)
+        subprocess.run(["git", "config", "user.name", "Test"], cwd=str(tmp_path), capture_output=True, check=True)
+        (tmp_path / "file.txt").write_text("hello")
+        subprocess.run(["git", "add", "."], cwd=str(tmp_path), capture_output=True, check=True)
+        subprocess.run(["git", "commit", "-m", "delete old files"], cwd=str(tmp_path), capture_output=True, check=True)
+
+        check = GitCommitApprovalCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 1
+        assert "Unapproved destructive commits" in issues[0].detail
+
+    def test_benign_commit_without_marker_ok(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
         import subprocess
         subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True, check=True)
@@ -59,8 +74,7 @@ class TestGitCommitApprovalCheck:
 
         check = GitCommitApprovalCheck()
         issues = check.run(tmp_path, config)
-        assert len(issues) == 1
-        assert "lacks approval marker" in issues[0].detail
+        assert len(issues) == 0
 
     def test_with_approval_marker(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)

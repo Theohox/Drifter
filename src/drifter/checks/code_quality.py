@@ -181,7 +181,7 @@ class HardcodedPathCheck:
 
         for ext in source_exts:
             for src_file in root.rglob(f"*{ext}"):
-                if config.is_ignored(src_file):
+                if config.is_check_ignored(self.name, src_file):
                     continue
                 # Skip this file itself, __pycache__, and test files
                 str_path = str(src_file)

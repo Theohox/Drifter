@@ -23,13 +23,14 @@ class Report:
     errors: int
     warns: int
     infos: int
+    health: str = "excellent"
     issues: list[Issue] = field(default_factory=list)
     timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     def __repr__(self) -> str:
         return (
             f"Report(score={self.score}, total={self.total}, "
-            f"errors={self.errors}, warns={self.warns})"
+            f"errors={self.errors}, warns={self.warns}, health={self.health})"
         )
 
 
@@ -79,7 +80,18 @@ def run_checks(root: Path | None = None, config: Config | None = None) -> Report
     infos = sum(1 for i in all_issues if i.severity == "info")
     total = len(all_issues)
 
-    score = max(0, 100 - errors * 10 - warns * 2)
+    error_weight = min(errors, 10)
+    warn_weight = min(warns, 25)
+    score = max(0, 100 - error_weight * 10 - warn_weight * 2)
+
+    if errors == 0 and warns == 0:
+        health = "excellent"
+    elif errors == 0:
+        health = "good"
+    elif score >= 50:
+        health = "degraded"
+    else:
+        health = "critical"
 
     return Report(
         score=score,
@@ -87,5 +99,6 @@ def run_checks(root: Path | None = None, config: Config | None = None) -> Report
         errors=errors,
         warns=warns,
         infos=infos,
+        health=health,
         issues=all_issues,
     )

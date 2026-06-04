@@ -23,12 +23,40 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 sys.path.insert(0, str(PROJECT_ROOT / "plugins/mcp-server"))
 
 from server import (  # noqa: E402
+    _require_auth,
     drifter_check,
     drifter_classify,
     drifter_enforce,
     drifter_log,
     drifter_preflight,
 )
+
+
+class TestMcpAuth:
+    def test_no_token_required_by_default(self) -> None:
+        assert _require_auth("") is None
+        assert _require_auth("wrong") is None
+
+    def test_invalid_token_rejected(self) -> None:
+        import server as _server
+        original = _server._EXPECTED_TOKEN
+        try:
+            _server._EXPECTED_TOKEN = "secret123"
+            assert _server._require_auth("wrong") is not None
+            assert _server._require_auth("") is not None
+            assert _server._require_auth("secret123") is None
+        finally:
+            _server._EXPECTED_TOKEN = original
+
+    def test_classify_rejects_bad_token(self, tmp_path: Path) -> None:
+        import server as _server
+        original = _server._EXPECTED_TOKEN
+        try:
+            _server._EXPECTED_TOKEN = "secret123"
+            result = json.loads(_server.drifter_classify("git status", root=str(tmp_path), token="bad"))
+            assert result["status"] == "error"
+        finally:
+            _server._EXPECTED_TOKEN = original
 
 
 class TestDrifterClassify:

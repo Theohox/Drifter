@@ -13,7 +13,9 @@ Run:
 
 from __future__ import annotations
 
+import hmac
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -38,9 +40,22 @@ except ImportError as exc:
 
 mcp = FastMCP("drifter")
 
+_EXPECTED_TOKEN = os.environ.get("DRIFTER_MCP_TOKEN")
+
+
+def _require_auth(token: str) -> dict | None:
+    """Return error dict if token is required but invalid."""
+    if _EXPECTED_TOKEN:
+        if not hmac.compare_digest(_EXPECTED_TOKEN, token):
+            return {"status": "error", "reason": "Invalid authentication token"}
+    return None
+
 
 @mcp.tool()
-def drifter_classify(command: str, root: str = ".") -> str:
+def drifter_classify(command: str, root: str = ".", token: str = "") -> str:
+    auth_error = _require_auth(token)
+    if auth_error:
+        return json.dumps(auth_error)
     """Classify a shell command via Drifter's ShellGuard.
 
     Returns: JSON with action, reason, matched_pattern.
@@ -55,7 +70,10 @@ def drifter_classify(command: str, root: str = ".") -> str:
 
 
 @mcp.tool()
-def drifter_enforce(command: str, root: str = ".") -> str:
+def drifter_enforce(command: str, root: str = ".", token: str = "") -> str:
+    auth_error = _require_auth(token)
+    if auth_error:
+        return json.dumps(auth_error)
     """Enforce a shell command via Drifter's ShellGuard.
 
     Raises DangerousCommandError or ApprovalRequiredError on violation.
@@ -86,7 +104,10 @@ def drifter_enforce(command: str, root: str = ".") -> str:
 
 
 @mcp.tool()
-def drifter_log(action: str, target: str, root: str = ".") -> str:
+def drifter_log(action: str, target: str, root: str = ".", token: str = "") -> str:
+    auth_error = _require_auth(token)
+    if auth_error:
+        return json.dumps(auth_error)
     """Log an action to the Drifter session audit log."""
     logger = SessionLogger(root=Path(root))
     logger.log(action, target)
@@ -94,7 +115,10 @@ def drifter_log(action: str, target: str, root: str = ".") -> str:
 
 
 @mcp.tool()
-def drifter_preflight(task: str | None = None, keyword: str | None = None, root: str = ".") -> str:
+def drifter_preflight(task: str | None = None, keyword: str | None = None, root: str = ".", token: str = "") -> str:
+    auth_error = _require_auth(token)
+    if auth_error:
+        return json.dumps(auth_error)
     """Run the Drifter pre-flight checklist.
 
     Returns: JSON with passed, drift_score, errors, step_results.
@@ -114,7 +138,10 @@ def drifter_preflight(task: str | None = None, keyword: str | None = None, root:
 
 
 @mcp.tool()
-def drifter_check(root: str = ".") -> str:
+def drifter_check(root: str = ".", token: str = "") -> str:
+    auth_error = _require_auth(token)
+    if auth_error:
+        return json.dumps(auth_error)
     """Run the Drifter drift guard.
 
     Returns: JSON with score, errors, warns, total.

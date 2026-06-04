@@ -15,10 +15,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
+from drifter._toml_utils import safe_load_toml
 
 
 DEFAULT_CONFIG: dict[str, Any] = {
@@ -85,6 +82,8 @@ class CheckConfig:
     enabled: bool = True
     severity: str = "warn"
     path: str | None = None  # optional custom check path
+    ignore_paths: list[str] = field(default_factory=list)
+    ignore_patterns: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -130,14 +129,24 @@ class Config:
             raw = _merge(raw, overrides)
 
         # Build typed config
+        check_configs: dict[str, dict[str, Any]] = {
+            c["name"]: c for c in raw.get("checks", [])
+        }
+        # Apply per-check overrides from [drifter.check_config.<name>]
+        for name, overrides in raw.get("check_config", {}).items():
+            if name in check_configs:
+                check_configs[name] = _merge(check_configs[name], overrides)
+
         checks = [
             CheckConfig(
-                name=c["name"],
+                name=name,
                 enabled=c.get("enabled", True),
                 severity=c.get("severity", "warn"),
                 path=c.get("path"),
+                ignore_paths=c.get("ignore_paths", []),
+                ignore_patterns=c.get("ignore_patterns", []),
             )
-            for c in raw.get("checks", [])
+            for name, c in check_configs.items()
         ]
 
         return cls(
@@ -148,6 +157,13 @@ class Config:
             checks=checks,
             ignore=IgnoreConfig(paths=raw.get("ignore", {}).get("paths", [])),
         )
+
+    def check_config(self, name: str) -> CheckConfig:
+        """Return configuration for a specific check, or a default."""
+        for c in self.checks:
+            if c.name == name:
+                return c
+        return CheckConfig(name=name)
 
     def is_ignored(self, path: Path) -> bool:
         """Check if a path matches any ignore pattern."""
@@ -163,10 +179,27 @@ class Config:
                 return True
         return False
 
+    def is_check_ignored(self, check_name: str, path: Path) -> bool:
+        """Check if a path is ignored for a specific check."""
+        cfg = self.check_config(check_name)
+        str_path = str(path)
+        try:
+            rel_path = str(path.relative_to(self.root))
+        except ValueError:
+            rel_path = str_path
+        for pattern in cfg.ignore_paths + cfg.ignore_patterns:
+            if fnmatch.fnmatch(str_path, pattern):
+                return True
+            if fnmatch.fnmatch(rel_path, pattern):
+                return True
+            if fnmatch.fnmatch(path.name, pattern):
+                return True
+        return self.is_ignored(path)
+
 
 def _load_toml(path: Path) -> dict[str, Any]:
-    with path.open("rb") as f:
-        return tomllib.load(f)
+    result = safe_load_toml(path)
+    return result if result is not None else {}
 
 
 def _merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:

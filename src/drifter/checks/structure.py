@@ -2,14 +2,9 @@ from __future__ import annotations
 
 import ast
 import re
-import sys
 from pathlib import Path
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
-
+from drifter._toml_utils import safe_load_toml
 from drifter.checks._base import Check, Issue
 from drifter.config import Config
 
@@ -53,8 +48,15 @@ class TreeIntegrityCheck:
         if not manifest_file.exists():
             return issues
 
-        with manifest_file.open("rb") as f:
-            manifest = tomllib.load(f)
+        manifest = safe_load_toml(manifest_file)
+        if manifest is None:
+            issues.append(Issue(
+                check=self.name,
+                file="drifter-manifest.toml",
+                detail="Cannot parse drifter-manifest.toml — file may be corrupted",
+                severity="error",
+            ))
+            return issues
 
         # Build declared file set from manifest tree.* sections
         declared: set[str] = set()
@@ -105,8 +107,15 @@ class FileSizeCheck:
         if not manifest_file.exists():
             return issues
 
-        with manifest_file.open("rb") as f:
-            manifest = tomllib.load(f)
+        manifest = safe_load_toml(manifest_file)
+        if manifest is None:
+            issues.append(Issue(
+                check=self.name,
+                file="drifter-manifest.toml",
+                detail="Cannot parse drifter-manifest.toml — file may be corrupted",
+                severity="error",
+            ))
+            return issues
 
         global_max = manifest.get("structure", {}).get("max_file_lines", 300)
 
@@ -114,6 +123,8 @@ class FileSizeCheck:
         for rel_path, val in _walk_manifest_tree(manifest):
             file_path = root / rel_path
             if not file_path.exists():
+                continue
+            if config.is_check_ignored(self.name, file_path):
                 continue
             max_lines = val.get("max_lines", global_max)
             try:
@@ -143,8 +154,15 @@ class ManifestSyncCheck:
         if not manifest_file.exists():
             return issues
 
-        with manifest_file.open("rb") as f:
-            manifest = tomllib.load(f)
+        manifest = safe_load_toml(manifest_file)
+        if manifest is None:
+            issues.append(Issue(
+                check=self.name,
+                file="drifter-manifest.toml",
+                detail="Cannot parse drifter-manifest.toml — file may be corrupted",
+                severity="error",
+            ))
+            return issues
 
         declared_count = manifest.get("checks", {}).get("count", 0)
         declared_names = set(manifest.get("checks", {}).get("names", []))
@@ -210,8 +228,15 @@ class ClaimSyncCheck:
         if not manifest_file.exists():
             return issues
 
-        with manifest_file.open("rb") as f:
-            manifest = tomllib.load(f)
+        manifest = safe_load_toml(manifest_file)
+        if manifest is None:
+            issues.append(Issue(
+                check=self.name,
+                file="drifter-manifest.toml",
+                detail="Cannot parse drifter-manifest.toml — file may be corrupted",
+                severity="error",
+            ))
+            return issues
 
         def _resolve(path: str, data: dict) -> str | None:
             node = data

@@ -4,7 +4,7 @@ type: backlog
 status: active
 phase: 1
 created: '2026-05-27T00:00:00Z'
-updated: '2026-06-01T17:30:00Z'
+updated: '2026-06-04T15:30:00Z'
 ---
 
 # Project Conductor — Master Plan & Active Task Tracker
@@ -80,7 +80,7 @@ updated: '2026-06-01T17:30:00Z'
 
 ---
 
-**Phase 4: Systematic Cleanup** 🟢 ACTIVE
+**Phase 4: Systematic Cleanup** ✅ COMPLETE
 
 **Goal**: Fix structural rot found during architectural review — Python 3.10 crash, document type drift, duplicate checks, zero-test coverage, manifest misalignment, stale references.
 
@@ -97,16 +97,38 @@ updated: '2026-06-01T17:30:00Z'
 
 ---
 
+**Phase 5: Security Hardening** 🟢 ACTIVE
+
+**Goal**: Address OWASP-style security review findings — command injection, audit log integrity, TOML robustness, score accuracy, MCP auth, credential detection.
+
+**Exit Criteria**:
+- [x] Command injection in pre_flight grep eliminated (native Python scan)
+- [x] SessionLogger.clear() removed, rotate_log() added
+- [x] HMAC-signed session log entries with tamper detection
+- [x] Session log files restricted to 0o700/0o600
+- [x] TOML parsing wrapped in safe_load_toml() with graceful degradation
+- [x] Score formula capped, health indicator added
+- [x] GitCommitApprovalCheck scans last 5 commits for destructive changes
+- [x] AgentSelfAuditCheck history read has 10s timeout
+- [x] MCP server supports optional DRIFTER_MCP_TOKEN auth
+- [x] CredentialLeakCheck expanded (URLs, PEM, AWS, high-entropy)
+- [x] Granular check suppression config infrastructure
+- [x] Manifest stale reference removed
+- [x] All new code tested
+- [x] Drift score 100/100
+
+---
+
 ## Active Task
 
 | Field | Value |
 |-------|-------|
-| **ID** | CLEANUP-001 |
-| **Name** | Systematic Cleanup — architectural review fixes |
+| **ID** | REFACTOR-004 |
+| **Name** | Security Hardening — OWASP review remediation |
 | **Status** | ✅ COMPLETE |
-| **Pipeline** | cleanup |
+| **Pipeline** | security |
 | **Depends On** | — |
-| **Evidence** | Python 3.10 tomllib fix (shell_guard.py). AGENTS.md type: playbook. Conductor Phase 4 active, CLEANUP-001. Manifest aligned (MCP server types, memory dep removed, new files). Merged TestAfterWrite+DriftCheckAfterWrite shared logic. Extracted _walk_manifest_tree. Fixed TestCoverageCheck per-module verification. Fixed ClaimSyncCheck generic dot-notation. Added 26 tests: PipelineIntegrityCheck (9), GitSafetyCheck+DangerousPatternsCheck (11), CrossDocConsistencyCheck+DigestStalenessCheck (6). Fixed FileSizeCheck binary file handling. Fixed archive stale refs, template drift, test file rename. 216 tests pass. Score 100/100. |
+| **Evidence** | Native Python grep in pre_flight.py (no subprocess). SessionLogger HMAC + rotate_log + 0o600. safe_load_toml() in _toml_utils.py. Capped score formula + health in drift_guard.py. GitCommitApprovalCheck last-5-commits. AgentSelfAuditCheck ThreadPoolExecutor timeout. MCP server token auth. Expanded credential patterns. Config check_suppressions. Manifest docx removed. AGENTS.md "Who Guards the Guard" section. Tests pass. |
 | **Next** | — |
 
 ---
@@ -188,6 +210,7 @@ If you find a NEW issue while working:
 | 2026-05-29T19:48 | 100/100 | 132 | Phase 2 enforcement primitives: errors.py, enforce(), ToolInterceptor, MCP server skeleton. |
 | 2026-06-01T16:30 | 100/100 | 190 | INTEG-001: HistoryReader (bash/zsh/fish), MCP server tests, git pre-commit hook. |
 | 2026-06-01T17:45 | 100/100 | 216 | CLEANUP-001: Python 3.10 fix, doc types, duplicate check merge, 26 new tests, manifest alignment, stale refs. |
+| 2026-06-04T15:30 | 100/100 | TBD | REFACTOR-004: Security hardening — command injection fix, HMAC logs, TOML hardening, score formula, MCP auth, credential patterns, check suppression. |
 
 ---
 

@@ -1,13 +1,11 @@
 from __future__ import annotations
+
+import re
 import subprocess
-import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
-
+from drifter._toml_utils import safe_load_toml
 from drifter.checks._base import Check, Issue
 from drifter.config import Config
 from drifter.history_reader import HistoryReader
@@ -23,8 +21,15 @@ class AgentSelfAuditCheck:
         if not patterns_file.exists():
             return issues
 
-        with patterns_file.open("rb") as f:
-            data = tomllib.load(f)
+        data = safe_load_toml(patterns_file)
+        if data is None:
+            issues.append(Issue(
+                check=self.name,
+                file="dangerous_patterns.toml",
+                detail="Cannot parse dangerous_patterns.toml — file may be corrupted",
+                severity="error",
+            ))
+            return issues
 
         agent_rules = data.get("agent", {})
         always_report = agent_rules.get("always_report", [])
@@ -36,7 +41,19 @@ class AgentSelfAuditCheck:
         if not reader.path.exists():
             return issues
 
-        recent = reader.read_commands(max_entries=50)
+        # Wrap history read in a timeout to avoid DoS from huge files
+        try:
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(reader.read_commands, max_entries=50)
+                recent = future.result(timeout=10)
+        except Exception:
+            issues.append(Issue(
+                check=self.name,
+                file=str(reader.path),
+                detail="Timeout reading shell history — file may be too large",
+                severity="warn",
+            ))
+            return issues
 
         for line in recent:
             line = line.strip()
@@ -52,9 +69,18 @@ class AgentSelfAuditCheck:
         return issues
 
 class GitCommitApprovalCheck:
-    """Verify last commit has approval marker."""
+    """Verify recent commits have approval markers.
+
+    Checks the last N commits (default 5) for unapproved destructive
+    changes rather than only the most recent commit.
+    """
 
     name = "git_commit_approval"
+    COMMIT_CHECK_WINDOW = 5
+    _DESTRUCTIVE_RE = re.compile(
+        r"\b(delete|remove|drop|destroy|rm -rf)\b",
+        re.IGNORECASE,
+    )
 
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
@@ -68,23 +94,31 @@ class GitCommitApprovalCheck:
                 return issues
 
             result = subprocess.run(
-                ["git", "-C", str(root), "log", "-1", "--pretty=%B"],
+                ["git", "-C", str(root), "log", f"-{self.COMMIT_CHECK_WINDOW}", "--pretty=%H|%s|%B%x00"],
                 capture_output=True, text=True, timeout=5,
             )
             if result.returncode != 0:
                 return issues
-            msg = result.stdout.strip()
-            if not msg:
-                return issues
-            has_marker = (
-                "[APPROVED BY" in msg.upper() or
-                msg.upper().startswith("APPROVED BY")
-            )
-            if not has_marker:
+
+            commits = result.stdout.split("\x00")
+            unapproved_destructive: list[str] = []
+            for commit_block in commits:
+                if "|" not in commit_block:
+                    continue
+                parts = commit_block.split("|", 2)
+                if len(parts) < 2:
+                    continue
+                hash_short, subject = parts[0][:7], parts[1]
+                has_marker = "[APPROVED BY" in commit_block.upper()
+                is_destructive = bool(self._DESTRUCTIVE_RE.search(subject))
+                if is_destructive and not has_marker:
+                    unapproved_destructive.append(f"{hash_short}: {subject}")
+
+            if unapproved_destructive:
                 issues.append(Issue(
                     check=self.name,
                     file="git",
-                    detail=f"Last commit lacks approval marker. Message: '{msg[:60]}...'",
+                    detail=f"Unapproved destructive commits: {unapproved_destructive}",
                     severity="error",
                 ))
         except Exception:

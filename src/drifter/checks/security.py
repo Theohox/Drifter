@@ -1,15 +1,9 @@
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
-from typing import Any
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
-
+from drifter._toml_utils import safe_load_toml
 from drifter.checks._base import Check, Issue
 from drifter.config import Config
 
@@ -29,6 +23,10 @@ class CredentialLeakCheck:
         (re.compile(r"password\s*=\s*['\"][^'\"]{4,}['\"]"), "hardcoded password"),
         (re.compile(r"secret\s*=\s*['\"][^'\"]{4,}['\"]"), "hardcoded secret"),
         (re.compile(r"token\s*=\s*['\"][^'\"]{8,}['\"]"), "hardcoded token"),
+        (re.compile(r"https?://[^:]+:[^@]+@"), "URL with embedded credentials"),
+        (re.compile(r"-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----"), "Private key block"),
+        (re.compile(r"AKIA[0-9A-Z]{16}"), "AWS Access Key ID"),
+        (re.compile(r"[A-Za-z0-9/+=]{40}"), "Base64-like high-entropy string (possible secret)"),
     ]
 
     def run(self, root: Path, config: Config) -> list[Issue]:
@@ -131,31 +129,31 @@ class DangerousPatternsCheck:
             return issues
 
         # Check it's valid TOML
-        try:
-            with patterns_file.open("rb") as f:
-                data = tomllib.load(f)
-            # Check required sections exist
-            if "git" not in data:
-                issues.append(Issue(
-                    check=self.name,
-                    file="dangerous_patterns.toml",
-                    detail="Missing [git] section",
-                    severity="warn",
-                ))
-            if "shell" not in data:
-                issues.append(Issue(
-                    check=self.name,
-                    file="dangerous_patterns.toml",
-                    detail="Missing [shell] section",
-                    severity="warn",
-                ))
-        except Exception as e:
+        data = safe_load_toml(patterns_file)
+        if data is None:
             issues.append(Issue(
                 check=self.name,
                 file="dangerous_patterns.toml",
-                detail=f"Invalid TOML: {e}",
+                detail="Invalid TOML in dangerous_patterns.toml",
                 severity="error",
             ))
+            return issues
+        # Check required sections exist
+        if "git" not in data:
+            issues.append(Issue(
+                check=self.name,
+                file="dangerous_patterns.toml",
+                detail="Missing [git] section",
+                severity="warn",
+            ))
+        if "shell" not in data:
+            issues.append(Issue(
+                check=self.name,
+                file="dangerous_patterns.toml",
+                detail="Missing [shell] section",
+                severity="warn",
+            ))
+
 
         # Check AGENTS.md references it
         if agents_md.exists():
@@ -201,12 +199,9 @@ class GitignoreCheck:
         patterns_file = root / "dangerous_patterns.toml"
         sensitive_patterns: list[str] = [".env", "*.key", "*.pem", "id_rsa*"]
         if patterns_file.exists():
-            try:
-                with patterns_file.open("rb") as f:
-                    data = tomllib.load(f)
+            data = safe_load_toml(patterns_file)
+            if data is not None:
                 sensitive_patterns = data.get("filesystem", {}).get("sensitive_patterns", sensitive_patterns)
-            except Exception:
-                pass
 
         for pattern in sensitive_patterns:
             matches = list(root.rglob(pattern))

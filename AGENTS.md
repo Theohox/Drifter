@@ -5,7 +5,7 @@ version: "1.0"
 status: active
 phase: "0"
 created: '2026-05-27T00:00:00Z'
-updated: '2026-06-01T17:30:00Z'
+updated: '2026-06-04T15:30:00Z'
 ---
 
 # Drifter Agent Contract
@@ -141,6 +141,23 @@ guard.enforce("git status")        # Returns Classification(action="allow")
 ```
 
 **If dangerous_patterns.toml does not exist, STOP and create it.** This file is as critical as AGENTS.md.
+
+### The "Who Guards the Guard" Limitation
+
+Drifter is a **cooperative guard**, not a mandatory OS-enforced gate. A misaligned or compromised agent that actively wants to bypass Drifter can:
+
+1. Catch and ignore `DangerousCommandError` silently
+2. Skip calling `drifter check` entirely
+3. Forge session log entries (mitigated by HMAC signatures since v0.3.0)
+4. Write its own `dangerous_patterns.toml` to bypass restrictions
+5. Delete the `.drifter/` directory and start fresh
+
+**This is by design.** Drifter assumes the agent is cooperating. For mandatory enforcement, use:
+- **Git pre-commit hooks** (`drifter install-hook`) — runs before every commit
+- **CI pipelines** — run `drifter check` in GitHub Actions / GitLab CI
+- **Separate watchdog process** — run Drifter outside the agent's execution context
+
+Drifter increases the cost of mistakes and makes bypasses auditable. It does not make them impossible.
 
 ### The Git Boundary Rule — ABSOLUTE
 

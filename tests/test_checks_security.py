@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from drifter.config import Config
-from drifter.checks.security import DangerousPatternsCheck, GitSafetyCheck
+from drifter.checks.security import CredentialLeakCheck, DangerousPatternsCheck, GitSafetyCheck
 
 
 class TestGitSafetyCheck:
@@ -106,5 +106,61 @@ class TestDangerousPatternsCheck:
         agents = tmp_path / "AGENTS.md"
         agents.write_text("references dangerous_patterns.toml here\n")
         check = DangerousPatternsCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 0
+
+
+class TestCredentialLeakCheck:
+    def test_detects_openai_key(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        src = tmp_path / "src" / "main.py"
+        src.parent.mkdir(parents=True)
+        src.write_text('api_key = "sk-1234567890abcdefghijklmnopqrstuvwxyz"\n')
+        check = CredentialLeakCheck()
+        issues = check.run(tmp_path, config)
+        assert any("OpenAI" in i.detail for i in issues)
+
+    def test_detects_url_with_credentials(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        src = tmp_path / "src" / "main.py"
+        src.parent.mkdir(parents=True)
+        src.write_text('url = "https://user:secret123@example.com/path"\n')
+        check = CredentialLeakCheck()
+        issues = check.run(tmp_path, config)
+        assert any("embedded credentials" in i.detail for i in issues)
+
+    def test_detects_aws_key(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        src = tmp_path / "src" / "main.py"
+        src.parent.mkdir(parents=True)
+        src.write_text('aws_access_key = "AKIAIOSFODNN7ABCDEFG"\n')
+        check = CredentialLeakCheck()
+        issues = check.run(tmp_path, config)
+        assert any("AWS" in i.detail for i in issues)
+
+    def test_detects_pem_key(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        src = tmp_path / "src" / "main.py"
+        src.parent.mkdir(parents=True)
+        src.write_text('-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA...\n')
+        check = CredentialLeakCheck()
+        issues = check.run(tmp_path, config)
+        assert any("Private key" in i.detail for i in issues)
+
+    def test_skips_comments(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        src = tmp_path / "src" / "main.py"
+        src.parent.mkdir(parents=True)
+        src.write_text('# api_key = "sk-1234567890abcdefghijklmnopqrstuvwxyz"\n')
+        check = CredentialLeakCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 0
+
+    def test_skips_tests_directory(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        test_file = tmp_path / "tests" / "test_foo.py"
+        test_file.parent.mkdir(parents=True)
+        test_file.write_text('api_key = "sk-1234567890abcdefghijklmnopqrstuvwxyz"\n')
+        check = CredentialLeakCheck()
         issues = check.run(tmp_path, config)
         assert len(issues) == 0

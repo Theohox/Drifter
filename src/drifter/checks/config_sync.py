@@ -3,16 +3,11 @@
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
 
+from drifter._toml_utils import safe_load_toml
 from drifter.checks._base import Check, Issue
 from drifter.config import Config
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 
 
 class ConfigSyncCheck:
@@ -27,10 +22,16 @@ class ConfigSyncCheck:
         if not manifest.exists():
             return issues
 
-        manifest_checks: set[str] = set()
-        with manifest.open("rb") as f:
-            data = tomllib.load(f)
-            manifest_checks = set(data.get("checks", {}).get("names", []))
+        data = safe_load_toml(manifest)
+        if data is None:
+            issues.append(Issue(
+                check=self.name,
+                file="drifter-manifest.toml",
+                detail="Cannot parse drifter-manifest.toml — file may be corrupted",
+                severity="error",
+            ))
+            return issues
+        manifest_checks = set(data.get("checks", {}).get("names", []))
 
         if not manifest_checks:
             return issues
@@ -102,8 +103,9 @@ class ConfigSyncCheck:
         return set(re.findall(r'"name":\s*"([^"]+)"', checks_match.group(1)))
 
     def _extract_toml_checks(self, path: Path) -> set[str]:
-        with path.open("rb") as f:
-            data = tomllib.load(f)
+        data = safe_load_toml(path)
+        if data is None:
+            return set()
         # Support [drifter] section directly
         if "drifter" in data and isinstance(data["drifter"], dict) and "checks" in data["drifter"]:
             return {c["name"] for c in data["drifter"]["checks"] if isinstance(c, dict) and "name" in c}

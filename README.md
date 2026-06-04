@@ -15,7 +15,8 @@ Drifter is a `pip install` defense layer. It does not replace your agent. It con
 - **Plugin API** — `ToolInterceptor` auto-logs and enforces before any tool call (MCP, Kimi, custom)
 - **Cross-platform shell history** — audit bash, zsh, and fish history with auto-detection
 - **Git pre-commit hook** — block commits that introduce drift (`drifter install-hook`)
-- **Session audit** — immutable log of reads, writes, and checks; append-only coding is detectable
+- **Session audit** — HMAC-signed tamper-evident log of reads, writes, and checks; forged entries are detected and skipped
+- **Granular suppression** — per-check `ignore_paths` and `ignore_patterns` via `drifter.toml`
 
 Drifter is not a prompt. It is a **system of enforced protocols**.
 
@@ -159,6 +160,8 @@ Exposes Drifter tools as MCP tools:
 - `drifter_log` — log an action to the session audit
 - `drifter_preflight` — run the 7-step pre-flight checklist
 - `drifter_check` — run the full drift guard
+
+Optional token authentication via `DRIFTER_MCP_TOKEN` environment variable.
 
 ## Documentation
 

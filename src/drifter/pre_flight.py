@@ -5,7 +5,7 @@ Enforces the 7-step pre-flight protocol before any coding session.
 
 from __future__ import annotations
 
-import subprocess
+import re
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -155,21 +155,25 @@ def run_pre_flight(
             "message": "Cannot check without conductor",
         })
 
-    # Step 6: Grep for existing code
+    # Step 6: Grep for existing code (native Python — no subprocess)
     if keyword:
         try:
-            result = subprocess.run(
-                ["grep", "-r", "-i", "--include=*.py", keyword, str(root / "src")],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            if result.returncode == 0 and result.stdout.strip():
-                lines = result.stdout.strip().split("\n")
+            src_dir = root / "src"
+            pattern = re.compile(re.escape(keyword), re.IGNORECASE)
+            matches = 0
+            if src_dir.exists():
+                for py_file in src_dir.rglob("*.py"):
+                    try:
+                        text = py_file.read_text(encoding="utf-8", errors="ignore")
+                        if pattern.search(text):
+                            matches += 1
+                    except Exception:
+                        continue
+            if matches:
                 step_results.append({
                     "name": "Grep for Existing Code",
                     "passed": True,
-                    "message": f"Found {len(lines)} matches for '{keyword}' in src/",
+                    "message": f"Found {matches} file(s) matching '{keyword}' in src/",
                 })
             else:
                 step_results.append({
@@ -181,7 +185,7 @@ def run_pre_flight(
             step_results.append({
                 "name": "Grep for Existing Code",
                 "passed": True,
-                "message": f"Grep failed: {e}",
+                "message": f"Search failed: {e}",
             })
     else:
         step_results.append({
