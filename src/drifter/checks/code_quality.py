@@ -27,7 +27,7 @@ class DeadCodeCheck:
         py_files = [
             f
             for f in src_dir.rglob("*.py")
-            if f.name != "__init__.py" and not config.is_ignored(f)
+            if f.name != "__init__.py" and not config.is_check_ignored(self.name, f)
         ]
 
         all_source = ""
@@ -94,7 +94,7 @@ class TestCoverageCheck:
         for py_file in src_dir.rglob("*.py"):
             if py_file.name == "__init__.py":
                 continue
-            if config.is_ignored(py_file):
+            if config.is_check_ignored(self.name, py_file):
                 continue
 
             # For check modules, look for test_checks_{stem}.py or any test that imports it
@@ -151,7 +151,7 @@ class TomllibCompatibilityCheck:
             return issues
 
         for py_file in src_dir.rglob("*.py"):
-            if config.is_ignored(py_file):
+            if config.is_check_ignored(self.name, py_file):
                 continue
             text = py_file.read_text(encoding="utf-8")
             if "import tomllib" not in text:

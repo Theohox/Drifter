@@ -10,16 +10,12 @@ from __future__ import annotations
 
 import re
 import shlex
-import sys
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
+from drifter._toml_utils import safe_load_toml
 
 
 ClassificationAction = Literal["allow", "block", "warn", "approval_required"]
@@ -41,10 +37,8 @@ class ShellGuard:
 
     def _load_patterns(self) -> dict:
         patterns_file = self.root / "dangerous_patterns.toml"
-        if not patterns_file.exists():
-            return {}
-        with patterns_file.open("rb") as f:
-            return tomllib.load(f)
+        data = safe_load_toml(patterns_file)
+        return data if data is not None else {}
 
     @staticmethod
     def _tokenize(command: str) -> list[str] | None:

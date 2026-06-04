@@ -64,7 +64,7 @@ class StaleReferenceCheck:
         md_files.extend(root.glob("*.md"))
 
         for md_file in md_files:
-            if config.is_ignored(md_file):
+            if config.is_check_ignored(self.name, md_file):
                 continue
             # Skip archive files — they are historical records and may reference
             # files that no longer exist (merged, renamed, or deleted)
@@ -123,7 +123,7 @@ class CrossDocConsistencyCheck:
         link_pattern = re.compile(r"\[([^\]]+)\]\(([^)]+\.md)\)")
 
         for md_file in md_files:
-            if config.is_ignored(md_file):
+            if config.is_check_ignored(self.name, md_file):
                 continue
             text = md_file.read_text(encoding="utf-8")
             for match in link_pattern.finditer(text):
@@ -161,7 +161,7 @@ class TimestampStalenessCheck:
         md_files.extend(root.glob("*.md"))
 
         for md_file in md_files:
-            if config.is_ignored(md_file):
+            if config.is_check_ignored(self.name, md_file):
                 continue
             text = md_file.read_text(encoding="utf-8")
             match = self._TIMESTAMP_PATTERN.search(text)
@@ -200,7 +200,7 @@ class DigestStalenessCheck:
             return issues
 
         for digest_file in digests_dir.rglob("*.md"):
-            if config.is_ignored(digest_file):
+            if config.is_check_ignored(self.name, digest_file):
                 continue
             text = digest_file.read_text(encoding="utf-8")
             age_days = self._get_age_days(text)
@@ -243,7 +243,7 @@ class ArchiveIntegrityCheck:
         for archive_file in archive_dir.glob("*.md"):
             if archive_file.name == "README.md":
                 continue
-            if config.is_ignored(archive_file):
+            if config.is_check_ignored(self.name, archive_file):
                 continue
 
             text = archive_file.read_text(encoding="utf-8")

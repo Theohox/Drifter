@@ -146,6 +146,16 @@ interceptor.before_write("src/main.py")     # Logs WRITE
 interceptor.before_shell("git status")      # Logs SHELL + enforces
 ```
 
+## Cooperative Enforcement Model
+
+Drifter constrains well-behaved agents through protocols and structure. It is **not** a mandatory gate that a determined agent cannot bypass. For enforcement that agents cannot ignore, pair Drifter with:
+
+- **Git pre-commit hooks** (`drifter install-hook`) — blocks commits with drift at the git layer
+- **CI/CD integration** — run `drifter check` in GitHub Actions; fail the build on errors
+- **Required approval markers** — `GitCommitApprovalCheck` verifies destructive commits have `[APPROVED BY ...]` markers
+
+Drifter is most effective when the agent is cooperative and the human reviews session reports regularly. For high-risk environments, combine with mandatory CI gates.
+
 ## MCP Server Plugin
 
 An MCP server is available in `plugins/mcp-server/`:

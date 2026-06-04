@@ -53,7 +53,7 @@ class CredentialLeakCheck:
 
         for ext in source_exts:
             for src_file in root.rglob(f"*{ext}"):
-                if config.is_ignored(src_file):
+                if config.is_check_ignored(self.name, src_file):
                     continue
                 str_path = str(src_file)
                 if "/tests/" in str_path or str_path.startswith("tests/"):
@@ -109,7 +109,7 @@ class GitSafetyCheck:
 
         for ext in source_exts:
             for src_file in root.rglob(f"*{ext}"):
-                if config.is_ignored(src_file):
+                if config.is_check_ignored(self.name, src_file):
                     continue
                 str_path = str(src_file)
                 if "/tests/" in str_path or str_path.startswith("tests/"):
