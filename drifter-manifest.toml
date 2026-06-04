@@ -61,7 +61,7 @@ required_dirs = [
 "_hook_commands.py" = { layer = "core", max_lines = 100, purpose = "Git hook install/uninstall helpers" }
 "_toml_utils.py" = { layer = "core", max_lines = 50, purpose = "Safe TOML loading" }
 "__main__.py" = { layer = "cli", max_lines = 10, purpose = "Module entry point for python -m drifter" }
-"manifest_generator.py" = { layer = "core", max_lines = 330, purpose = "Capability manifest generator" }
+"manifest_generator.py" = { layer = "core", max_lines = 380, purpose = "Capability manifest generator" }
 
 [tree.src.drifter.checks]
 "__init__.py" = { layer = "checks", max_lines = 100, purpose = "Check registry" }

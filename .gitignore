@@ -43,3 +43,4 @@ id_rsa*
 
 # Drifter session audit logs (local only)
 .drifter/
+uv.lock

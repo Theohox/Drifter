@@ -29,6 +29,8 @@ class CommandInfo:
 class CheckInfo:
     name: str
     module: str
+    description: str = ""
+    severity: str = "warn"
 
 
 @dataclass
@@ -108,8 +110,9 @@ def _scan_cli_commands(root: Path) -> list[CommandInfo]:
 
 
 def _scan_checks(root: Path) -> list[CheckInfo]:
-    """Read BUILTIN_CHECKS from checks/__init__.py."""
+    """Read BUILTIN_CHECKS from checks/__init__.py and extract descriptions/severities."""
     init_file = root / "src" / "drifter" / "checks" / "__init__.py"
+    checks_dir = root / "src" / "drifter" / "checks"
     if not init_file.exists():
         return []
 
@@ -118,12 +121,50 @@ def _scan_checks(root: Path) -> list[CheckInfo]:
 
     # Extract the BUILTIN_CHECKS dict
     match = re.search(r"BUILTIN_CHECKS:\s*dict\[.*?\]\s*=\s*\{(.*?)\}", text, re.DOTALL)
-    if match:
-        body = match.group(1)
-        for line in body.split("\n"):
-            m = re.search(r'"([^"]+)"\s*:\s*(\w+)', line)
-            if m:
-                checks.append(CheckInfo(name=m.group(1), module=m.group(2)))
+    if not match:
+        return checks
+
+    body = match.group(1)
+    name_to_module: dict[str, str] = {}
+    for line in body.split("\n"):
+        m = re.search(r'"([^"]+)"\s*:\s*(\w+)', line)
+        if m:
+            name_to_module[m.group(1)] = m.group(2)
+
+    # Parse all check module files to extract docstrings
+    class_docstrings: dict[str, str] = {}
+    if checks_dir.exists():
+        for py_file in checks_dir.glob("*.py"):
+            if py_file.name.startswith("_"):
+                continue
+            try:
+                tree = ast.parse(py_file.read_text(encoding="utf-8"))
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.ClassDef) and node.name.endswith("Check"):
+                        doc = ast.get_docstring(node) or ""
+                        class_docstrings[node.name] = doc.split("\n")[0].strip()
+            except Exception:
+                pass
+
+    # Look up severities from DEFAULT_CONFIG
+    severities: dict[str, str] = {}
+    try:
+        from drifter.config import DEFAULT_CONFIG
+
+        for check_cfg in DEFAULT_CONFIG.get("checks", []):
+            severities[check_cfg["name"]] = check_cfg.get("severity", "warn")
+    except Exception:
+        pass
+
+    for check_name, class_name in name_to_module.items():
+        checks.append(
+            CheckInfo(
+                name=check_name,
+                module=class_name,
+                description=class_docstrings.get(class_name, ""),
+                severity=severities.get(check_name, "warn"),
+            )
+        )
 
     return checks
 
@@ -287,10 +328,14 @@ def describe_markdown(root: Path | None = None) -> str:
             "",
             f"**{len(manifest.checks)} built-in drift checks:**",
             "",
+            "| Check | Description | Severity |",
+            "|-------|-------------|----------|",
         ]
     )
     for check in manifest.checks:
-        lines.append(f"- `{check.name}`")
+        lines.append(
+            f"| `{check.name}` | {check.description or '—'} | {check.severity} |"
+        )
 
     lines.extend(
         [
