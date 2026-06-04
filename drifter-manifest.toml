@@ -4,7 +4,7 @@
 
 [project]
 name = "Drifter"
-version = "0.2.0"
+version = "0.3.0"
 python_requires = ">=3.10"
 
 [structure]
@@ -31,6 +31,7 @@ required_dirs = [
 "LICENSE-MIT" = { type = "license" }
 "LICENSE-APACHE" = { type = "license" }
 "README.md" = { type = "readme" }
+"CHANGELOG.md" = { type = "changelog" }
 "dangerous_patterns.toml" = { type = "config" }
 
 "drifter-manifest.toml" = { type = "manifest" }

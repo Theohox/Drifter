@@ -141,7 +141,7 @@ Tasks waiting on something before they can start.
 |----|------|----------|-----------|--------|
 | ENFORCE-001 | AST-based import boundary validation | backlog | design | Manifest `[boundaries]` section exists but is not enforced by code. Need `ImportBoundaryCheck`. |
 | ENFORCE-002 | Circular import detection | backlog | design | No check validates that `src/drifter/` modules have no circular imports. |
-| FEAT-004 | Derived file auto-generation (`drifter generate`) | backlog | design | Manifest `[generated]` section declares 3 files that must be derived from manifest. No `generate` command exists yet. |
+| FEAT-004 | Derived file auto-generation (drifter generate) | backlog | design | Manifest `[generated]` section declares 3 files that must be derived from manifest. No generate command exists yet. |
 | FEAT-005 | Trend-based file size enforcement | backlog | design | Current hard limits cause drift on legitimate growth. Replace with growth-percentage threshold. |
 
 ---

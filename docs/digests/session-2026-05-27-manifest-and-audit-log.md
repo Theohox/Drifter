@@ -4,7 +4,7 @@ type: archive
 status: archived
 phase: 1
 created: '2026-05-27T23:30:00Z'
-updated: '2026-05-29T00:27:03Z'
+updated: '2026-06-04T17:25:00Z'
 ---
 
 # Session Digest — Manifest System + Session Audit Log
@@ -80,7 +80,7 @@ updated: '2026-05-29T00:27:03Z'
 
 2. Add import boundary checks (AST-based layer validation)
 3. Add circular import check
-4. Add derived file auto-generation (`drifter generate`)
+4. Add derived file auto-generation (drifter generate)
 
 ## Decisions
 

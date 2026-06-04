@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "drifter"
-version = "0.2.0"
+version = "0.3.0"
 description = "Universal drift guard for AI agents — enforce discipline, prevent bloat, and stop hallucination before it starts."
 readme = "README.md"
 license = { text = "MIT OR Apache-2.0" }
