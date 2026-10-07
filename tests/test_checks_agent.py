@@ -47,12 +47,23 @@ class TestAgentSelfAuditCheck:
 class TestGitCommitApprovalCheck:
     def test_missing_approval_marker_destructive(self, git_repo) -> None:
         config = Config.load(root=git_repo.path)
-        git_repo.commit("delete old files")
+        git_repo.commit("did a git push --force to main")
 
         check = GitCommitApprovalCheck()
         issues = check.run(git_repo.path, config)
         assert len(issues) == 1
         assert "Unapproved destructive commits" in issues[0].detail
+
+    def test_english_words_are_not_destructive_ops(self, git_repo) -> None:
+        """Maintenance language ('drop', 'remove', 'delete') must not fire —
+        only git-history-destructive commands require approval markers."""
+        config = Config.load(root=git_repo.path)
+        git_repo.commit("ci: drop codecov upload")
+        git_repo.commit("chore: remove dead code and delete stale files")
+
+        check = GitCommitApprovalCheck()
+        issues = check.run(git_repo.path, config)
+        assert len(issues) == 0
 
     def test_benign_commit_without_marker_ok(self, git_repo) -> None:
         config = Config.load(root=git_repo.path)
@@ -64,7 +75,7 @@ class TestGitCommitApprovalCheck:
 
     def test_with_approval_marker(self, git_repo) -> None:
         config = Config.load(root=git_repo.path)
-        git_repo.commit("[APPROVED BY MAINTAINER] fix bug")
+        git_repo.commit("[APPROVED BY MAINTAINER] git reset --hard after bad merge")
 
         check = GitCommitApprovalCheck()
         issues = check.run(git_repo.path, config)

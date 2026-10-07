@@ -114,8 +114,12 @@ class GitCommitApprovalCheck:
 
     name = "git_commit_approval"
     COMMIT_CHECK_WINDOW = 5
+    # Match destructive GIT OPERATIONS, not English words — "drop codecov" or
+    # "remove dead code" are ordinary maintenance commits, not history
+    # destruction. Only command-shaped patterns require an approval marker.
     _DESTRUCTIVE_RE = re.compile(
-        r"\b(delete|remove|drop|destroy|rm -rf)\b",
+        r"git\s+(push\s+(--force|-f\b)|reset\s+--hard|clean\s+-[a-z]*[df]|"
+        r"branch\s+-D|filter-branch|filter-repo|reflog\s+expire)",
         re.IGNORECASE,
     )
 
