@@ -36,7 +36,6 @@ from drifter.pre_flight import run_pre_flight  # noqa: E402
 from drifter.session_logger import SessionLogger  # noqa: E402
 from drifter.shell_guard import ShellGuard  # noqa: E402
 
-
 try:
     from fastmcp import FastMCP
 except ImportError as exc:
@@ -53,9 +52,8 @@ _EXPECTED_TOKEN = os.environ.get("DRIFTER_MCP_TOKEN")
 
 def _require_auth(token: str) -> dict | None:
     """Return error dict if token is required but invalid."""
-    if _EXPECTED_TOKEN:
-        if not hmac.compare_digest(_EXPECTED_TOKEN, token):
-            return {"status": "error", "reason": "Invalid authentication token"}
+    if _EXPECTED_TOKEN and not hmac.compare_digest(_EXPECTED_TOKEN, token):
+        return {"status": "error", "reason": "Invalid authentication token"}
     return None
 
 

@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-from drifter.config import Config
 from drifter.checks.docs import (
     CrossDocConsistencyCheck,
     DigestStalenessCheck,
@@ -10,6 +9,7 @@ from drifter.checks.docs import (
 )
 from drifter.checks.project import ConductorContentCheck
 from drifter.checks.sync import ArchitectureDocSyncCheck
+from drifter.config import Config
 
 
 class TestTimestampStalenessCheck:

@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from drifter.config import Config
 from drifter.checks.agent_behavior import AgentSelfAuditCheck, GitCommitApprovalCheck
+from drifter.config import Config
 
 
 class TestAgentSelfAuditCheck:

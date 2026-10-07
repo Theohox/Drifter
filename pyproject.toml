@@ -33,7 +33,9 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-cov",
-    "ruff",
+    # Pinned band: bump deliberately. CI installs the latest ruff otherwise,
+    # and new ruff releases introduce new lint rules that break the build.
+    "ruff >= 0.16, < 0.17",
     "mypy",
 ]
 mcp = [
@@ -54,6 +56,46 @@ packages = ["src/drifter"]
 [tool.ruff]
 target-version = "py310"
 line-length = 88
+
+[tool.ruff.lint]
+# Explicit rule set. Ruff 0.16 expanded its default from 59 to 413 rules,
+# which broke CI when GitHub Actions installed the latest release. This list
+# pins the rule families we adopt; expanding it is a deliberate act, not
+# upstream default drift.
+select = ["E", "F", "I", "UP", "B", "SIM", "S", "BLE", "RUF", "PLW", "FURB", "PLR"]
+ignore = [
+    # Drift checks are deliberately defensive/best-effort: one bad file,
+    # unreadable path, or failing check must never crash the whole run.
+    # drift_guard additionally wraps every check.run in a blind except.
+    "BLE001",
+    "S110",
+    "S112",
+    # Same defensive pattern: plain try/except/pass is kept over
+    # contextlib.suppress for consistency with the S110 policy above.
+    "SIM105",
+    # The formatter owns line length; E501 would fight `ruff format`.
+    "E501",
+    # Subprocess targets are fixed, vetted binaries (git, sys.executable).
+    "S603",
+    "S607",
+    # Reusing the loop variable for the parsed value is an accepted idiom here.
+    "PLW2901",
+    # Pylint complexity/count thresholds are advisory, not hard limits.
+    "PLR0911",
+    "PLR0912",
+    "PLR0913",
+    "PLR0915",
+    "PLR0917",
+    "PLR2004",
+    # Console reporter uses the ℹ glyph deliberately.
+    "RUF001",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Asserts are idiomatic in pytest.
+"tests/**" = ["S101"]
+# sys.path bootstrap before imports; fake tokens for auth tests.
+"tests/test_mcp_server.py" = ["E402", "S105", "S106"]
 
 [tool.mypy]
 python_version = "3.10"

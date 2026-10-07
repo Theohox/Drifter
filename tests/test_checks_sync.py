@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-from drifter.config import Config
 from drifter.checks.sync import (
     ArchitectureDocSyncCheck,
     AuditCoverageCheck,
@@ -12,6 +11,7 @@ from drifter.checks.sync import (
     ReadmeCompletenessCheck,
     ReporterCompletenessCheck,
 )
+from drifter.config import Config
 
 
 def _write(path: Path, text: str) -> None:

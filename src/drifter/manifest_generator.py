@@ -133,10 +133,12 @@ def _builtin_checks_map(tree: ast.Module) -> dict[str, str]:
             isinstance(node, ast.AnnAssign)
             and isinstance(node.target, ast.Name)
             and node.target.id == "BUILTIN_CHECKS"
-        ):
-            value = node.value
-        elif isinstance(node, ast.Assign) and any(
-            isinstance(t, ast.Name) and t.id == "BUILTIN_CHECKS" for t in node.targets
+        ) or (
+            isinstance(node, ast.Assign)
+            and any(
+                isinstance(t, ast.Name) and t.id == "BUILTIN_CHECKS"
+                for t in node.targets
+            )
         ):
             value = node.value
         if not isinstance(value, ast.Dict):
@@ -223,20 +225,19 @@ def _scan_mcp_tools(root: Path) -> list[McpToolInfo]:
             for decorator in node.decorator_list:
                 # Match @mcp.tool() or @mcp_tool()
                 is_mcp_tool = False
-                if isinstance(decorator, ast.Attribute) and decorator.attr == "tool":
-                    is_mcp_tool = True
-                elif (
-                    isinstance(decorator, ast.Call)
-                    and isinstance(decorator.func, ast.Attribute)
-                    and decorator.func.attr == "tool"
-                ):
-                    is_mcp_tool = True
-                elif isinstance(decorator, ast.Name) and decorator.id == "mcp_tool":
-                    is_mcp_tool = True
-                elif (
-                    isinstance(decorator, ast.Call)
-                    and isinstance(decorator.func, ast.Name)
-                    and decorator.func.id == "mcp_tool"
+                if (
+                    (isinstance(decorator, ast.Attribute) and decorator.attr == "tool")
+                    or (
+                        isinstance(decorator, ast.Call)
+                        and isinstance(decorator.func, ast.Attribute)
+                        and decorator.func.attr == "tool"
+                    )
+                    or (isinstance(decorator, ast.Name) and decorator.id == "mcp_tool")
+                    or (
+                        isinstance(decorator, ast.Call)
+                        and isinstance(decorator.func, ast.Name)
+                        and decorator.func.id == "mcp_tool"
+                    )
                 ):
                     is_mcp_tool = True
 
@@ -294,7 +295,7 @@ def _scan_doc_types(root: Path) -> list[str]:
 def generate_manifest(root: Path | None = None) -> CapabilityManifest:
     """Scan the codebase and return a CapabilityManifest."""
     if root is None:
-        root = Path(".").resolve()
+        root = Path.cwd()
 
     return CapabilityManifest(
         version=_extract_version(root),
@@ -309,7 +310,7 @@ def generate_manifest(root: Path | None = None) -> CapabilityManifest:
 def write_manifest(root: Path | None = None) -> Path:
     """Generate and write the manifest to .drifter/capability-manifest.json."""
     if root is None:
-        root = Path(".").resolve()
+        root = Path.cwd()
 
     manifest = generate_manifest(root)
     output = root / ".drifter" / "capability-manifest.json"

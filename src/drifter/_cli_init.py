@@ -7,8 +7,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from drifter._templates import template_text
 from drifter._cli_common import print_banner, print_rule
+from drifter._templates import template_text
 from drifter.config import Config
 from drifter.doc_validator import validate_docs
 

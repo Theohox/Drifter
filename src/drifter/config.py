@@ -17,7 +17,6 @@ from typing import Any
 
 from drifter._toml_utils import safe_load_toml
 
-
 DEFAULT_CONFIG: dict[str, Any] = {
     "root": ".",
     "max_pending_age_days": 7,

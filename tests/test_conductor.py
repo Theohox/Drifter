@@ -3,8 +3,8 @@
 import re
 from pathlib import Path
 
-from drifter.config import Config
 from drifter.conductor import Conductor
+from drifter.config import Config
 
 
 class TestConductor:

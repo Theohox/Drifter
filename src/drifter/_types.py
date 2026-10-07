@@ -9,7 +9,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-
 ClassificationAction = Literal["allow", "block", "warn", "approval_required"]
 
 

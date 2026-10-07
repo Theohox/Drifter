@@ -6,8 +6,8 @@ Checks verify behavioral patterns from the log.
 
 from __future__ import annotations
 
-import hmac
 import hashlib
+import hmac
 import os
 import stat
 from dataclasses import dataclass

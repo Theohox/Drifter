@@ -6,13 +6,13 @@ from pathlib import Path
 
 import pytest
 
-from drifter.config import Config
 from drifter.checks.code_quality import HardcodedPathCheck
 from drifter.checks.security import (
     CredentialLeakCheck,
     DangerousPatternsCheck,
     GitSafetyCheck,
 )
+from drifter.config import Config
 
 
 class TestGitSafetyCheck:

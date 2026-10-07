@@ -1,8 +1,9 @@
 from __future__ import annotations
-from datetime import datetime, timedelta, timezone
 
 import re
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import ClassVar
 
 from drifter.checks._base import Issue
 from drifter.checks._shared import (
@@ -19,7 +20,7 @@ class StaleReferenceCheck:
 
     name = "stale_reference"
 
-    _PATH_PATTERNS = [
+    _PATH_PATTERNS: ClassVar = [
         re.compile(
             r"`([^`]+\.(?:py|rs|md|toml|json|yaml|txt|cfg|sh|js|ts|go|java|cpp|c|h))`"
         ),

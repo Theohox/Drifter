@@ -22,8 +22,8 @@ from drifter._cli_admin import (
 from drifter._cli_check import cmd_check, cmd_session_report
 from drifter._cli_conductor import cmd_conductor
 from drifter._cli_init import cmd_init, cmd_validate
-from drifter._hook_commands import cmd_install_hook, cmd_uninstall_hook
 from drifter._commit_commands import cmd_approve, cmd_commit_msg
+from drifter._hook_commands import cmd_install_hook, cmd_uninstall_hook
 
 
 def main(argv: list[str] | None = None) -> int:

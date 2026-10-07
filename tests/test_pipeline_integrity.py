@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from drifter.config import Config
 from drifter.checks.project import PipelineIntegrityCheck
+from drifter.config import Config
 
 
 class TestPipelineIntegrityCheck:

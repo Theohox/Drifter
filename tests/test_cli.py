@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import drifter.cli as cli
+from drifter import cli
 
 HANDLER_NAMES = [
     "cmd_audit",

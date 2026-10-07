@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-from drifter.config import Config
 from drifter.checks.behavioral import (
     DriftCheckAfterWriteCheck,
     NoRushCheck,
@@ -11,6 +10,7 @@ from drifter.checks.behavioral import (
     is_drift_check,
     is_test_run,
 )
+from drifter.config import Config
 from drifter.session_logger import SessionLogger
 
 

@@ -122,20 +122,20 @@ class ReadBeforeWriteCheck:
         # Second pass: check writes against the full set of reads
         written_without_read: set[str] = set()
         for entry in entries:
-            if entry.action == "WRITE":
-                if (
-                    entry.target not in read_targets
-                    and entry.target not in written_without_read
-                ):
-                    issues.append(
-                        Issue(
-                            check=self.name,
-                            file="session.log",
-                            detail=f"WRITE {entry.target} without preceding READ",
-                            severity="error",
-                        )
+            if (
+                entry.action == "WRITE"
+                and entry.target not in read_targets
+                and entry.target not in written_without_read
+            ):
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file="session.log",
+                        detail=f"WRITE {entry.target} without preceding READ",
+                        severity="error",
                     )
-                    written_without_read.add(entry.target)
+                )
+                written_without_read.add(entry.target)
         return issues
 
 

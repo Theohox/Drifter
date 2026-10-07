@@ -21,6 +21,7 @@ class TestMainEntryPoint:
             cwd=str(PROJECT_ROOT),
             capture_output=True,
             text=True,
+            check=False,
         )
         assert result.returncode == 0
         assert "usage:" in result.stdout.lower()
@@ -37,6 +38,7 @@ class TestMainEntryPoint:
             [sys.executable, "-m", "drifter", "--root", str(tmp_path), "check"],
             capture_output=True,
             text=True,
+            check=False,
         )
         assert result.returncode == 1
         assert "error" in result.stdout.lower()
@@ -54,6 +56,7 @@ class TestMainEntryPoint:
             ],
             capture_output=True,
             text=True,
+            check=False,
         )
         # Empty project drifts -> rc 1 via sys.exit(main())
         assert result.returncode == 1

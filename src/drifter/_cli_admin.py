@@ -6,8 +6,8 @@ import argparse
 from pathlib import Path
 
 from drifter._cli_common import print_banner, print_rule
-from drifter.config import Config
 from drifter.conductor import Conductor
+from drifter.config import Config
 from drifter.history_reader import HistoryReader
 from drifter.manifest_generator import describe_json, describe_markdown, write_manifest
 from drifter.pre_flight import run_pre_flight

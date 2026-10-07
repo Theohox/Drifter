@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from drifter._doc_validate import DocIssue, _validate_single
 from drifter.config import Config
-from drifter._doc_validate import _validate_single, DocIssue
 
 
 @dataclass

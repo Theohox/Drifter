@@ -19,7 +19,7 @@ BUNDLED_TEMPLATES = [
 class _Missing:
     """Traversable stand-in where nothing exists."""
 
-    def joinpath(self, _part: str) -> "_Missing":
+    def joinpath(self, _part: str) -> _Missing:
         return self
 
     def is_file(self) -> bool:

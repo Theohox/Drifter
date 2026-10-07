@@ -32,10 +32,6 @@ class DrifterError(Exception):
 class DangerousCommandError(DrifterError):
     """Raised when a command matches a blocked pattern."""
 
-    pass
-
 
 class ApprovalRequiredError(DrifterError):
     """Raised when a command requires explicit human approval."""
-
-    pass

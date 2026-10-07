@@ -18,7 +18,7 @@ class HistoryReader:
         self.shell = self._detect_shell()
 
     @classmethod
-    def auto_detect(cls) -> "HistoryReader | None":
+    def auto_detect(cls) -> HistoryReader | None:
         """Auto-detect history file from environment and known paths."""
         # 1. Check explicit env var
         env_path = os.environ.get("DRIFTER_HISTORY_PATH")

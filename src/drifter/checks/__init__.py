@@ -16,6 +16,7 @@ from drifter.checks.code_quality import (
     TestCoverageCheck,
     TomllibCompatibilityCheck,
 )
+from drifter.checks.config_sync import ConfigSyncCheck
 from drifter.checks.docs import (
     ArchiveIntegrityCheck,
     CrossDocConsistencyCheck,
@@ -23,6 +24,7 @@ from drifter.checks.docs import (
     StaleReferenceCheck,
     TimestampStalenessCheck,
 )
+from drifter.checks.ghost_reference import GhostReferenceCheck
 from drifter.checks.project import (
     ConductorContentCheck,
     ConductorHealthCheck,
@@ -31,11 +33,9 @@ from drifter.checks.project import (
 from drifter.checks.security import (
     CredentialLeakCheck,
     DangerousPatternsCheck,
-    GitSafetyCheck,
     GitignoreCheck,
+    GitSafetyCheck,
 )
-from drifter.checks.config_sync import ConfigSyncCheck
-from drifter.checks.ghost_reference import GhostReferenceCheck
 from drifter.checks.structure import (
     ClaimSyncCheck,
     FileSizeCheck,

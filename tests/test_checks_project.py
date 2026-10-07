@@ -7,9 +7,9 @@ lives in test_checks_security.py with the other security checks.
 
 from pathlib import Path
 
-from drifter.config import Config
 from drifter.checks.code_quality import DeadCodeCheck, TestCoverageCheck
-from drifter.checks.sync import ReadmeCompletenessCheck, PreFlightSyncCheck
+from drifter.checks.sync import PreFlightSyncCheck, ReadmeCompletenessCheck
+from drifter.config import Config
 
 
 class TestReadmeCompletenessCheck:

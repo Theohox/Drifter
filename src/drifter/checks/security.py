@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import ClassVar
 
 from drifter._toml_utils import safe_load_toml
 from drifter.checks._base import Issue
@@ -13,7 +14,7 @@ class CredentialLeakCheck:
 
     name = "credential_leak"
 
-    _PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    _PATTERNS: ClassVar[list[tuple[re.Pattern[str], str]]] = [
         (re.compile(r"sk-[a-zA-Z0-9]{20,}"), "OpenAI API key"),
         (re.compile(r"ghp_[a-zA-Z0-9]{36}"), "GitHub PAT"),
         (re.compile(r"gho_[a-zA-Z0-9]{36}"), "GitHub OAuth token"),
@@ -97,7 +98,7 @@ class GitSafetyCheck:
     name = "git_safety"
 
     # Patterns that look like git history mutation in code
-    _GIT_PATTERNS = [
+    _GIT_PATTERNS: ClassVar = [
         re.compile(r"git\s+(commit|push|reset|rebase|merge|cherry-pick|tag)\s"),
         re.compile(r"git\s+checkout\s+-b"),
         re.compile(r"subprocess\.\w+.*git\s+(commit|push|reset|rebase|merge)"),

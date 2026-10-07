@@ -1,6 +1,6 @@
 """Tests for enforcement exception classes."""
 
-from drifter.errors import DangerousCommandError, ApprovalRequiredError, DrifterError
+from drifter.errors import ApprovalRequiredError, DangerousCommandError, DrifterError
 from drifter.shell_guard import Classification
 
 

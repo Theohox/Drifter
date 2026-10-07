@@ -1,7 +1,7 @@
 """Tests for doc coverage check."""
 
-from drifter.config import Config
 from drifter.checks.sync import DocCoverageCheck
+from drifter.config import Config
 
 FULL_README = (
     "# Project\n\nenforcement dangerous_patterns session audit pre-flight conductor\n"

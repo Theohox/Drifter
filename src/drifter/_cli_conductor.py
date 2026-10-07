@@ -5,8 +5,8 @@ from __future__ import annotations
 import argparse
 
 from drifter._cli_common import print_banner, print_rule
-from drifter.config import Config
 from drifter.conductor import Conductor
+from drifter.config import Config
 
 
 def cmd_conductor(args: argparse.Namespace) -> int:

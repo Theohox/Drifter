@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-
-from dataclasses import dataclass
 
 VALID_TYPES = {
     "constitution",

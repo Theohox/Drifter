@@ -128,6 +128,7 @@ class GitCommitApprovalCheck:
                 capture_output=True,
                 text=True,
                 timeout=5,
+                check=False,
             )
             if repo_check.returncode != 0:
                 return issues
@@ -144,6 +145,7 @@ class GitCommitApprovalCheck:
                 capture_output=True,
                 text=True,
                 timeout=5,
+                check=False,
             )
             if result.returncode != 0:
                 return issues

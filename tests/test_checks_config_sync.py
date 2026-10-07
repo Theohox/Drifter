@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from drifter.config import Config
 from drifter.checks.config_sync import ConfigSyncCheck
+from drifter.config import Config
 
 
 class TestConfigSyncCheck:

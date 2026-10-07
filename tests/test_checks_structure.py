@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-from drifter.config import Config
-from drifter.checks.sync import CliOutputCheck
 from drifter.checks.security import GitignoreCheck
 from drifter.checks.structure import (
     ClaimSyncCheck,
@@ -11,6 +9,8 @@ from drifter.checks.structure import (
     ManifestSyncCheck,
     TreeIntegrityCheck,
 )
+from drifter.checks.sync import CliOutputCheck
+from drifter.config import Config
 
 
 class TestCliOutputCheck:

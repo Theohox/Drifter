@@ -7,13 +7,13 @@ HardcodedPathCheck (checks/code_quality.py), and ConductorHealthCheck
 
 from pathlib import Path
 
-from drifter.config import Config
+from drifter.checks.code_quality import HardcodedPathCheck
 from drifter.checks.docs import (
     ArchiveIntegrityCheck,
     StaleReferenceCheck,
 )
-from drifter.checks.code_quality import HardcodedPathCheck
 from drifter.checks.project import ConductorHealthCheck
+from drifter.config import Config
 
 
 class TestStaleReferenceCheck:

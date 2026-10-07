@@ -244,17 +244,16 @@ class PipelineIntegrityCheck:
             return False
 
         for node in adjacency:
-            if node not in visited:
-                if has_cycle(node):
-                    issues.append(
-                        Issue(
-                            check=self.name,
-                            file=str(conductor.relative_to(root)),
-                            detail="Circular dependency detected in task graph: check 'Depends On' references",
-                            severity="error",
-                        )
+            if node not in visited and has_cycle(node):
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file=str(conductor.relative_to(root)),
+                        detail="Circular dependency detected in task graph: check 'Depends On' references",
+                        severity="error",
                     )
-                    break
+                )
+                break
 
         # Check that "Next" references exist
         next_match = re.search(r"\*\*Next\*\*\s*\|\s*(.+?)\s*\n", text)

@@ -91,6 +91,7 @@ def cmd_commit_msg(args: argparse.Namespace) -> int:
         cwd=root,
         capture_output=True,
         text=True,
+        check=False,
     )
     if result.returncode != 0:
         print(f"✗ git diff failed: {result.stderr.strip()}")

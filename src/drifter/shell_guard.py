@@ -28,7 +28,6 @@ from drifter._toml_utils import safe_load_toml
 from drifter._types import Classification
 from drifter.errors import ApprovalRequiredError, DangerousCommandError
 
-
 _ACTION_SEVERITY = {"allow": 0, "warn": 1, "approval_required": 2, "block": 3}
 
 _RULE_SECTIONS = ("git", "shell", "filesystem")

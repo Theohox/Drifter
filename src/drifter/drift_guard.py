@@ -14,8 +14,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import cast
 
-from drifter.checks._base import Check, Issue
 from drifter.checks import BUILTIN_CHECKS
+from drifter.checks._base import Check, Issue
 from drifter.config import CheckConfig, Config
 
 _SEVERITY_RANK = {"info": 0, "warn": 1, "error": 2}

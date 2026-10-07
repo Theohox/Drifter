@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from drifter.config import Config
 from drifter.checks.code_quality import TomllibCompatibilityCheck
+from drifter.config import Config
 
 
 class TestTomllibCompatibilityCheck:

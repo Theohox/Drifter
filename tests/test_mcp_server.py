@@ -38,7 +38,7 @@ sys.modules["fastmcp"] = _fake_fastmcp_module
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "plugins/mcp-server"))
 
-from server import (  # noqa: E402
+from server import (
     _require_auth,
     drifter_check,
     drifter_classify,

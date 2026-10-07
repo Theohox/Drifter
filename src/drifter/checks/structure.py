@@ -32,7 +32,7 @@ def _walk_manifest_tree(manifest: dict) -> list[tuple[str, dict]]:
                     except ValueError:
                         pass
                 else:
-                    _collect(val, path_parts + [key])
+                    _collect(val, [*path_parts, key])
 
     _collect(manifest, [])
     return results
@@ -188,10 +188,10 @@ class ManifestSyncCheck:
                                         if (
                                             isinstance(target, ast.Name)
                                             and target.id == "name"
+                                            and isinstance(sub.value, ast.Constant)
+                                            and isinstance(sub.value.value, str)
                                         ):
-                                            if isinstance(sub.value, ast.Constant):
-                                                if isinstance(sub.value.value, str):
-                                                    actual_names.add(sub.value.value)
+                                            actual_names.add(sub.value.value)
                 except Exception:
                     pass
 

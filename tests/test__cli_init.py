@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from types import SimpleNamespace
+from typing import ClassVar
 
 import drifter._cli_init as cli_init_mod
 from drifter._cli_init import _doc_stub, cmd_init, cmd_validate
@@ -30,7 +31,7 @@ def _init_args(root: Path, full: bool = False, force: bool = False) -> SimpleNam
 
 
 class TestCmdInit:
-    CORE_FILES = [
+    CORE_FILES: ClassVar = [
         "AGENTS.md",
         "dangerous_patterns.toml",
         "drifter.toml",
@@ -39,7 +40,7 @@ class TestCmdInit:
         "docs/digests/index.md",
         "docs/archive/README.md",
     ]
-    STUB_FILES = [
+    STUB_FILES: ClassVar = [
         "docs/methodology.md",
         "docs/architecture.md",
         "docs/adoption-guide.md",

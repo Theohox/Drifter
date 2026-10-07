@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from drifter.errors import DangerousCommandError, ApprovalRequiredError
+from drifter.errors import ApprovalRequiredError, DangerousCommandError
 from drifter.shell_guard import ShellGuard
 
 

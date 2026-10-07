@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import ClassVar
 
 from drifter.checks._base import Issue
 from drifter.config import Config
@@ -206,7 +207,7 @@ class ReadmeCompletenessCheck:
 
     name = "readme_completeness"
 
-    _REQUIRED_MENTIONS = [
+    _REQUIRED_MENTIONS: ClassVar = [
         "AGENTS.md",
         "dangerous_patterns.toml",
         "session-protocol.md",
@@ -272,7 +273,7 @@ class CliOutputCheck:
 
     name = "cli_output"
 
-    _REQUIRED_MENTIONS = [
+    _REQUIRED_MENTIONS: ClassVar = [
         "AGENTS.md",
         "dangerous_patterns.toml",
         "session-protocol.md",
@@ -398,7 +399,7 @@ class DocCoverageCheck:
     name = "doc_coverage"
 
     # Files that should match their templates exactly
-    _TEMPLATE_PAIRS = [
+    _TEMPLATE_PAIRS: ClassVar = [
         (
             "dangerous_patterns.toml",
             "src/drifter/templates/dangerous_patterns.toml.tmpl",
@@ -406,7 +407,7 @@ class DocCoverageCheck:
     ]
 
     # Key features that should be mentioned in README.md
-    _README_FEATURES = [
+    _README_FEATURES: ClassVar = [
         "enforcement",
         "dangerous_patterns",
         "session audit",
@@ -492,17 +493,19 @@ class DocCoverageCheck:
         for rendered_name, template_name in self._TEMPLATE_PAIRS:
             rendered = root / rendered_name
             template = root / template_name
-            if rendered.exists() and template.exists():
-                if rendered.read_text(encoding="utf-8") != template.read_text(
-                    encoding="utf-8"
-                ):
-                    issues.append(
-                        Issue(
-                            check=self.name,
-                            file=rendered_name,
-                            detail=f"diverges from template '{template_name}'",
-                            severity="warn",
-                        )
+            if (
+                rendered.exists()
+                and template.exists()
+                and rendered.read_text(encoding="utf-8")
+                != template.read_text(encoding="utf-8")
+            ):
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file=rendered_name,
+                        detail=f"diverges from template '{template_name}'",
+                        severity="warn",
                     )
+                )
 
         return issues
