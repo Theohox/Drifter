@@ -16,6 +16,9 @@ max_file_lines = 300
 # number. Re-baseline with wc -l whenever a file legitimately grows past budget.
 
 [tree.root]
+# NOTE: .drifter/ holds runtime state (session log, HMAC secret, generated
+# capability manifest) and is .gitignored — it is intentionally NOT declared
+# here; TreeIntegrityCheck skips it like .git.
 "AGENTS.md" = { type = "constitution", max_lines = 370 }
 "LICENSE-MIT" = { type = "license" }
 "LICENSE-APACHE" = { type = "license" }
@@ -25,13 +28,10 @@ max_file_lines = 300
 
 "drifter-manifest.toml" = { type = "manifest" }
 "drifter.toml" = { type = "config" }
-".drifter/session.log" = { type = "log", note = "Per-project session audit log, .gitignored" }
-".drifter/.session_secret" = { type = "secret", note = "HMAC secret for session log integrity, .gitignored" }
-".drifter/capability-manifest.json" = { type = "generated", max_lines = 385, note = "Auto-generated capability manifest, .gitignored" }
+"pyproject.toml" = { type = "config" }
 ".gitignore" = { type = "config", note = "Git ignore rules" }
 ".github/workflows/ci.yml" = { type = "config", note = "GitHub Actions CI workflow" }
 ".github/workflows/publish.yml" = { type = "config", note = "Tag-triggered PyPI publish via trusted publishing" }
-"pyproject.toml" = { type = "config" }
 
 [tree.src.drifter]
 "__init__.py" = { layer = "package", max_lines = 10, purpose = "Package init" }

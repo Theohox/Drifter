@@ -26,6 +26,7 @@ PATH_SKIP_PATTERNS = {
     "YYYY-MM-DD",
     ".kimi/",
     ".claude/",
+    ".drifter/",
     ".cursor/",
     "nonexistent",
     "not_found",

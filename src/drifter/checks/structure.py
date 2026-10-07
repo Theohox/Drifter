@@ -76,6 +76,7 @@ class TreeIntegrityCheck:
                     ".coverage",
                     "dist",
                     ".eggs",
+                    ".drifter",
                 }
                 if any(part in skip_parts for part in parts):
                     continue
