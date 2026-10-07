@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FuturesTimeoutError
 from pathlib import Path
 
 from drifter._toml_utils import safe_load_toml
@@ -44,12 +45,16 @@ class AgentSelfAuditCheck:
         if reader.path is None or not reader.path.exists():
             return issues
 
-        # Wrap history read in a timeout to avoid DoS from huge files
+        # Bound how long we wait on the history read so a huge or slow
+        # file cannot stall the whole check run. On timeout, shut the
+        # executor down without waiting for the reader thread.
+        executor = ThreadPoolExecutor(max_workers=1)
+        future = executor.submit(reader.read_commands, max_entries=50)
         try:
-            with ThreadPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(reader.read_commands, max_entries=50)
-                recent = future.result(timeout=10)
-        except Exception:
+            recent = future.result(timeout=10)
+        except FuturesTimeoutError:
+            future.cancel()
+            executor.shutdown(wait=False, cancel_futures=True)
             issues.append(
                 Issue(
                     check=self.name,
@@ -59,6 +64,18 @@ class AgentSelfAuditCheck:
                 )
             )
             return issues
+        except Exception as exc:
+            executor.shutdown(wait=False, cancel_futures=True)
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file=str(reader.path),
+                    detail=f"Cannot read shell history: {type(exc).__name__}: {exc}",
+                    severity="warn",
+                )
+            )
+            return issues
+        executor.shutdown(wait=True)
 
         for line in recent:
             line = line.strip()
@@ -134,6 +151,8 @@ class GitCommitApprovalCheck:
             commits = result.stdout.split("\x00")
             unapproved_destructive: list[str] = []
             for commit_block in commits:
+                # %x00 separates records; git terminates each with a newline
+                commit_block = commit_block.strip()
                 if "|" not in commit_block:
                     continue
                 parts = commit_block.split("|", 2)
@@ -154,6 +173,13 @@ class GitCommitApprovalCheck:
                         severity="error",
                     )
                 )
-        except Exception:
-            pass
+        except Exception as exc:
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file="git",
+                    detail=f"Could not inspect git history: {type(exc).__name__}: {exc}",
+                    severity="warn",
+                )
+            )
         return issues

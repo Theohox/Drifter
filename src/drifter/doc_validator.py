@@ -37,8 +37,8 @@ def validate_docs(root: Path | None = None, config: Config | None = None) -> Doc
         if md_file.parent == root and md_file.name in (
             "README.md",
             "AGENTS.md",
-            "LICENSE",
             "CONTRIBUTING.md",
+            "CHANGELOG.md",
         ):
             continue
         issues.extend(_validate_single(md_file, root))

@@ -6,7 +6,7 @@ can handle enforcement failures programmatically.
 
 from __future__ import annotations
 
-from drifter.shell_guard import Classification
+from drifter._types import Classification
 
 
 class DrifterError(Exception):

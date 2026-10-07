@@ -2,15 +2,15 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 import re
-import sys
 from pathlib import Path
 
-if sys.version_info >= (3, 11):
-    pass
-else:
-    pass
-
 from drifter.checks._base import Issue
+from drifter.checks._shared import (
+    archive_designated_docs,
+    is_skippable_path,
+    load_drifter_manifest,
+    resolve_doc_path,
+)
 from drifter.config import Config
 
 
@@ -28,34 +28,6 @@ class StaleReferenceCheck:
             r"(?:^|\s)([\w/\-\.]+\.(?:py|rs|md|toml|json|yaml|txt|js|ts|go|java|cpp|c|h))"
         ),
     ]
-
-    _SKIP_PATTERNS = {
-        "http",
-        "https",
-        "mailto",
-        "#",
-        "..",
-        "./",
-        "example",
-        "your_",
-        "my_",
-        "agent_name",
-        "skill_name",
-        "yyyy-mm-dd",
-        "YYYY-MM-DD",
-        ".kimi/",
-        ".claude/",
-        ".cursor/",
-        # Common documentation examples that may not exist in all projects
-        "purpose.md",
-        "current_state.md",
-        "agent_open.md",
-        "agent_closed.md",
-        "ops-playbook.md",
-        "contributing.md",
-        "api-reference.md",
-        "session-*.md",  # wildcard patterns in examples
-    }
 
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
@@ -78,13 +50,9 @@ class StaleReferenceCheck:
                         if len(match.groups()) >= 2 and match.group(2)
                         else match.group(1)
                     )
-                    if self._should_skip(path_str):
+                    if is_skippable_path(path_str):
                         continue
-                    candidate = root / path_str
-                    if not candidate.exists():
-                        candidate = (
-                            wiki_dir / path_str if wiki_dir.exists() else candidate
-                        )
+                    candidate = resolve_doc_path(root, path_str)
                     if not candidate.exists() and "/" in path_str and len(path_str) > 5:
                         issues.append(
                             Issue(
@@ -95,15 +63,6 @@ class StaleReferenceCheck:
                             )
                         )
         return issues
-
-    def _should_skip(self, path_str: str) -> bool:
-        lower = path_str.lower()
-        if any(lower.startswith(p) for p in self._SKIP_PATTERNS):
-            return True
-        for skip in self._SKIP_PATTERNS:
-            if skip in lower:
-                return True
-        return False
 
 
 class CrossDocConsistencyCheck:
@@ -187,11 +146,18 @@ class TimestampStalenessCheck:
 
 
 class DigestStalenessCheck:
-    """Check digests for PENDING/TODO items older than threshold."""
+    """Check digests for PENDING/TODO items older than threshold.
+
+    Only list-item-ish lines (table rows, bullets, numbered items, task
+    checkboxes) are inspected — keywords in ordinary prose are not pending
+    work. Digests designated type = "archive" in drifter-manifest.toml are
+    historical records and are skipped entirely.
+    """
 
     name = "digest_staleness"
 
     _STALE_KEYWORDS = re.compile(r"\b(PENDING|TODO|BLOCKED|WAITING)\b", re.IGNORECASE)
+    _LIST_ITEM = re.compile(r"^\s*(?:[-*+]\s|\d+\.\s|\|)")
 
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
@@ -199,18 +165,31 @@ class DigestStalenessCheck:
         if not digests_dir.exists():
             return issues
 
+        manifest, manifest_issue = load_drifter_manifest(root, self.name)
+        if manifest_issue is not None:
+            return [manifest_issue]
+        archived = archive_designated_docs(manifest) if manifest else set()
+
         for digest_file in digests_dir.rglob("*.md"):
             if config.is_check_ignored(self.name, digest_file):
                 continue
+            docs_rel = str(digest_file.relative_to(root / "docs"))
+            if docs_rel in archived:
+                continue
             text = digest_file.read_text(encoding="utf-8")
             age_days = self._get_age_days(text)
-            stale_matches = self._STALE_KEYWORDS.findall(text)
-            if stale_matches and age_days > config.max_pending_age_days:
+            stale_count = sum(
+                len(self._STALE_KEYWORDS.findall(line))
+                for line in text.split("\n")
+                if self._LIST_ITEM.match(line)
+            )
+            if stale_count and age_days > config.max_pending_age_days:
+                plural = "s" if stale_count != 1 else ""
                 issues.append(
                     Issue(
                         check=self.name,
                         file=str(digest_file.relative_to(root)),
-                        detail=f"has {len(stale_matches)} pending items, last updated {age_days} days ago",
+                        detail=f"has {stale_count} pending item{plural}, last updated {age_days} days ago",
                         severity="warn",
                     )
                 )

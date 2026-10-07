@@ -4,7 +4,7 @@ type: snapshot
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-06-04T17:22:00Z'
+updated: '2026-10-07T12:42:00Z'
 ---
 
 # Drifter Internal Architecture
@@ -21,181 +21,92 @@ How Drifter is built. For contributors and advanced users.
 4. **Fast feedback** — the `check` command runs in < 5 seconds on a 10k-file repo
 5. **Language-agnostic** — Works with any project that has files and docs
 
+CLI surface (13 commands): `drifter check`, `drifter preflight`, `drifter conductor`, `drifter validate`, `drifter audit`, `drifter init`, `drifter log`, `drifter log-rotate`, `drifter session-report`, `drifter install-hook`, `drifter uninstall-hook`, `drifter manifest`, `drifter describe`.
+
 ---
 
 ## Component Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        CLI (cli.py)                         │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │   check     │  │  preflight  │  │     conductor       │  │
-│  │  command    │  │   command   │  │      command        │  │  command   │  │
-│  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘  │
-│         │                │                     │             │
-│         ▼                ▼                     ▼             │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │           Core Engine (drifter/drift_guard.py)       │   │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │   │
-│  │  │   Check     │  │   Check     │  │   Check     │   │   │
-│  │  │  Registry   │  │   Runner    │  │  Pipeline   │   │   │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘   │   │
-│  └──────────────────────────────────────────────────────┘   │
-│         │                │                     │             │
-│         ▼                ▼                     ▼             │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │              Built-in Checks (35)                    │   │
-│  │  • StaleReferenceCheck                               │   │
-│  │  • HardcodedPathCheck                                │   │
-│  │  • DigestStalenessCheck                              │   │
-│  │  • ConductorHealthCheck                              │   │
-│  │  • CrossDocConsistencyCheck                          │   │
-│  │  • GitSafetyCheck                                    │   │
-│  │  • DangerousPatternsCheck                            │   │
-│  │  • TimestampStalenessCheck                           │   │
-│  │  • ConductorContentCheck                             │   │
-│  │  • ArchitectureDocSyncCheck                          │   │
-│  │  • ReadmeCompletenessCheck                           │   │
-│  │  • PreFlightSyncCheck                                │   │
-│  │  • CredentialLeakCheck                               │   │
-│  │  • DeadCodeCheck                                     │   │
-│  │  • TestCoverageCheck                                 │   │
-│  │  • CliOutputCheck                                    │   │
-│  │  • GitignoreCheck                                    │   │
-│  │  • PipelineIntegrityCheck                            │   │
-│  │  • ArchiveIntegrityCheck                             │   │
-│  │  • TomllibCompatibilityCheck                         │   │
-│  │  • AuditCoverageCheck                                │   │
-│  │  • ReporterCompletenessCheck                         │   │
-│  │  • AgentSelfAuditCheck                               │   │
-│  │  • GitCommitApprovalCheck                            │   │
-│  │  • TreeIntegrityCheck                                │   │
-│  │  • FileSizeCheck                                     │   │
-│  │  • ManifestSyncCheck                                 │   │
-│  │  • ClaimSyncCheck                                    │   │
-│  │  • ReadBeforeWriteCheck                              │   │
-│  │  • TestAfterWriteCheck                               │   │
-│  │  • DriftCheckAfterWriteCheck                         │   │
-│  │  • NoRushCheck                                       │   │
-│  │  • ConfigSyncCheck                                   │   │
-│  │  • GhostReferenceCheck                               │   │
-│  │  • DocCoverageCheck                                  │   │
-│  └──────────────────────────────────────────────────────┘   │
-│         │                                                    │
-│         ▼                                                    │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │              Reporters                               │   │
-│  │  • ConsoleReporter (human-readable)                  │   │
-│  │  • JsonReporter (machine-parseable)                  │   │
-│  │  • GitHubActionsReporter (CI annotations)            │   │
-│  └──────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-         │
-         ▼
+│                CLI (cli.py + _cli_* modules)                │
+│         check │ preflight │ conductor │ admin commands      │
+└──────────────────────────┬──────────────────────────────────┘
+                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              Config (config.py)                             │
-│  Loads from: drifter.toml, pyproject.toml, or defaults      │
-└─────────────────────────────────────────────────────────────┘
-         │
-         ▼
+│           Core Engine (drift_guard.py)                      │
+│     check registry (BUILTIN_CHECKS) → parallel runner       │
+│     → severity ceiling → Report                             │
+└──────────────────────────┬──────────────────────────────────┘
+                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              Optional Modules                               │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │  pre_flight │  │  conductor  │  │   doc_validator     │  │
-│  │   runner    │  │   manager   │  │     checker         │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────┘  │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │              Memory Layer (removed)                  │   │
-│  │  Was `src/drifter/memory/`. Deleted as dead code.    │   │
-│  │  Cross-session persistence via digests + conductor.  │   │
-│  └──────────────────────────────────────────────────────┘   │
+│   Built-in Checks (35 in checks/) + custom checks (path)    │
+│   Full registry: drifter describe or README.md              │
+└──────────────────────────┬──────────────────────────────────┘
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│   Reporters (reporters/)                                    │
+│   ConsoleReporter · JsonReporter · GitHubActionsReporter    │
 └─────────────────────────────────────────────────────────────┘
+
+Config (config.py) feeds every layer:
+defaults → drifter.toml → pyproject.toml [tool.drifter] → CLI flags
+
+Optional modules: pre_flight.py, conductor.py, doc_validator.py,
+shell_guard.py, session_logger.py, history_reader.py, plugin_api.py,
+manifest_generator.py. Cross-session persistence: digests + conductor.
 ```
+
+### Support Modules
+
+Internal (underscore-prefixed) modules that the diagram elides:
+
+| Module | Role |
+|---|---|
+| `src/drifter/_types.py` | Shared `Classification` / `ClassificationAction` — imported by both `shell_guard` and `errors` to avoid a circular import |
+| `src/drifter/_templates.py` | Bundled template resolution via `importlib.resources` (`template_text`), with a repo-root `templates/` fallback for source checkouts |
+| `src/drifter/_cli_common.py` | Shared CLI helpers (`print_banner`) |
+| `src/drifter/_cli_check.py`, `_cli_conductor.py`, `_cli_init.py`, `_cli_admin.py` | CLI command handlers, split from `cli.py` (following the `_hook_commands.py` precedent) |
+| `src/drifter/checks/_shared.py` | Shared check helpers — `load_drifter_manifest`, `PATH_SKIP_PATTERNS`, `is_skippable_path`, `resolve_doc_path`, `archive_designated_docs` |
+| `src/drifter/checks/_base.py` | `Issue` (frozen dataclass) and the `Check` protocol |
 
 ---
 
 ## Check Protocol
 
-A check is any callable that implements this protocol:
+A check is any class implementing the `Check` protocol from `src/drifter/checks/_base.py`:
 
 ```python
-from pathlib import Path
-from typing import Protocol, List, runtime_checkable
+@dataclass(frozen=True)
+class Issue:
+    check: str
+    file: str
+    detail: str
+    severity: str = "warn"  # "error" | "warn" | "info"
 
-@runtime_checkable
 class Check(Protocol):
     name: str
-    
-    def run(self, root: Path, config: dict) -> List[Issue]:
-        ...
-
-class Issue:
-    def __init__(self, check: str, file: str, detail: str, severity: str = "warn"):
-        self.check = check      # check name
-        self.file = file        # relative path
-        self.detail = detail    # human-readable description
-        self.severity = severity  # "error" | "warn" | "info"
+    def run(self, root: Path, config: Config) -> list[Issue]: ...
 ```
 
-Checks are registered in `src/drifter/drift_guard.py` and run in parallel where possible.
+Built-in checks are registered in `BUILTIN_CHECKS` in `src/drifter/checks/__init__.py` and run in parallel (ThreadPoolExecutor, ≤4 workers). Custom checks load from a `path` via importlib — see Extension Points below.
 
 ---
 
 ## Reporter Protocol
 
-A reporter formats and outputs issues:
-
-```python
-from typing import Protocol, List, runtime_checkable
-
-@runtime_checkable
-class Reporter(Protocol):
-    name: str
-    
-    def report(self, issues: List[Issue]) -> str:
-        ...
-```
+Reporters are plain classes (no formal `Protocol`) in `src/drifter/reporters/`, each exposing a `name` and `report(issues, meta=None) -> str`. `meta` carries report metadata (score, counts, timestamp); printing is the caller's job.
 
 Built-in reporters:
-- `ConsoleReporter` — colored terminal output
-- `JsonReporter` — JSON for piping to other tools
+- `ConsoleReporter` — grouped plain-text terminal report (no color codes)
+- `JsonReporter` — JSON metadata envelope with structured issue objects
 - `GitHubActionsReporter` — `::error::` and `::warning::` annotations
-
----
-
-## Config Resolution
-
-Config is loaded in this priority order (later overrides earlier):
-
-1. Built-in defaults (`src/drifter/config.py`)
-2. `drifter.toml` in project root (`[drifter]` section)
-3. `pyproject.toml [tool.drifter]`
-4. Command-line flags
 
 ---
 
 ## Performance Budgets
 
-| Operation | Target | Worst Case |
-|-----------|--------|------------|
-| `drifter check` | < 5s for 10k files | < 30s for 100k files |
-| `drifter validate` | < 1s for 100 docs | < 5s for 1k docs |
-| `drifter preflight` | < 10s total | < 30s if drift guard is slow |
-| `drifter conductor` | < 1s | < 5s |
-| `drifter audit` | < 2s | < 10s |
-| `drifter init` | < 1s | < 2s |
-| `drifter log` | < 10ms | < 100ms |
-| `drifter session-report` | < 100ms | < 500ms |
-| `drifter install-hook` | < 10ms | < 100ms |
-| `drifter uninstall-hook` | < 10ms | < 100ms |
-| `drifter manifest` | < 1s | < 5s |
-| `drifter describe` | < 100ms | < 500ms |
-
-Performance strategies:
-- Checks run in parallel using `concurrent.futures`
-- File scanning uses `pathlib.Path.rglob` with early filtering
-- Regex patterns are compiled once
-- Results are cached within a single run
+A check run completes in under 5s on 10k files; all other commands < 1-2s in typical repos. Strategies: checks run in parallel (`concurrent.futures`); file scanning uses `pathlib.Path.rglob` with early filtering; regexes compiled once; results cached within a single run.
 
 ---
 
@@ -203,41 +114,48 @@ Performance strategies:
 
 ### Custom Checks
 
-Create a Python file with a Check class:
+Create a Python file defining exactly one check class — a class with a
+`run(root, config)` method returning a list of `Issue`s:
 
 ```python
-# my_project/checks/no_console_log.py
-from drifter.drift_guard import Issue
+# my_checks/no_console_log.py
 from pathlib import Path
-import re
+from drifter.checks._base import Issue
 
 class NoConsoleLogCheck:
     name = "no_console_log"
-    
-    def run(self, root: Path, config: dict):
-        issues = []
-        pattern = re.compile(r"console\.log\(")
-        for js_file in root.rglob("*.js"):
-            text = js_file.read_text()
-            for match in pattern.finditer(text):
-                issues.append(Issue(
-                    check=self.name,
-                    file=str(js_file.relative_to(root)),
-                    detail=f"console.log at line {text[:match.start()].count(chr(10)) + 1}",
-                    severity="warn"
-                ))
-        return issues
+
+    def run(self, root: Path, config) -> list[Issue]:
+        return [
+            Issue(check=self.name, file=str(f.relative_to(root)),
+                  detail="console.log found", severity="warn")
+            for f in root.rglob("*.js")
+            if "console.log(" in f.read_text()
+        ]
 ```
 
-Register in `drifter.toml`:
+Register it in `drifter.toml` with a `path`:
 
 ```toml
 [[drifter.checks]]
 name = "no_console_log"
-path = "my_project/checks/no_console_log.py"
+path = "my_checks/no_console_log.py"   # relative to project root (or absolute)
 enabled = true
-severity = "warn"
+severity = "warn"                   # ceiling: issues report no higher than this
 ```
+
+The contract, enforced by `run_checks` in `src/drifter/drift_guard.py`:
+
+- The file must define **exactly one** class with a `run()` method; it is
+  instantiated with no arguments. If the instance has no `name`, the
+  configured check name is assigned.
+- `severity` acts as a ceiling, exactly as for built-in checks.
+- A missing file, an import error, or the wrong number of check classes
+  produces an error-level issue instead of a crash or silence.
+- A configured check name with no builtin and no `path` produces a
+  warn-level issue (typo guard).
+- If the name collides with a built-in check, the builtin wins and a
+  warn-level issue is emitted.
 
 ### Custom Reporters
 

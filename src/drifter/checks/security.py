@@ -58,7 +58,12 @@ class CredentialLeakCheck:
                 str_path = str(src_file)
                 if "/tests/" in str_path or str_path.startswith("tests/"):
                     continue
-                text = src_file.read_text(encoding="utf-8")
+                if not src_file.is_file():
+                    continue
+                try:
+                    text = src_file.read_text(encoding="utf-8")
+                except (OSError, UnicodeDecodeError):
+                    continue
                 for pattern, label in self._PATTERNS:
                     for match in pattern.finditer(text):
                         line_start = text.rfind("\n", 0, match.start()) + 1
@@ -100,9 +105,6 @@ class GitSafetyCheck:
         re.compile(r'["\']git\s+(commit|push|reset|rebase|merge|cherry-pick|tag)["\']'),
     ]
 
-    # Safe informational commands we don't flag
-    _SAFE_COMMANDS = {"git status", "git diff", "git log", "git show", "git branch"}
-
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
         source_exts = (".py", ".rs", ".js", ".ts", ".go", ".java", ".sh", ".rb")
@@ -114,15 +116,15 @@ class GitSafetyCheck:
                 str_path = str(src_file)
                 if "/tests/" in str_path or str_path.startswith("tests/"):
                     continue
-                text = src_file.read_text(encoding="utf-8")
+                if not src_file.is_file():
+                    continue
+                try:
+                    text = src_file.read_text(encoding="utf-8")
+                except (OSError, UnicodeDecodeError):
+                    continue
                 for pattern in self._GIT_PATTERNS:
                     for match in pattern.finditer(text):
                         matched_text = match.group(0)
-                        # Skip if it's just documenting the rule itself
-                        if any(
-                            safe in matched_text.lower() for safe in self._SAFE_COMMANDS
-                        ):
-                            continue
                         # Skip comments that mention git commands for documentation
                         line_start = text.rfind("\n", 0, match.start()) + 1
                         line = text[line_start : match.start()]

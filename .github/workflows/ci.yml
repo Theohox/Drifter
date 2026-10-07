@@ -49,4 +49,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage.xml
+          fail_ci_if_error: true
+          # Public repo: tokenless upload works; set CODECOV_TOKEN if uploads
+          # start failing with rate-limit errors.
         if: matrix.python == '3.12'

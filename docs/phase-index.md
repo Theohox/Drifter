@@ -4,7 +4,7 @@ type: index
 status: active
 phase: 1
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-29T00:27:03Z'
+updated: '2026-10-07T12:00:00Z'
 ---
 
 # Phase Index — Documents by Phase
@@ -36,6 +36,18 @@ Documents created or significantly updated during the polish phase. These are li
 | [Session Protocol](session-protocol.md) | playbook | active | Hard rules for every session |
 | [Project Conductor](project-conductor.md) | backlog | active | Active task tracker |
 | [Phase Index](phase-index.md) | index | active | This file — maps docs to phases |
+
+---
+
+## Phase 3: Integration Hardening
+
+Documents created for the integration and planning workstreams.
+
+| Document | Type | Status | Description |
+|----------|------|--------|-------------|
+| [Wiki](wiki.md) | reference | active | The complete Drifter reference — checks, modules, config, roadmap |
+| [SOW v3](Drifter_SOWchanges.md) | reference | draft | Framework improvement program proposal (human's draft, not yet adopted) |
+| [SOW v3 Critique](sow-v3-critique.md) | reference | draft | 13-reviewer critique of the SOW v3 draft |
 
 ---
 

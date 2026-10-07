@@ -1,16 +1,46 @@
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
-
-if sys.version_info >= (3, 11):
-    pass
-else:
-    pass
 
 from drifter.checks._base import Issue
 from drifter.config import Config
+
+
+def _parse_md_table(section_text: str) -> list[dict[str, str]]:
+    """Parse markdown table(s) in a section into rows keyed by header name.
+
+    Column order varies between conductor layouts, so cells are resolved
+    by header name rather than fixed index.
+    """
+    headers: list[str] = []
+    rows: list[dict[str, str]] = []
+    for line in section_text.split("\n"):
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            continue
+        cells = [c.strip() for c in stripped.strip("|").split("|")]
+        if not cells or all(set(c) <= {"-", ":"} for c in cells):
+            if rows:
+                # Separator after data rows means a new table is starting
+                headers = []
+            continue
+        if not headers:
+            headers = cells
+            continue
+        rows.append(dict(zip(headers, cells, strict=False)))
+    return rows
+
+
+def _section_rows(text: str, heading: str) -> list[dict[str, str]]:
+    """Return table rows from the given '## heading' section."""
+    match = re.search(rf"## {re.escape(heading)}.*?(?=## |\Z)", text, re.DOTALL)
+    return _parse_md_table(match.group(0)) if match else []
+
+
+def _row_id(row: dict[str, str]) -> str:
+    task_id = row.get("ID", "")
+    return task_id if task_id and task_id != "—" else ""
 
 
 class ConductorHealthCheck:
@@ -58,8 +88,10 @@ class ConductorHealthCheck:
                 )
             )
 
-        # Check current phase is marked active
-        if "🟢 ACTIVE" not in text and "🟡 ACTIVE" not in text and "ACTIVE" not in text:
+        # Check current phase is marked active. A conductor with no ACTIVE
+        # phase is fine when it explicitly declares a waiting state
+        # (AGENTS.md Stop Rule: "if no next task is Ready, wait for the maintainer").
+        if "ACTIVE" not in text and "AWAITING" not in text.upper():
             issues.append(
                 Issue(
                     check=self.name,
@@ -102,49 +134,20 @@ class PipelineIntegrityCheck:
                 active_ids.add(active_id)
                 all_ids.add(active_id)
 
-        # Extract IDs from Blocked Tasks table
-        blocked_section = re.search(r"## Blocked Tasks.*?(?=## |\Z)", text, re.DOTALL)
-        if blocked_section:
-            for line in blocked_section.group(0).split("\n"):
-                if (
-                    line.strip().startswith("|")
-                    and "| ID |" not in line
-                    and "---" not in line
-                ):
-                    parts = [p.strip() for p in line.split("|")]
-                    if len(parts) >= 2 and parts[1] and parts[1] != "—":
-                        blocked_ids.add(parts[1])
-                        all_ids.add(parts[1])
-
-        # Extract IDs from Future Tasks table
-        future_section = re.search(r"## Future Tasks.*?(?=## |\Z)", text, re.DOTALL)
-        if future_section:
-            for line in future_section.group(0).split("\n"):
-                if (
-                    line.strip().startswith("|")
-                    and "| ID |" not in line
-                    and "---" not in line
-                ):
-                    parts = [p.strip() for p in line.split("|")]
-                    if len(parts) >= 2 and parts[1] and parts[1] != "—":
-                        future_ids.add(parts[1])
-                        all_ids.add(parts[1])
-
-        # Extract IDs from Completed Tasks table
-        completed_section = re.search(
-            r"## Completed Tasks.*?(?=## |\Z)", text, re.DOTALL
-        )
-        if completed_section:
-            for line in completed_section.group(0).split("\n"):
-                if (
-                    line.strip().startswith("|")
-                    and "| ID |" not in line
-                    and "---" not in line
-                ):
-                    parts = [p.strip() for p in line.split("|")]
-                    if len(parts) >= 2 and parts[1] and parts[1] != "—":
-                        completed_ids.add(parts[1])
-                        all_ids.add(parts[1])
+        # Extract IDs from the task tables
+        blocked_rows = _section_rows(text, "Blocked Tasks")
+        future_rows = _section_rows(text, "Future Tasks")
+        completed_rows = _section_rows(text, "Completed Tasks")
+        for rows, target in (
+            (blocked_rows, blocked_ids),
+            (future_rows, future_ids),
+            (completed_rows, completed_ids),
+        ):
+            for row in rows:
+                task_id = _row_id(row)
+                if task_id:
+                    target.add(task_id)
+                    all_ids.add(task_id)
 
         # Check for tasks in multiple states
         active_blocked = active_ids & blocked_ids
@@ -208,25 +211,21 @@ class PipelineIntegrityCheck:
                 if owner_id and owner_id != "—":
                     adjacency[owner_id] = deps
 
-        # Also check Blocked Tasks and Future Tasks tables for Depends On
-        for section_match in [blocked_section, future_section]:
-            if section_match:
-                lines = section_match.group(0).split("\n")
-                for line in lines:
-                    if (
-                        line.strip().startswith("|")
-                        and "| ID |" not in line
-                        and "---" not in line
-                    ):
-                        parts = [p.strip() for p in line.split("|")]
-                        if len(parts) >= 5 and parts[1] and parts[1] != "—":
-                            task_id = parts[1]
-                            deps_str = parts[4] if len(parts) > 4 else "—"
-                            if deps_str != "—":
-                                deps = {
-                                    d.strip() for d in deps_str.split(",") if d.strip()
-                                }
-                                adjacency[task_id] = deps
+        # Also check task tables for dependency edges. Both "Depends On"
+        # and "Blocked On" name work that must finish first, so a cycle
+        # through either is a deadlock.
+        for row in blocked_rows + future_rows:
+            task_id = _row_id(row)
+            if not task_id:
+                continue
+            table_deps: set[str] = set()
+            for col in ("Depends On", "Blocked On"):
+                for dep in row.get(col, "").split(","):
+                    dep = dep.strip()
+                    if dep and dep != "—":
+                        table_deps.add(dep)
+            if table_deps:
+                adjacency[task_id] = table_deps
 
         # Detect cycles using DFS
         visited: set[str] = set()
@@ -274,46 +273,30 @@ class PipelineIntegrityCheck:
                     )
 
         # Check blocked tasks have non-empty Blocked On
-        if blocked_section:
-            for line in blocked_section.group(0).split("\n"):
-                if (
-                    line.strip().startswith("|")
-                    and "| ID |" not in line
-                    and "---" not in line
-                ):
-                    parts = [p.strip() for p in line.split("|")]
-                    if len(parts) >= 6 and parts[1] and parts[1] != "—":
-                        blocked_on = parts[4] if len(parts) > 4 else ""
-                        if not blocked_on or blocked_on == "—":
-                            issues.append(
-                                Issue(
-                                    check=self.name,
-                                    file=str(conductor.relative_to(root)),
-                                    detail=f"Blocked task '{parts[1]}' has empty 'Blocked On' field",
-                                    severity="warn",
-                                )
-                            )
+        for row in blocked_rows:
+            task_id = _row_id(row)
+            if task_id and "Blocked On" in row and row["Blocked On"] in ("", "—"):
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file=str(conductor.relative_to(root)),
+                        detail=f"Blocked task '{task_id}' has empty 'Blocked On' field",
+                        severity="warn",
+                    )
+                )
 
-        # Check completed tasks have non-empty evidence
-        if completed_section:
-            for line in completed_section.group(0).split("\n"):
-                if (
-                    line.strip().startswith("|")
-                    and "| ID |" not in line
-                    and "---" not in line
-                ):
-                    parts = [p.strip() for p in line.split("|")]
-                    if len(parts) >= 5 and parts[1] and parts[1] != "—":
-                        evidence = parts[4] if len(parts) > 4 else ""
-                        if not evidence or evidence == "—":
-                            issues.append(
-                                Issue(
-                                    check=self.name,
-                                    file=str(conductor.relative_to(root)),
-                                    detail=f"Completed task '{parts[1]}' has empty evidence",
-                                    severity="warn",
-                                )
-                            )
+        # Check completed tasks link to an archive record
+        for row in completed_rows:
+            task_id = _row_id(row)
+            if task_id and "Archive" in row and row["Archive"] in ("", "—"):
+                issues.append(
+                    Issue(
+                        check=self.name,
+                        file=str(conductor.relative_to(root)),
+                        detail=f"Completed task '{task_id}' has empty 'Archive' field",
+                        severity="warn",
+                    )
+                )
 
         return issues
 

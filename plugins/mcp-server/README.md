@@ -5,12 +5,14 @@ version: "1.0"
 status: active
 phase: "3"
 created: '2026-06-01T16:15:00Z'
-updated: '2026-06-01T16:15:00Z'
+updated: '2026-10-07T00:00:00Z'
 ---
 
 # Drifter MCP Server
 
 MCP (Model Context Protocol) server that exposes Drifter's enforcement primitives as tools for any MCP-compatible agent.
+
+**This plugin ships in the Drifter repository, not in the `drifter-check` wheel.** To run it, either run `server.py` from a Drifter source checkout (it adds `src/` to `sys.path` automatically) or copy `server.py` into your own project with `drifter-check` installed.
 
 ## Tools
 
@@ -25,13 +27,12 @@ MCP (Model Context Protocol) server that exposes Drifter's enforcement primitive
 ## Installation
 
 ```bash
-# Install Drifter + MCP dependencies
-pip install drifter fastmcp
+# Install Drifter + MCP dependencies from PyPI
+pip install "drifter-check[mcp]"
 
 # Or install in development mode
 cd /path/to/drifter
-pip install -e ".[dev]"
-pip install fastmcp
+pip install -e ".[dev,mcp]"
 ```
 
 ## Running
@@ -46,9 +47,13 @@ DRIFTER_ROOT=/path/to/project python plugins/mcp-server/server.py
 
 ## Configuration
 
-The server reads `dangerous_patterns.toml` and `drifter.toml` from the project root (default: current directory).
+The server reads `dangerous_patterns.toml` and `drifter.toml` from the project root.
 
-Set `DRIFTER_ROOT` environment variable to point to a specific project.
+Project root resolution, in order of precedence:
+
+1. The per-call `root` argument passed to a tool (always wins).
+2. The `DRIFTER_ROOT` environment variable.
+3. The current working directory.
 
 ## Error Handling
 

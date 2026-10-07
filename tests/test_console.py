@@ -13,12 +13,25 @@ class TestConsoleReporter:
             ),
             Issue(check="test2", file="bar.py", detail="warning here", severity="warn"),
         ]
-        output = reporter.report(issues)
+        output = reporter.report(issues, {"score": 88})
+        assert "DRIFT GUARD REPORT" in output
+        assert "Score: 88/100" in output
         assert "foo.py" in output
         assert "something wrong" in output
         assert "bar.py" in output
+        assert "Errors (1)" in output
+        assert "Warnings (1)" in output
+
+    def test_report_without_score(self) -> None:
+        reporter = ConsoleReporter()
+        issues = [
+            Issue(check="t", file="f.py", detail="d", severity="info"),
+        ]
+        output = reporter.report(issues)
+        assert "Score:" not in output
+        assert "Info (1)" in output
 
     def test_empty_issues(self) -> None:
         reporter = ConsoleReporter()
         output = reporter.report([])
-        assert output == ""
+        assert "No drift detected" in output

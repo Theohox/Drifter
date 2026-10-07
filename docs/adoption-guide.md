@@ -4,7 +4,7 @@ type: guide
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-06-04T19:24:00Z'
+updated: '2026-10-07T12:30:00Z'
 ---
 
 # Drifter Adoption Guide
@@ -85,7 +85,7 @@ Replace the template sections with your project's specifics:
 
 Keep it under 300 lines. Agents read this every session — if it's too long, they'll skip it.
 
-### 3.2 Edit `docs/session-protocol.md`
+### 3.3 Edit `docs/session-protocol.md`
 
 Customize the hard rules:
 
@@ -93,7 +93,7 @@ Customize the hard rules:
 - **Evidence Rule**: What does evidence look like for your stack? (screenshots for UI, test output for APIs, benchmarks for performance)
 - **Stop Rule**: What tests must pass before stopping?
 
-### 3.3 Edit `docs/project-conductor.md`
+### 3.4 Edit `docs/project-conductor.md`
 
 Set up your first phase and active task:
 
@@ -315,9 +315,12 @@ Each project gets its own `AGENTS.md`, conductor, and session audit log (`<proje
 
 ---
 
+## Complementary Tools
+
+Drifter handles governance and drift detection. If your codebase is large enough that agents spend most of their tokens on discovery rather than implementation, consider adding a knowledge graph tool like [Graphify](https://github.com/Graphify-Labs/graphify). It maps code, docs, and diagrams into a queryable graph — a natural complement to Drifter's enforcement layer.
+
 ## Next Steps
 
 - Read [`docs/rules-reference.md`](rules-reference.md) for the complete rule catalog
-- Read [`docs/methodology.md`](methodology.md) for the philosophy
-- Write your first custom check (see `src/drifter/drift_guard.py` for examples)
-- Read `docs/methodology.md` for the philosophy behind each rule
+- Read [`docs/methodology.md`](methodology.md) for the philosophy behind each rule
+- Write your first custom check (contract in `docs/architecture.md` → Extension Points → Custom Checks; examples in `src/drifter/checks/`)

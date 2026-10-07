@@ -7,6 +7,7 @@ from pathlib import Path
 
 from drifter._toml_utils import safe_load_toml
 from drifter.checks._base import Issue
+from drifter.checks._shared import load_drifter_manifest
 from drifter.config import Config
 
 
@@ -18,20 +19,11 @@ class ConfigSyncCheck:
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
 
-        manifest = root / "drifter-manifest.toml"
-        if not manifest.exists():
+        data, data_issue = load_drifter_manifest(root, self.name)
+        if data_issue is not None:
+            issues.append(data_issue)
             return issues
-
-        data = safe_load_toml(manifest)
         if data is None:
-            issues.append(
-                Issue(
-                    check=self.name,
-                    file="drifter-manifest.toml",
-                    detail="Cannot parse drifter-manifest.toml — file may be corrupted",
-                    severity="error",
-                )
-            )
             return issues
         manifest_checks = set(data.get("checks", {}).get("names", []))
 
@@ -85,14 +77,14 @@ class ConfigSyncCheck:
                 )
 
         # 3. Check template (warn-only)
-        template = root / "templates" / "drifter.toml.tmpl"
+        template = root / "src" / "drifter" / "templates" / "drifter.toml.tmpl"
         if template.exists():
             tmpl_checks = self._extract_toml_checks(template)
             for check in manifest_checks - tmpl_checks:
                 issues.append(
                     Issue(
                         check=self.name,
-                        file="templates/drifter.toml.tmpl",
+                        file="src/drifter/templates/drifter.toml.tmpl",
                         detail=f"check '{check}' in manifest but missing from template",
                         severity="warn",
                     )
@@ -101,7 +93,7 @@ class ConfigSyncCheck:
                 issues.append(
                     Issue(
                         check=self.name,
-                        file="templates/drifter.toml.tmpl",
+                        file="src/drifter/templates/drifter.toml.tmpl",
                         detail=f"check '{check}' in template but not in manifest",
                         severity="warn",
                     )

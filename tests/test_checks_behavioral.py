@@ -8,8 +8,30 @@ from drifter.checks.behavioral import (
     NoRushCheck,
     ReadBeforeWriteCheck,
     TestAfterWriteCheck,
+    is_drift_check,
+    is_test_run,
 )
 from drifter.session_logger import SessionLogger
+
+
+class TestEvidenceMatching:
+    def test_cat_pytest_ini_is_not_a_test_run(self) -> None:
+        assert not is_test_run("SHELL", "cat pytest.ini")
+
+    def test_echo_drifter_check_is_not_a_drift_check(self) -> None:
+        assert not is_drift_check("SHELL", "echo drifter check")
+
+    def test_real_invocations_count(self) -> None:
+        assert is_test_run("SHELL", "pytest")
+        assert is_test_run("SHELL", ".venv/bin/python -m pytest tests/ -q")
+        assert is_test_run("SHELL", "ruff check src/ && python3 -m pytest")
+        assert is_drift_check("SHELL", "drifter check")
+        assert is_drift_check("SHELL", ".venv/bin/python -m drifter check")
+        assert is_drift_check("CHECK", "drifter check passed 100/100")
+
+    def test_mentions_in_arguments_do_not_count(self) -> None:
+        assert not is_test_run("SHELL", "grep -r pytest src/")
+        assert not is_drift_check("SHELL", "git log --grep='drifter check'")
 
 
 class TestNoRushCheck:
@@ -41,7 +63,7 @@ class TestNoRushCheck:
         issues = check.run(tmp_path, config)
         assert len(issues) == 1
         assert issues[0].severity == "warn"
-        assert "4:1" in issues[0].detail or "ratio" in issues[0].detail
+        assert "4 WRITEs vs 1 drift checks (ratio 4.0:1) — max 3:1" in issues[0].detail
 
     def test_ratio_under_3_passes(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
@@ -63,7 +85,10 @@ class TestNoRushCheck:
         issues = check.run(tmp_path, config)
         assert len(issues) == 1
         assert issues[0].severity == "error"
-        assert "severe" in issues[0].detail or "11" in issues[0].detail
+        assert (
+            "11 WRITEs vs 1 drift checks (ratio 11.0:1) — severe rushing (max 3:1)"
+            in issues[0].detail
+        )
 
     def test_check_action_counts(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)

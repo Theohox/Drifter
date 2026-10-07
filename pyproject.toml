@@ -1,13 +1,13 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
-name = "drifter"
-version = "0.3.0"
+name = "drifter-check"
+version = "0.4.0"
 description = "Universal drift guard for AI agents — enforce discipline, prevent bloat, and stop hallucination before it starts."
 readme = "README.md"
-license = { text = "MIT OR Apache-2.0" }
+license = "MIT OR Apache-2.0"
 requires-python = ">=3.10"
 authors = [
     { name = "hox" },
@@ -16,7 +16,6 @@ keywords = ["ai", "agent", "llm", "drift", "guard", "code-quality", "documentati
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -37,6 +36,9 @@ dev = [
     "ruff",
     "mypy",
 ]
+mcp = [
+    "fastmcp",
+]
 
 [project.scripts]
 drifter = "drifter.cli:main"
@@ -45,3 +47,19 @@ drifter = "drifter.cli:main"
 Homepage = "https://github.com/Theohox/Drifter"
 Documentation = "https://github.com/Theohox/Drifter/tree/main/docs"
 Issues = "https://github.com/Theohox/Drifter/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/drifter"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+
+[tool.mypy]
+python_version = "3.10"
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = "tomli"
+ignore_missing_imports = true

@@ -1,13 +1,7 @@
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
-
-if sys.version_info >= (3, 11):
-    pass
-else:
-    pass
 
 from drifter.checks._base import Issue
 from drifter.config import Config
@@ -35,11 +29,6 @@ class ArchitectureDocSyncCheck:
                     continue
                 check_text = check_file.read_text(encoding="utf-8")
                 actual_checks += len(re.findall(r"class \w+Check:", check_text))
-        # Also check legacy drift_guard.py
-        drift_guard = root / "src" / "drifter" / "drift_guard.py"
-        if drift_guard.exists():
-            guard_text = drift_guard.read_text(encoding="utf-8")
-            actual_checks += len(re.findall(r"class \w+Check:", guard_text))
 
         listed_checks = len(re.findall(r"•\s+\w+Check", arch_text))
         if listed_checks > 0 and actual_checks != listed_checks:
@@ -69,8 +58,8 @@ class ArchitectureDocSyncCheck:
                     )
                 )
 
-        # Check templates/drifter.toml.tmpl for hardcoded check counts
-        toml_tmpl = root / "templates" / "drifter.toml.tmpl"
+        # Check src/drifter/templates/drifter.toml.tmpl for hardcoded check counts
+        toml_tmpl = root / "src" / "drifter" / "templates" / "drifter.toml.tmpl"
         if toml_tmpl.exists():
             toml_text = toml_tmpl.read_text(encoding="utf-8")
             check_count_match = re.search(r"Built-in checks \((\d+) total\)", toml_text)
@@ -80,7 +69,7 @@ class ArchitectureDocSyncCheck:
                     issues.append(
                         Issue(
                             check=self.name,
-                            file="templates/drifter.toml.tmpl",
+                            file="src/drifter/templates/drifter.toml.tmpl",
                             detail=f"claims {listed} built-in checks but checks package has {actual_checks}",
                             severity="warn",
                         )
@@ -292,7 +281,7 @@ class CliOutputCheck:
 
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
-        cli_file = root / "src" / "drifter" / "cli.py"
+        cli_file = root / "src" / "drifter" / "_cli_init.py"
         if not cli_file.exists():
             return issues
 
@@ -309,7 +298,7 @@ class CliOutputCheck:
                 issues.append(
                     Issue(
                         check=self.name,
-                        file="src/drifter/cli.py",
+                        file="src/drifter/_cli_init.py",
                         detail=f"cmd_init output does not mention '{mention}'",
                         severity="warn",
                     )
@@ -325,7 +314,7 @@ class AuditCoverageCheck:
 
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
-        cli_file = root / "src" / "drifter" / "cli.py"
+        cli_file = root / "src" / "drifter" / "_cli_admin.py"
         shell_guard_file = root / "src" / "drifter" / "shell_guard.py"
 
         if not cli_file.exists() or not shell_guard_file.exists():
@@ -352,7 +341,7 @@ class AuditCoverageCheck:
                 issues.append(
                     Issue(
                         check=self.name,
-                        file="src/drifter/cli.py",
+                        file="src/drifter/_cli_admin.py",
                         detail=f"cmd_audit does not handle ShellGuard action '{action}'",
                         severity="error",
                     )
@@ -368,16 +357,16 @@ class ReporterCompletenessCheck:
 
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
-        cli_file = root / "src" / "drifter" / "cli.py"
-        if not cli_file.exists():
+        console_file = root / "src" / "drifter" / "reporters" / "console.py"
+        if not console_file.exists():
             return issues
 
-        cli_text = cli_file.read_text(encoding="utf-8")
+        console_text = console_file.read_text(encoding="utf-8")
 
-        # Find console formatter
+        # Find the reporter's report() method
         formatter_match = re.search(
-            r"def _format_issues_console\(.*?\n(?=\ndef |\nclass |\Z)",
-            cli_text,
+            r"def report\(.*?\n(?=\nclass |\Z)",
+            console_text,
             re.DOTALL,
         )
         if not formatter_match:
@@ -390,8 +379,8 @@ class ReporterCompletenessCheck:
                 issues.append(
                     Issue(
                         check=self.name,
-                        file="src/drifter/cli.py",
-                        detail=f"_format_issues_console() does not reference severity '{sev}'",
+                        file="src/drifter/reporters/console.py",
+                        detail=f"ConsoleReporter.report() does not reference severity '{sev}'",
                         severity="error",
                     )
                 )
@@ -410,7 +399,10 @@ class DocCoverageCheck:
 
     # Files that should match their templates exactly
     _TEMPLATE_PAIRS = [
-        ("dangerous_patterns.toml", "templates/dangerous_patterns.toml.tmpl"),
+        (
+            "dangerous_patterns.toml",
+            "src/drifter/templates/dangerous_patterns.toml.tmpl",
+        ),
     ]
 
     # Key features that should be mentioned in README.md

@@ -90,87 +90,35 @@ class TestScanReporters:
 
 
 class TestGenerateManifest:
-    def test_manifest_has_version(self, tmp_path: Path) -> None:
-        pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text('[project]\nversion = "1.0.0"\n')
-        src = tmp_path / "src" / "drifter"
-        src.mkdir(parents=True)
-        (src / "cli.py").write_text('subparsers.add_parser("check")\n')
-        checks = src / "checks"
-        checks.mkdir()
-        (checks / "__init__.py").write_text("BUILTIN_CHECKS = {}\n")
-        mcp = tmp_path / "plugins" / "mcp-server"
-        mcp.mkdir(parents=True)
-        (mcp / "server.py").write_text("")
-        reps = src / "reporters"
-        reps.mkdir()
-        (reps / "__init__.py").write_text("")
+    def test_manifest_has_version(self, fake_project) -> None:
+        root = fake_project(version="1.0.0")
 
-        manifest = generate_manifest(tmp_path)
+        manifest = generate_manifest(root)
         assert manifest.version == "1.0.0"
         assert any(c.name == "check" for c in manifest.commands)
 
 
 class TestWriteManifest:
-    def test_writes_json_file(self, tmp_path: Path) -> None:
-        pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text('[project]\nversion = "0.1.0"\n')
-        src = tmp_path / "src" / "drifter"
-        src.mkdir(parents=True)
-        (src / "cli.py").write_text('subparsers.add_parser("check")\n')
-        checks = src / "checks"
-        checks.mkdir()
-        (checks / "__init__.py").write_text("BUILTIN_CHECKS = {}\n")
-        mcp = tmp_path / "plugins" / "mcp-server"
-        mcp.mkdir(parents=True)
-        (mcp / "server.py").write_text("")
-        reps = src / "reporters"
-        reps.mkdir()
-        (reps / "__init__.py").write_text("")
+    def test_writes_json_file(self, fake_project) -> None:
+        root = fake_project(version="0.1.0")
 
-        path = write_manifest(tmp_path)
+        path = write_manifest(root)
         assert path.exists()
         data = path.read_text()
         assert '"version": "0.1.0"' in data
 
 
 class TestDescribeFormats:
-    def test_describe_json_is_valid(self, tmp_path: Path) -> None:
-        pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text('[project]\nversion = "0.1.0"\n')
-        src = tmp_path / "src" / "drifter"
-        src.mkdir(parents=True)
-        (src / "cli.py").write_text('subparsers.add_parser("check")\n')
-        checks = src / "checks"
-        checks.mkdir()
-        (checks / "__init__.py").write_text("BUILTIN_CHECKS = {}\n")
-        mcp = tmp_path / "plugins" / "mcp-server"
-        mcp.mkdir(parents=True)
-        (mcp / "server.py").write_text("")
-        reps = src / "reporters"
-        reps.mkdir()
-        (reps / "__init__.py").write_text("")
+    def test_describe_json_is_valid(self, fake_project) -> None:
+        root = fake_project(version="0.1.0")
 
-        json_text = describe_json(tmp_path)
+        json_text = describe_json(root)
         assert '"version": "0.1.0"' in json_text
         assert '"commands"' in json_text
 
-    def test_describe_markdown_contains_sections(self, tmp_path: Path) -> None:
-        pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text('[project]\nversion = "0.1.0"\n')
-        src = tmp_path / "src" / "drifter"
-        src.mkdir(parents=True)
-        (src / "cli.py").write_text('subparsers.add_parser("check")\n')
-        checks = src / "checks"
-        checks.mkdir()
-        (checks / "__init__.py").write_text("BUILTIN_CHECKS = {}\n")
-        mcp = tmp_path / "plugins" / "mcp-server"
-        mcp.mkdir(parents=True)
-        (mcp / "server.py").write_text("")
-        reps = src / "reporters"
-        reps.mkdir()
-        (reps / "__init__.py").write_text("")
+    def test_describe_markdown_contains_sections(self, fake_project) -> None:
+        root = fake_project(version="0.1.0")
 
-        md = describe_markdown(tmp_path)
+        md = describe_markdown(root)
         assert "# Drifter 0.1.0 — Capability Overview" in md
         assert "## CLI Commands" in md

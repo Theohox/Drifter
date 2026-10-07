@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from drifter.checks._base import Check, Issue as Issue
+from drifter.checks._base import Check
 from drifter.checks.agent_behavior import AgentSelfAuditCheck, GitCommitApprovalCheck
 from drifter.checks.behavioral import (
     DriftCheckAfterWriteCheck,

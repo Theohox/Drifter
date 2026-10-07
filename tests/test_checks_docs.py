@@ -79,9 +79,9 @@ class TestArchitectureDocSyncCheck:
         arch = tmp_path / "docs" / "architecture.md"
         arch.parent.mkdir(parents=True)
         arch.write_text("# Architecture\n• StaleReferenceCheck\n• HardcodedPathCheck\n")
-        guard = tmp_path / "src" / "drifter" / "drift_guard.py"
-        guard.parent.mkdir(parents=True)
-        guard.write_text(
+        checks_dir = tmp_path / "src" / "drifter" / "checks"
+        checks_dir.mkdir(parents=True)
+        (checks_dir / "docs.py").write_text(
             "class StaleReferenceCheck:\n"
             "class HardcodedPathCheck:\n"
             "class DigestStalenessCheck:\n"
@@ -106,14 +106,14 @@ class TestArchitectureDocSyncCheck:
         arch = tmp_path / "docs" / "architecture.md"
         arch.parent.mkdir(parents=True)
         arch.write_text("# Architecture\n")
-        guard = tmp_path / "src" / "drifter" / "drift_guard.py"
-        guard.parent.mkdir(parents=True)
-        guard.write_text(
+        checks_dir = tmp_path / "src" / "drifter" / "checks"
+        checks_dir.mkdir(parents=True)
+        (checks_dir / "docs.py").write_text(
             "class StaleReferenceCheck:\n"
             "class HardcodedPathCheck:\n"
             "class DigestStalenessCheck:\n"
         )
-        toml_tmpl = tmp_path / "templates" / "drifter.toml.tmpl"
+        toml_tmpl = tmp_path / "src" / "drifter" / "templates" / "drifter.toml.tmpl"
         toml_tmpl.parent.mkdir(parents=True)
         toml_tmpl.write_text("# Built-in checks (5 total)\n")
         check = ArchitectureDocSyncCheck()
@@ -160,12 +160,37 @@ class TestDigestStalenessCheck:
         digest = tmp_path / "docs" / "digests" / "old.md"
         digest.parent.mkdir(parents=True)
         digest.write_text(
-            "---\nupdated: '2020-01-01T00:00:00Z'\n---\n\n# Digest\n\nTODO: fix this\n"
+            "---\nupdated: '2020-01-01T00:00:00Z'\n---\n\n# Digest\n\n- TODO: fix this\n"
         )
         check = DigestStalenessCheck()
         issues = check.run(tmp_path, config)
         assert len(issues) == 1
-        assert "pending items" in issues[0].detail
+        assert "pending item" in issues[0].detail
+
+    def test_prose_keywords_not_flagged(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        digest = tmp_path / "docs" / "digests" / "old.md"
+        digest.parent.mkdir(parents=True)
+        digest.write_text(
+            "---\nupdated: '2020-01-01T00:00:00Z'\n---\n\n# Digest\n\n"
+            "A latent bug waiting to cause false negatives.\n"
+        )
+        check = DigestStalenessCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 0
+
+    def test_archive_designated_digest_skipped(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        digest = tmp_path / "docs" / "digests" / "old.md"
+        digest.parent.mkdir(parents=True)
+        digest.write_text(
+            "---\nupdated: '2020-01-01T00:00:00Z'\n---\n\n# Digest\n\n- TODO: fix this\n"
+        )
+        manifest = tmp_path / "drifter-manifest.toml"
+        manifest.write_text('[tree.docs]\n"digests/old.md" = { type = "archive" }\n')
+        check = DigestStalenessCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 0
 
     def test_fresh_digest_passes(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)

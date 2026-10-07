@@ -1,15 +1,10 @@
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
 
-if sys.version_info >= (3, 11):
-    pass
-else:
-    pass
-
 from drifter.checks._base import Issue
+from drifter.checks._shared import is_skippable_path, resolve_doc_path
 from drifter.config import Config
 
 
@@ -97,44 +92,34 @@ class TestCoverageCheck:
             if config.is_check_ignored(self.name, py_file):
                 continue
 
-            # For check modules, look for test_checks_{stem}.py or any test that imports it
-            if "src/drifter/checks/" in str(py_file):
-                exact = tests_dir / f"test_checks_{py_file.stem}.py"
-                if exact.exists():
-                    continue
-                # Fallback 1: any test_checks_* file whose name contains the stem
-                name_match = any(
-                    py_file.stem in f.name for f in tests_dir.glob("test_checks_*.py")
+            rel = py_file.relative_to(src_dir)
+            # Accepted conventions: test_{stem}.py for top-level modules,
+            # test_{parent}_{stem}.py for packaged modules
+            # (e.g. test_checks_sync.py covers checks/sync.py)
+            candidates = [f"test_{py_file.name}"]
+            if len(rel.parts) > 1:
+                candidates.append(f"test_{rel.parts[-2]}_{py_file.stem}.py")
+            if any((tests_dir / name).exists() for name in candidates):
+                continue
+
+            # Fallback: any test file imports this module
+            module_path = ".".join(rel.with_suffix("").parts)
+            import_match = any(
+                f"from {module_path} import" in text or f"import {module_path}" in text
+                for test_file in tests_dir.glob("test_*.py")
+                for text in [test_file.read_text(encoding="utf-8")]
+            )
+            if import_match:
+                continue
+
+            issues.append(
+                Issue(
+                    check=self.name,
+                    file=str(py_file.relative_to(root)),
+                    detail=f"no test file for {py_file.name} (expected {' or '.join(f'tests/{c}' for c in candidates)})",
+                    severity="warn",
                 )
-                if name_match:
-                    continue
-                # Fallback 2: any test file imports from this module
-                import_path = f"drifter.checks.{py_file.stem}"
-                import_match = any(
-                    import_path in test_file.read_text(encoding="utf-8")
-                    for test_file in tests_dir.glob("test_*.py")
-                )
-                if import_match:
-                    continue
-                issues.append(
-                    Issue(
-                        check=self.name,
-                        file=str(py_file.relative_to(root)),
-                        detail=f"no test file for {py_file.name} (expected tests/test_checks_{py_file.stem}.py or similar)",
-                        severity="warn",
-                    )
-                )
-            else:
-                test_file = tests_dir / f"test_{py_file.name}"
-                if not test_file.exists():
-                    issues.append(
-                        Issue(
-                            check=self.name,
-                            file=str(py_file.relative_to(root)),
-                            detail=f"no test file for {py_file.name} (expected tests/test_{py_file.name})",
-                            severity="warn",
-                        )
-                    )
+            )
 
         return issues
 
@@ -159,8 +144,7 @@ class TomllibCompatibilityCheck:
             # If the file has a version guard, it's safe
             if "sys.version_info" in text and "tomli as tomllib" in text:
                 continue
-            # If the file imports tomli as tomllib unconditionally (like shell_guard.py at module level)
-            # that's also acceptable as long as there's a version guard somewhere
+            # An unconditional 'import tomli as tomllib' alias is also acceptable
             if "import tomli as tomllib" in text:
                 continue
             issues.append(
@@ -183,20 +167,6 @@ class HardcodedPathCheck:
         r'["\']((?:docs|src|tests|config|tools|scripts|wiki|core|guides|reference)/[\w/\-\.]+)["\']'
     )
 
-    _SKIP_PATTERNS = {
-        "example",
-        "agent_name",
-        "skill_name",
-        "your_",
-        "my_",
-        "yyyy-mm-dd",
-        "YYYY-MM-DD",
-        "nonexistent",
-        "not_found",
-        "not found",
-        "missing_",
-    }
-
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
         source_exts = (
@@ -216,24 +186,23 @@ class HardcodedPathCheck:
             for src_file in root.rglob(f"*{ext}"):
                 if config.is_check_ignored(self.name, src_file):
                     continue
-                # Skip this file itself, __pycache__, and test files
+                # Skip caches, the drift engine, and test files
                 str_path = str(src_file)
                 if "__pycache__" in str_path or src_file.name == "drift_guard.py":
                     continue
                 if "/tests/" in str_path or str_path.startswith("tests/"):
                     continue
-                text = src_file.read_text(encoding="utf-8")
+                if not src_file.is_file():
+                    continue
+                try:
+                    text = src_file.read_text(encoding="utf-8")
+                except (OSError, UnicodeDecodeError):
+                    continue
                 for match in self._PATH_PATTERN.finditer(text):
                     path_str = match.group(1)
-                    if self._should_skip(path_str):
+                    if is_skippable_path(path_str):
                         continue
-                    candidate = root / path_str
-                    if not candidate.exists():
-                        candidate = (
-                            root / "docs" / path_str
-                            if (root / "docs").exists()
-                            else candidate
-                        )
+                    candidate = resolve_doc_path(root, path_str)
                     if not candidate.exists():
                         issues.append(
                             Issue(
@@ -244,10 +213,3 @@ class HardcodedPathCheck:
                             )
                         )
         return issues
-
-    def _should_skip(self, path_str: str) -> bool:
-        lower = path_str.lower()
-        for skip in self._SKIP_PATTERNS:
-            if skip in lower:
-                return True
-        return False

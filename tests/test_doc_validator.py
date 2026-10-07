@@ -100,3 +100,12 @@ updated: '2026-01-02T00:00:00Z'
 """)
         report = validate_docs(root=tmp_path, config=config)
         assert any("Invalid status" in i.detail for i in report.issues)
+
+    def test_root_conventional_files_exempt(self, tmp_path: Path) -> None:
+        """Root-level conventional files need no frontmatter."""
+        config = Config.load(root=tmp_path)
+        for name in ("README.md", "AGENTS.md", "CONTRIBUTING.md", "CHANGELOG.md"):
+            (tmp_path / name).write_text("# No frontmatter\n")
+
+        report = validate_docs(root=tmp_path, config=config)
+        assert report.errors == 0

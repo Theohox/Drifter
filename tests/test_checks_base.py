@@ -1,4 +1,9 @@
-"""Tests for base drift guard checks."""
+"""Tests for docs, code-quality, and project checks.
+
+Covers StaleReferenceCheck and ArchiveIntegrityCheck (checks/docs.py),
+HardcodedPathCheck (checks/code_quality.py), and ConductorHealthCheck
+(checks/project.py).
+"""
 
 from pathlib import Path
 
@@ -16,13 +21,13 @@ class TestStaleReferenceCheck:
         config = Config.load(root=tmp_path)
         doc = tmp_path / "docs" / "readme.md"
         doc.parent.mkdir(parents=True)
-        doc.write_text("See `src/nonexistent.py` for details.")
+        doc.write_text("See `src/definitely_gone.py` for details.")
 
         check = StaleReferenceCheck()
         issues = check.run(tmp_path, config)
         assert len(issues) == 1
         assert issues[0].check == "stale_reference"
-        assert "nonexistent.py" in issues[0].detail
+        assert "definitely_gone.py" in issues[0].detail
 
     def test_ignores_existing_file(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
@@ -75,6 +80,42 @@ class TestConductorHealthCheck:
         check = ConductorHealthCheck()
         issues = check.run(tmp_path, config)
         assert len(issues) == 0
+
+    def test_awaiting_state_is_not_a_warning(self, tmp_path: Path) -> None:
+        """The Stop Rule makes 'no ACTIVE phase, waiting on the human' a valid
+        state — declared with an AWAITING marker, it must not warn."""
+        config = Config.load(root=tmp_path)
+        conductor = tmp_path / "docs" / "project-conductor.md"
+        conductor.parent.mkdir(parents=True)
+        conductor.write_text("""
+## Current Phase
+**Phase 9** ⏸️ AWAITING MAINTAINER
+
+## Active Task
+| ID | Name |
+|----|------|
+| 1 | Do thing |
+""")
+        check = ConductorHealthCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 0
+
+    def test_no_active_and_no_awaiting_warns(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        conductor = tmp_path / "docs" / "project-conductor.md"
+        conductor.parent.mkdir(parents=True)
+        conductor.write_text("""
+## Current Phase
+**Phase 1** ✅ COMPLETE
+
+## Active Task
+| ID | Name |
+|----|------|
+| 1 | Do thing |
+""")
+        check = ConductorHealthCheck()
+        issues = check.run(tmp_path, config)
+        assert any("No phase marked as ACTIVE" in i.detail for i in issues)
 
 
 class TestArchiveIntegrityCheck:

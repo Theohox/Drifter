@@ -1,9 +1,13 @@
-"""Tests for project and quality checks."""
+"""Tests for sync and code-quality checks.
+
+Covers ReadmeCompletenessCheck and PreFlightSyncCheck (checks/sync.py) and
+DeadCodeCheck and TestCoverageCheck (checks/code_quality.py). CredentialLeakCheck
+lives in test_checks_security.py with the other security checks.
+"""
 
 from pathlib import Path
 
 from drifter.config import Config
-from drifter.checks.security import CredentialLeakCheck
 from drifter.checks.code_quality import DeadCodeCheck, TestCoverageCheck
 from drifter.checks.sync import ReadmeCompletenessCheck, PreFlightSyncCheck
 
@@ -104,36 +108,6 @@ class TestPreFlightSyncCheck:
         check = PreFlightSyncCheck()
         issues = check.run(tmp_path, config)
         assert any("README.md" in i.file and "5-step" in i.detail for i in issues)
-
-
-class TestCredentialLeakCheck:
-    def test_detects_api_key(self, tmp_path: Path) -> None:
-        config = Config.load(root=tmp_path)
-        src = tmp_path / "src" / "main.py"
-        src.parent.mkdir(parents=True)
-        src.write_text('api_key = "sk-abcdefghijklmnopqrstuvwxyz123456"')
-        check = CredentialLeakCheck()
-        issues = check.run(tmp_path, config)
-        assert len(issues) == 1
-        assert "OpenAI API key" in issues[0].detail
-
-    def test_ignores_example(self, tmp_path: Path) -> None:
-        config = Config.load(root=tmp_path)
-        src = tmp_path / "src" / "main.py"
-        src.parent.mkdir(parents=True)
-        src.write_text('api_key = "sk-your_example_key_here"')
-        check = CredentialLeakCheck()
-        issues = check.run(tmp_path, config)
-        assert len(issues) == 0
-
-    def test_ignores_comment(self, tmp_path: Path) -> None:
-        config = Config.load(root=tmp_path)
-        src = tmp_path / "src" / "main.py"
-        src.parent.mkdir(parents=True)
-        src.write_text('# api_key = "sk-abcdefghijklmnopqrstuvwxyz123456"')
-        check = CredentialLeakCheck()
-        issues = check.run(tmp_path, config)
-        assert len(issues) == 0
 
 
 class TestDeadCodeCheck:

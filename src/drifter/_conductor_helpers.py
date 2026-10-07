@@ -14,22 +14,29 @@ def _slugify(text: str) -> str:
 
 
 def create_archive_file(
-    root: Path, task_id: str, task_name: str, evidence: str, phase: str = "0"
+    root: Path,
+    task_id: str,
+    task_name: str,
+    evidence: str,
+    phase: str = "0",
+    score: int | None = None,
 ) -> Path | None:
     archive_dir = root / "docs" / "archive"
     archive_dir.mkdir(parents=True, exist_ok=True)
     slug = _slugify(task_name)
     archive_path = archive_dir / f"{task_id}-{slug}.md"
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Only record a score we actually measured — never fabricate one.
+    score_line = f"score: {score}\n" if score is not None else ""
     content = f"""---
 title: "{task_id}: {task_name}"
 type: archive
 status: archived
 phase: {phase}
 created: '{now}'
+updated: '{now}'
 completed: '{now}'
-score: 100
-task_id: {task_id}
+{score_line}task_id: {task_id}
 ---
 
 # {task_id}: {task_name}

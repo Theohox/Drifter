@@ -10,14 +10,17 @@ from drifter.checks._base import Issue
 class JsonReporter:
     name = "json"
 
-    def report(self, issues: list[Issue]) -> str:
-        data = [
-            {
-                "check": i.check,
-                "file": i.file,
-                "detail": i.detail,
-                "severity": i.severity,
-            }
-            for i in issues
-        ]
+    def report(self, issues: list[Issue], meta: dict | None = None) -> str:
+        data = {
+            **(meta or {}),
+            "issues": [
+                {
+                    "check": i.check,
+                    "file": i.file,
+                    "detail": i.detail,
+                    "severity": i.severity,
+                }
+                for i in issues
+            ],
+        }
         return json.dumps(data, indent=2)

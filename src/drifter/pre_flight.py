@@ -21,11 +21,14 @@ class PreFlightResult:
     step_results: list[dict[str, Any]] = field(default_factory=list)
     drift_score: int = 100
     errors: list[str] = field(default_factory=list)
+    task: str | None = None
 
     def print_report(self) -> None:
         print(f"\n{'=' * 60}")
         print("  PRE-FLIGHT REPORT")
         print(f"  {datetime.now(timezone.utc).isoformat()}")
+        if self.task:
+            print(f"  Task: {self.task}")
         print(f"{'=' * 60}")
 
         for step in self.step_results:
@@ -77,7 +80,7 @@ def run_pre_flight(
                 "message": "AGENTS.md not found in repo root",
             }
         )
-        errors.append("AGENTS.md is missing. Create it from templates/AGENTS.md.tmpl")
+        errors.append("AGENTS.md is missing. Run `drifter init` to create it")
 
     # Step 2: Session protocol exists
     session_protocol = root / "docs" / "session-protocol.md"
@@ -97,9 +100,7 @@ def run_pre_flight(
                 "message": "docs/session-protocol.md not found",
             }
         )
-        errors.append(
-            "Session protocol is missing. Create it from templates/session-protocol.md.tmpl"
-        )
+        errors.append("Session protocol is missing. Run `drifter init` to create it")
 
     # Step 3: Conductor exists
     conductor = root / "docs" / "project-conductor.md"
@@ -122,7 +123,7 @@ def run_pre_flight(
             }
         )
         errors.append(
-            "Conductor is missing. Create it from templates/project-conductor.md.tmpl"
+            "Conductor is missing. Run `drifter init` or `drifter conductor init` to create it"
         )
 
     # Step 4: Run drift guard
@@ -257,4 +258,5 @@ def run_pre_flight(
         step_results=step_results,
         drift_score=report.score if report else 0,
         errors=errors,
+        task=task,
     )

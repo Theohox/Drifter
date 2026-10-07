@@ -37,7 +37,7 @@ Before any coding session:
 
 | Component | Location | Don't Do |
 |-----------|----------|----------|
-| <!-- TODO: Add your components --> | | |
+| TODO: component name | TODO: `path/to/module` | TODO: boundary rule |
 
 > **TODO**: Fill in this table with your project's components, their file locations, and anti-patterns to avoid.
 
@@ -45,17 +45,11 @@ Before any coding session:
 
 | What You Need | Where It Already Exists |
 |---------------|------------------------|
-| Run drift guard | `python -m drifter check` or `src/drifter/drift_guard.py` |
-| Run pre-flight | `python -m drifter preflight` or `src/drifter/pre_flight.py` |
-| Manage conductor | `python -m drifter conductor` or `src/drifter/conductor.py` |
-| Validate docs | `python -m drifter validate` or `src/drifter/doc_validator.py` |
-| Audit session | `drifter audit` or `src/drifter/shell_guard.py` |
-| Enforce command | `src/drifter/shell_guard.py` — `guard.enforce()` raises on violation |
-| Tool interceptor | `src/drifter/plugin_api.py` — `ToolInterceptor` for integrations |
-| Add a reporter | `src/drifter/reporters/` — implement `Reporter` protocol |
-| Project config | `drifter.toml` (`[drifter]` section) or `pyproject.toml [tool.drifter]` |
+| TODO: e.g. "run the test suite" | TODO: e.g. `make test` or `pytest tests/` |
+| TODO: e.g. "add a database migration" | TODO: e.g. `alembic revision` — never hand-write SQL |
+| TODO: common need in your project | TODO: where it already exists |
 
-> **TODO**: Fill in this table so agents don't recreate existing functionality.
+> **TODO**: Fill in this table so agents don't recreate existing functionality. Map each common need to the command or module that already provides it. Delete rows you don't need.
 
 ## 4. Critical Rules
 
@@ -244,7 +238,10 @@ drifter conductor next     # Show next ready task
 drifter validate           # Validate document types
 drifter audit              # Audit session for dangerous commands
 drifter log                # Log an action to session audit
+drifter log-rotate         # Archive session log and start fresh
 drifter session-report     # Generate session report card
+drifter manifest           # Regenerate the capability manifest
+drifter describe           # Print machine-readable project description
 drifter init               # Initialize Drifter in a new project
 drifter install-hook       # Install git pre-commit hook
 drifter uninstall-hook     # Remove git pre-commit hook

@@ -3,22 +3,67 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from drifter.config import Config
 from drifter._conductor_helpers import create_archive_file, default_conductor_content
+from drifter._templates import template_text
+from drifter.config import Config
 
 
-@dataclass
-class Task:
-    id: str
-    name: str
-    status: str
-    evidence: str
-    next_task: str | None = None
+def _insert_table_row(
+    lines: list[str], section_header: str, column_header: str, row: str
+) -> bool:
+    """Insert ``row`` at the end of the markdown table under ``section_header``.
+
+    Mutates ``lines`` in place; returns True on success. Placeholder rows
+    containing "—" don't count as data rows, so the new row lands after the
+    last real data row or, failing that, right after the separator.
+    """
+    header_idx = -1
+    last_data_idx = -1
+    in_section = False
+    for i, line in enumerate(lines):
+        if section_header in line:
+            in_section = True
+            header_idx = i
+            continue
+        if in_section:
+            if line.strip().startswith("## "):
+                break
+            if (
+                line.strip().startswith("|")
+                and column_header not in line
+                and "---" not in line
+                and "—" not in line
+            ):
+                last_data_idx = i
+    if header_idx < 0:
+        return False
+    sep_idx = -1
+    for i in range(
+        header_idx,
+        min(last_data_idx + 2 if last_data_idx >= 0 else len(lines), len(lines)),
+    ):
+        if "|---" in lines[i] or "| -" in lines[i]:
+            sep_idx = i
+            break
+    insert_idx = last_data_idx if last_data_idx >= 0 else sep_idx
+    if insert_idx < 0:
+        return False
+    lines.insert(insert_idx + 1, row)
+    return True
+
+
+def _latest_drift_score(text: str) -> int | None:
+    """Return the most recent score from the Drift Score History table."""
+    parts = text.split("## Drift Score History", 1)
+    if len(parts) < 2:
+        return None
+    section = parts[1].split("\n## ", 1)[0]
+    matches = re.findall(r"\|\s*(\d+)\s*/\s*100\s*\|", section)
+    return int(matches[-1]) if matches else None
 
 
 class Conductor:
@@ -56,38 +101,8 @@ class Conductor:
         now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M")
         new_row = f"| {now} | {score}/100 | {tests} | {notes} |"
         lines = text.split("\n")
-        in_history = False
-        header_idx = -1
-        last_data_idx = -1
-        for i, line in enumerate(lines):
-            if "## Drift Score History" in line:
-                in_history = True
-                header_idx = i
-                continue
-            if in_history:
-                if line.strip().startswith("## "):
-                    break
-                if (
-                    line.strip().startswith("|")
-                    and "Timestamp" not in line
-                    and "---" not in line
-                ):
-                    if "—" not in line:
-                        last_data_idx = i
-        if header_idx < 0:
+        if not _insert_table_row(lines, "## Drift Score History", "Timestamp", new_row):
             return
-        sep_idx = -1
-        for i in range(
-            header_idx,
-            min(last_data_idx + 2 if last_data_idx >= 0 else len(lines), len(lines)),
-        ):
-            if "|---" in lines[i] or "| -" in lines[i]:
-                sep_idx = i
-                break
-        insert_idx = last_data_idx if last_data_idx >= 0 else sep_idx
-        if insert_idx < 0:
-            return
-        lines.insert(insert_idx + 1, new_row)
         new_text = "\n".join(lines)
         new_text = self._update_timestamp(new_text)
         self.path.write_text(new_text, encoding="utf-8")
@@ -129,13 +144,24 @@ class Conductor:
         )
         if not task_match:
             return False
-        task_name = task_match.group(2).strip()
+        task_name = task_match.group(2).strip().rstrip("|").strip()
         phase_match = re.search(r"phase:\s*(\d+)", text)
         phase = phase_match.group(1) if phase_match else "0"
         archive_path = create_archive_file(
-            self.root, task_id, task_name, evidence, phase
+            self.root,
+            task_id,
+            task_name,
+            evidence,
+            phase,
+            score=_latest_drift_score(text),
         )
-        archive_rel = f"archive/{archive_path.name}" if archive_path else ""
+        archive_rel = ""
+        if archive_path:
+            try:
+                # Correct for both layouts: conductor in docs/ or at repo root
+                archive_rel = str(archive_path.relative_to(self.path.parent))
+            except ValueError:
+                archive_rel = str(archive_path)
         old_pattern = re.compile(
             r"(\*\*Status\*\*\s*\|\s*)(.+?)(\n.*?\*\*Evidence\*\*\s*\|\s*)(.*?)(\n)",
             re.DOTALL,
@@ -151,39 +177,8 @@ class Conductor:
         archive_link = f"[archive]({archive_rel})" if archive_rel else evidence
         archive_row = f"| {task_id} | {task_name} | {now} | {archive_link} | — |"
         lines = new_text.split("\n")
-        in_completed = False
-        header_idx = -1
-        last_data_idx = -1
-        for i, line in enumerate(lines):
-            if "## Completed Tasks" in line:
-                in_completed = True
-                header_idx = i
-                continue
-            if in_completed:
-                if line.strip().startswith("## "):
-                    break
-                if (
-                    line.strip().startswith("|")
-                    and "| ID |" not in line
-                    and "---" not in line
-                ):
-                    if "—" not in line:
-                        last_data_idx = i
-        if header_idx >= 0:
-            sep_idx = -1
-            for i in range(
-                header_idx,
-                min(
-                    last_data_idx + 2 if last_data_idx >= 0 else len(lines), len(lines)
-                ),
-            ):
-                if "|---" in lines[i] or "| -" in lines[i]:
-                    sep_idx = i
-                    break
-            insert_idx = last_data_idx if last_data_idx >= 0 else sep_idx
-            if insert_idx >= 0:
-                lines.insert(insert_idx + 1, archive_row)
-                new_text = "\n".join(lines)
+        if _insert_table_row(lines, "## Completed Tasks", "| ID |", archive_row):
+            new_text = "\n".join(lines)
         new_text = self._update_timestamp(new_text)
         self.path.write_text(new_text, encoding="utf-8")
         return True
@@ -193,39 +188,9 @@ class Conductor:
             return False
         text = self.read()
         lines = text.split("\n")
-        in_blocked = False
-        header_idx = -1
-        last_data_idx = -1
-        for i, line in enumerate(lines):
-            if "## Blocked Tasks" in line:
-                in_blocked = True
-                header_idx = i
-                continue
-            if in_blocked:
-                if line.strip().startswith("## "):
-                    break
-                if (
-                    line.strip().startswith("|")
-                    and "| ID |" not in line
-                    and "---" not in line
-                ):
-                    if "—" not in line:
-                        last_data_idx = i
-        if header_idx < 0:
-            return False
-        sep_idx = -1
-        for i in range(
-            header_idx,
-            min(last_data_idx + 2 if last_data_idx >= 0 else len(lines), len(lines)),
-        ):
-            if "|---" in lines[i] or "| -" in lines[i]:
-                sep_idx = i
-                break
-        insert_idx = last_data_idx if last_data_idx >= 0 else sep_idx
-        if insert_idx < 0:
-            return False
         new_row = f"| {task_id} | {reason} | discovered during current task | — |"
-        lines.insert(insert_idx + 1, new_row)
+        if not _insert_table_row(lines, "## Blocked Tasks", "| ID |", new_row):
+            return False
         new_text = "\n".join(lines)
         new_text = self._update_timestamp(new_text)
         self.path.write_text(new_text, encoding="utf-8")
@@ -248,18 +213,8 @@ class Conductor:
     def init(self, force: bool = False) -> Path:
         if self.exists() and not force:
             return self.path
-        template_path = (
-            Path(__file__).parent.parent.parent
-            / "templates"
-            / "project-conductor.md.tmpl"
-        )
-        if not template_path.exists():
-            template_path = (
-                Path(__file__).parent.parent / "templates" / "project-conductor.md.tmpl"
-            )
-        if template_path.exists():
-            content = template_path.read_text(encoding="utf-8")
-        else:
+        content = template_text("project-conductor.md.tmpl")
+        if content is None:
             content = default_conductor_content()
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(content, encoding="utf-8")

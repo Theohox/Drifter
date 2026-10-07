@@ -8,7 +8,7 @@ from drifter.checks._base import Issue
 class GitHubActionsReporter:
     name = "github"
 
-    def report(self, issues: list[Issue]) -> str:
+    def report(self, issues: list[Issue], meta: dict | None = None) -> str:
         lines = []
         for issue in issues:
             level = "error" if issue.severity == "error" else "warning"

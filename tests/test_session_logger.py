@@ -63,6 +63,43 @@ class TestSessionLogger:
         assert entries[0].target == "src/legacy.py"
         assert entries[0].verified is False
 
+    def test_garbage_lines_skipped(self, tmp_path: Path) -> None:
+        log_file = tmp_path / "session.log"
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        log_file.write_text(
+            "garbage line with no brackets\n[unterminated bracket line\n\n   \n",
+            encoding="utf-8",
+        )
+        logger = SessionLogger(path=log_file)
+        assert logger.read_entries() == []
+
+    def test_legacy_line_without_target(self, tmp_path: Path) -> None:
+        log_file = tmp_path / "session.log"
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        log_file.write_text("[2026-01-01T00:00:00+00:00] READ\n", encoding="utf-8")
+        logger = SessionLogger(path=log_file)
+        entries = logger.read_entries()
+        assert len(entries) == 1
+        assert entries[0].action == "READ"
+        assert entries[0].target == ""
+        assert entries[0].verified is False
+
+    def test_mixed_signed_and_legacy_lines(self, tmp_path: Path) -> None:
+        log_file = tmp_path / "session.log"
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        log_file.write_text(
+            "[2026-01-01T00:00:00+00:00] READ src/legacy.py\n", encoding="utf-8"
+        )
+        logger = SessionLogger(path=log_file)
+        logger.log("WRITE", "src/new.py")
+        entries = logger.read_entries()
+        assert len(entries) == 2
+        assert entries[0].target == "src/legacy.py"
+        assert entries[0].verified is False
+        assert entries[1].action == "WRITE"
+        assert entries[1].target == "src/new.py"
+        assert entries[1].verified is True
+
     def test_file_permissions(self, tmp_path: Path) -> None:
         import os
         import stat

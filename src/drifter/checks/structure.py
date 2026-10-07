@@ -5,8 +5,8 @@ import json
 import re
 from pathlib import Path
 
-from drifter._toml_utils import safe_load_toml
 from drifter.checks._base import Issue
+from drifter.checks._shared import load_drifter_manifest
 from drifter.config import Config
 
 
@@ -45,20 +45,11 @@ class TreeIntegrityCheck:
 
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
-        manifest_file = root / "drifter-manifest.toml"
-        if not manifest_file.exists():
+        manifest, manifest_issue = load_drifter_manifest(root, self.name)
+        if manifest_issue is not None:
+            issues.append(manifest_issue)
             return issues
-
-        manifest = safe_load_toml(manifest_file)
         if manifest is None:
-            issues.append(
-                Issue(
-                    check=self.name,
-                    file="drifter-manifest.toml",
-                    detail="Cannot parse drifter-manifest.toml — file may be corrupted",
-                    severity="error",
-                )
-            )
             return issues
 
         # Build declared file set from manifest tree.* sections
@@ -80,8 +71,16 @@ class TreeIntegrityCheck:
                     ".venv",
                     "node_modules",
                     ".pytest_cache",
+                    ".mypy_cache",
+                    ".ruff_cache",
+                    ".coverage",
+                    "dist",
+                    ".eggs",
                 }
                 if any(part in skip_parts for part in parts):
+                    continue
+                # Rotated session logs are Drifter runtime artifacts
+                if f.name.startswith("session.log."):
                     continue
                 actual.add(rel)
 
@@ -117,20 +116,11 @@ class FileSizeCheck:
 
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
-        manifest_file = root / "drifter-manifest.toml"
-        if not manifest_file.exists():
+        manifest, manifest_issue = load_drifter_manifest(root, self.name)
+        if manifest_issue is not None:
+            issues.append(manifest_issue)
             return issues
-
-        manifest = safe_load_toml(manifest_file)
         if manifest is None:
-            issues.append(
-                Issue(
-                    check=self.name,
-                    file="drifter-manifest.toml",
-                    detail="Cannot parse drifter-manifest.toml — file may be corrupted",
-                    severity="error",
-                )
-            )
             return issues
 
         global_max = manifest.get("structure", {}).get("max_file_lines", 300)
@@ -168,20 +158,11 @@ class ManifestSyncCheck:
 
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
-        manifest_file = root / "drifter-manifest.toml"
-        if not manifest_file.exists():
+        manifest, manifest_issue = load_drifter_manifest(root, self.name)
+        if manifest_issue is not None:
+            issues.append(manifest_issue)
             return issues
-
-        manifest = safe_load_toml(manifest_file)
         if manifest is None:
-            issues.append(
-                Issue(
-                    check=self.name,
-                    file="drifter-manifest.toml",
-                    detail="Cannot parse drifter-manifest.toml — file may be corrupted",
-                    severity="error",
-                )
-            )
             return issues
 
         declared_count = manifest.get("checks", {}).get("count", 0)
@@ -343,20 +324,11 @@ class ClaimSyncCheck:
 
     def run(self, root: Path, config: Config) -> list[Issue]:
         issues: list[Issue] = []
-        manifest_file = root / "drifter-manifest.toml"
-        if not manifest_file.exists():
+        manifest, manifest_issue = load_drifter_manifest(root, self.name)
+        if manifest_issue is not None:
+            issues.append(manifest_issue)
             return issues
-
-        manifest = safe_load_toml(manifest_file)
         if manifest is None:
-            issues.append(
-                Issue(
-                    check=self.name,
-                    file="drifter-manifest.toml",
-                    detail="Cannot parse drifter-manifest.toml — file may be corrupted",
-                    severity="error",
-                )
-            )
             return issues
 
         def _resolve(path: str, data: dict) -> str | None:

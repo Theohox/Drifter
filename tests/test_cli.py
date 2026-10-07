@@ -1,131 +1,123 @@
-"""Tests for CLI commands."""
+"""Tests for CLI parser construction and dispatch (drifter.cli)."""
+
+from __future__ import annotations
 
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from drifter.cli import cmd_init
+import pytest
+
+import drifter.cli as cli
+
+HANDLER_NAMES = [
+    "cmd_audit",
+    "cmd_check",
+    "cmd_conductor",
+    "cmd_describe",
+    "cmd_init",
+    "cmd_install_hook",
+    "cmd_log",
+    "cmd_log_rotate",
+    "cmd_manifest",
+    "cmd_preflight",
+    "cmd_session_report",
+    "cmd_uninstall_hook",
+    "cmd_validate",
+]
 
 
-class TestCmdInit:
-    def test_creates_all_files(self, tmp_path: Path) -> None:
-        args = MagicMock()
-        args.root = str(tmp_path)
-        args.force = False
-        args.full = False
-        cmd_init(args)
-        assert (tmp_path / "AGENTS.md").exists()
-        assert (tmp_path / "dangerous_patterns.toml").exists()
-        assert (tmp_path / "docs" / "session-protocol.md").exists()
-        assert (tmp_path / "docs" / "project-conductor.md").exists()
-        assert (tmp_path / "docs" / "archive").is_dir()
+@pytest.fixture
+def spies(monkeypatch: pytest.MonkeyPatch) -> dict[str, MagicMock]:
+    """Replace every command handler with a spy returning 0."""
+    spies: dict[str, MagicMock] = {}
+    for name in HANDLER_NAMES:
+        spy = MagicMock(return_value=0)
+        monkeypatch.setattr(cli, name, spy)
+        spies[name] = spy
+    return spies
 
-    def test_mentions_all_canonical_files(self, tmp_path: Path) -> None:
-        args = MagicMock()
-        args.root = str(tmp_path)
-        args.force = False
-        args.full = False
-        import io
-        import sys
 
-        captured = io.StringIO()
-        old_stdout = sys.stdout
-        sys.stdout = captured
-        try:
-            cmd_init(args)
-        finally:
-            sys.stdout = old_stdout
-        output = captured.getvalue()
-        assert "AGENTS.md" in output
-        assert "dangerous_patterns.toml" in output
-        assert "session-protocol.md" in output
-        assert "project-conductor.md" in output
+@pytest.mark.parametrize(
+    ("argv", "handler_name"),
+    [
+        (["check"], "cmd_check"),
+        (["check", "--score"], "cmd_check"),
+        (["check", "--json"], "cmd_check"),
+        (["check", "--format", "github"], "cmd_check"),
+        (["preflight"], "cmd_preflight"),
+        (["preflight", "--task", "x", "--keyword", "y"], "cmd_preflight"),
+        (["conductor", "init"], "cmd_conductor"),
+        (["conductor", "init", "--force"], "cmd_conductor"),
+        (["conductor", "show"], "cmd_conductor"),
+        (["conductor", "done", "--task-id", "T-1"], "cmd_conductor"),
+        (["conductor", "block", "--task-id", "T-1", "--reason", "r"], "cmd_conductor"),
+        (["conductor", "next"], "cmd_conductor"),
+        (["validate"], "cmd_validate"),
+        (["audit"], "cmd_audit"),
+        (["audit", "--no-history", "--window", "5"], "cmd_audit"),
+        (["init"], "cmd_init"),
+        (["init", "--full", "--force"], "cmd_init"),
+        (["log", "READ", "foo.py"], "cmd_log"),
+        (["log-rotate"], "cmd_log_rotate"),
+        (["session-report"], "cmd_session_report"),
+        (["install-hook"], "cmd_install_hook"),
+        (["uninstall-hook"], "cmd_uninstall_hook"),
+        (["manifest"], "cmd_manifest"),
+        (["describe"], "cmd_describe"),
+        (["describe", "--format", "markdown"], "cmd_describe"),
+    ],
+)
+def test_dispatch_routes_to_handler(
+    spies: dict[str, MagicMock], argv: list[str], handler_name: str
+) -> None:
+    rc = cli.main(argv)
+    assert rc == 0
+    spies[handler_name].assert_called_once()
+    for name, spy in spies.items():
+        if name != handler_name:
+            spy.assert_not_called()
 
-    def test_template_substitution(self, tmp_path: Path) -> None:
-        args = MagicMock()
-        args.root = str(tmp_path)
-        args.force = False
-        args.full = False
-        cmd_init(args)
 
-        # Project name substituted in AGENTS.md
-        agents = (tmp_path / "AGENTS.md").read_text()
-        assert "{{PROJECT_NAME}}" not in agents
-        assert tmp_path.name in agents
+def test_handler_return_code_propagates(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(cli, "cmd_check", MagicMock(return_value=7))
+    assert cli.main(["check"]) == 7
 
-        # NOW substituted in drifter.toml comment
-        toml = (tmp_path / "drifter.toml").read_text()
-        assert "{{NOW}}" not in toml
-        assert "{{PROJECT_NAME}}" not in toml
-        assert tmp_path.name in toml
 
-    def test_no_phantom_references_in_agents(self, tmp_path: Path) -> None:
-        args = MagicMock()
-        args.root = str(tmp_path)
-        args.force = False
-        args.full = False
-        cmd_init(args)
+def test_root_flag_propagates(spies: dict[str, MagicMock], tmp_path: Path) -> None:
+    cli.main(["--root", str(tmp_path), "check"])
+    assert spies["cmd_check"].call_args.args[0].root == tmp_path
 
-        agents = (tmp_path / "AGENTS.md").read_text()
-        # AGENTS.md references canonical docs; init must create them so refs are not phantom
-        assert "docs/methodology.md" in agents
-        assert "docs/architecture.md" in agents
-        assert "docs/adoption-guide.md" in agents
-        assert "docs/rules-reference.md" in agents
-        assert (tmp_path / "docs" / "methodology.md").exists()
-        assert (tmp_path / "docs" / "architecture.md").exists()
-        assert (tmp_path / "docs" / "adoption-guide.md").exists()
-        assert (tmp_path / "docs" / "rules-reference.md").exists()
 
-    def test_full_mode_creates_doc_stubs(self, tmp_path: Path) -> None:
-        args = MagicMock()
-        args.root = str(tmp_path)
-        args.force = False
-        args.full = True
-        cmd_init(args)
+def test_root_defaults_to_none(spies: dict[str, MagicMock]) -> None:
+    cli.main(["check"])
+    assert spies["cmd_check"].call_args.args[0].root is None
 
-        assert (tmp_path / "docs" / "methodology.md").exists()
-        assert (tmp_path / "docs" / "architecture.md").exists()
-        assert (tmp_path / "docs" / "adoption-guide.md").exists()
-        assert (tmp_path / "docs" / "rules-reference.md").exists()
 
-        # Stubs should have correct frontmatter
-        arch = (tmp_path / "docs" / "architecture.md").read_text()
-        assert "type: snapshot" in arch
-        assert "TODO" in arch
+@pytest.mark.parametrize(
+    ("argv", "expected"),
+    [
+        (["conductor", "init"], "init"),
+        (["conductor", "show"], "show"),
+        (["conductor", "done", "--task-id", "T-1"], "done"),
+        (["conductor", "block", "--task-id", "T-1", "--reason", "r"], "block"),
+        (["conductor", "next"], "next"),
+    ],
+)
+def test_conductor_subcommand_attribute(
+    spies: dict[str, MagicMock], argv: list[str], expected: str
+) -> None:
+    cli.main(argv)
+    assert spies["cmd_conductor"].call_args.args[0].conductor_command == expected
 
-    def test_force_overwrites_existing(self, tmp_path: Path) -> None:
-        args = MagicMock()
-        args.root = str(tmp_path)
-        args.force = False
-        args.full = False
-        cmd_init(args)
 
-        # Modify a file
-        (tmp_path / "AGENTS.md").write_text("old content")
+def test_parsed_options_reach_handler(spies: dict[str, MagicMock]) -> None:
+    cli.main(["check", "--score", "--format", "github"])
+    args = spies["cmd_check"].call_args.args[0]
+    assert args.score is True
+    assert args.format == "github"
 
-        # Without force, should skip
-        args2 = MagicMock()
-        args2.root = str(tmp_path)
-        args2.force = False
-        args2.full = False
-        import io
-        import sys
 
-        captured = io.StringIO()
-        old_stdout = sys.stdout
-        sys.stdout = captured
-        try:
-            cmd_init(args2)
-        finally:
-            sys.stdout = old_stdout
-        output = captured.getvalue()
-        assert "Skipped" in output
-        assert (tmp_path / "AGENTS.md").read_text() == "old content"
-
-        # With force, should overwrite
-        args3 = MagicMock()
-        args3.root = str(tmp_path)
-        args3.force = True
-        args3.full = False
-        cmd_init(args3)
-        assert "old content" not in (tmp_path / "AGENTS.md").read_text()
+def test_no_command_exits_with_usage_error() -> None:
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main([])
+    assert exc_info.value.code == 2

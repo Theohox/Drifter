@@ -25,8 +25,8 @@ Drifter is not a prompt. It is a **system of enforced protocols**.
 Requires **Python 3.10+**.
 
 ```bash
-# Install
-pip install drifter
+# Install (PyPI package is `drifter-check`; the CLI command is `drifter`)
+pip install drifter-check
 
 # Initialize in your project
 cd your-project
@@ -54,6 +54,7 @@ drifter preflight --task "fix login bug"
 | `drifter validate` | Validate document types and frontmatter. |
 | `drifter audit` | Audit session history for dangerous command violations. |
 | `drifter log` | Log agent actions (READ/WRITE/SHELL/CHECK) to per-project session audit. |
+| `drifter log-rotate` | Archive the session log and start a fresh one. |
 | `drifter session-report` | Generate behavioral report card from session audit log. |
 | `drifter init` | Initialize Drifter in a new project. |
 | `drifter install-hook` | Install git pre-commit hook that blocks commits with drift. |
@@ -83,21 +84,21 @@ drifter preflight --task "fix login bug"
 | `test_coverage` | Verify every source module has a corresponding test file. | warn |
 | `cli_output` | Verify CLI output (especially init) mentions all canonical files. | warn |
 | `gitignore` | Verify sensitive file patterns from dangerous_patterns.toml are in .gitignore if files exist. | error |
-| `pipeline_integrity` | Verify conductor task references are consistent and tasks don't exist in multiple states. | warn |
+| `pipeline_integrity` | Verify conductor task references are consistent and tasks don't exist in multiple states. | error |
 | `archive_integrity` | Verify archive files have valid frontmatter and consistent naming. | error |
 | `tomllib_compatibility` | Scan for bare 'import tomllib' without Python 3.11 version guard. | error |
 | `audit_coverage` | Verify cmd_audit handles all ShellGuard action types. | error |
 | `reporter_completeness` | Verify console reporter handles all severity levels explicitly. | error |
 | `agent_self_audit` | Scan agent shell history for dangerous commands. | error |
 | `git_commit_approval` | Verify recent commits have approval markers. | error |
-| `tree_integrity` | Verify every file on disk is declared in drifter-manifest.toml and every declared file exists. | warn |
-| `file_size` | Verify no module exceeds manifest-declared max_file_lines. | warn |
+| `tree_integrity` | Verify every file on disk is declared in drifter-manifest.toml and every declared file exists. | error |
+| `file_size` | Verify no module exceeds manifest-declared max_file_lines. | error |
 | `manifest_sync` | Verify BUILTIN_CHECKS count matches manifest-declared count. | error |
-| `claim_sync` | Verify numerical claims in docs match manifest values. | warn |
+| `claim_sync` | Verify numerical claims in docs match manifest values. | error |
 | `read_before_write` | Verify every WRITE has a preceding READ on the same file. | error |
 | `test_after_write` | Verify a test run happened after the most recent WRITE. | error |
 | `drift_check_after_write` | Verify drifter check was run after the most recent WRITE. | error |
-| `no_rush` | Verify at least one drift check per 3 WRITEs. | warn |
+| `no_rush` | Verify at least one drift check per 3 WRITEs. | error |
 | `config_sync` | Verify config.py DEFAULT_CONFIG and drifter.toml match manifest checks. | error |
 | `ghost_reference` | Scan markdown docs for references to non-existent commands or MCP tools. | warn |
 
@@ -178,8 +179,8 @@ Drifter is not just a linter — it can actively block dangerous commands:
 from drifter.shell_guard import ShellGuard
 
 guard = ShellGuard()
-guard.enforce("git commit -m 'fix'")  # Raises DangerousCommandError
-guard.enforce("sudo apt install x")   # Raises ApprovalRequiredError
+guard.enforce("git commit -m 'fix'")  # Raises DangerousCommandError (always_block)
+guard.enforce("sudo apt install x")   # confirm_required: warns, returns Classification(action="warn")
 guard.enforce("git status")           # Returns Classification(action="allow")
 ```
 
@@ -209,9 +210,8 @@ Drifter is most effective when the agent is cooperative and the human reviews se
 An MCP server is available in `plugins/mcp-server/`:
 
 ```bash
-cd plugins/mcp-server
-pip install fastmcp
-python server.py
+pip install "drifter-check[mcp]"
+python plugins/mcp-server/server.py
 ```
 
 Exposes Drifter tools as MCP tools:
@@ -222,6 +222,10 @@ Exposes Drifter tools as MCP tools:
 - `drifter_check` — run the full drift guard
 
 Optional token authentication via `DRIFTER_MCP_TOKEN` environment variable.
+
+## Complementary Tools
+
+Drifter provides **discipline** (governance, checks, boundaries). For **comprehension** (understanding large codebases without burning tokens on grep), consider [Graphify](https://github.com/Graphify-Labs/graphify) — a knowledge graph builder that maps code, docs, and diagrams into a queryable graph. The two tools are independent but work well together: Graphify tells the agent *what connects to what*; Drifter keeps it from making careless changes.
 
 ## Documentation
 

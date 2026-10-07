@@ -1,4 +1,4 @@
-"""Tests for PipelineIntegrityCheck — the most complex check with zero coverage."""
+"""Tests for PipelineIntegrityCheck (checks/project.py)."""
 
 from __future__ import annotations
 
@@ -113,7 +113,7 @@ class TestPipelineIntegrityCheck:
             "FOO-001" in i.detail and "empty 'Blocked On'" in i.detail for i in issues
         )
 
-    def test_completed_task_empty_evidence(self, tmp_path: Path) -> None:
+    def test_completed_task_empty_archive(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
         self._conductor(
             tmp_path,
@@ -125,8 +125,44 @@ class TestPipelineIntegrityCheck:
         check = PipelineIntegrityCheck()
         issues = check.run(tmp_path, config)
         assert any(
-            "FOO-001" in i.detail and "empty evidence" in i.detail for i in issues
+            "FOO-001" in i.detail and "empty 'Archive'" in i.detail for i in issues
         )
+
+    def test_template_layout_blocked_on_read_correctly(self, tmp_path: Path) -> None:
+        """Template layout has a Depends On column before Blocked On —
+        the empty Blocked On column must be detected, not Depends On."""
+        config = Config.load(root=tmp_path)
+        self._conductor(
+            tmp_path,
+            "## Blocked Tasks\n\n"
+            "| ID | Name | Pipeline | Depends On | Blocked On | ETA |\n"
+            "|----|------|----------|------------|-----------|-----|\n"
+            "| FOO-001 | Task | backlog | BAR-001 | — | — |\n"
+            "| BAR-001 | Other | backlog | — | design | — |\n",
+        )
+        check = PipelineIntegrityCheck()
+        issues = check.run(tmp_path, config)
+        assert any(
+            "FOO-001" in i.detail and "empty 'Blocked On'" in i.detail for i in issues
+        )
+        assert not any(
+            "BAR-001" in i.detail and "empty 'Blocked On'" in i.detail for i in issues
+        )
+
+    def test_template_layout_depends_on_cycle(self, tmp_path: Path) -> None:
+        """Depends On column in template layout feeds cycle detection."""
+        config = Config.load(root=tmp_path)
+        self._conductor(
+            tmp_path,
+            "## Blocked Tasks\n\n"
+            "| ID | Name | Pipeline | Depends On | Blocked On | ETA |\n"
+            "|----|------|----------|------------|-----------|-----|\n"
+            "| A-001 | Task A | backlog | B-001 | design | — |\n"
+            "| B-001 | Task B | backlog | A-001 | design | — |\n",
+        )
+        check = PipelineIntegrityCheck()
+        issues = check.run(tmp_path, config)
+        assert any("Circular dependency" in i.detail for i in issues)
 
     def test_valid_conductor_passes(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)

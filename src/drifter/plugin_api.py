@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from drifter.config import Config
 from drifter.session_logger import SessionLogger
 from drifter.shell_guard import Classification, ShellGuard
 
@@ -19,7 +18,6 @@ class ToolInterceptor:
 
     def __init__(self, root: Path | None = None):
         self.root = (root or Path(".")).resolve()
-        self.config = Config.load(root=self.root)
         self._guard = ShellGuard(root=self.root)
 
     def before_read(self, path: Path) -> None:

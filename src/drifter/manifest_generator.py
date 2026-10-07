@@ -12,6 +12,7 @@ from __future__ import annotations
 import ast
 import json
 import re
+import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
@@ -77,36 +78,79 @@ def _extract_version(root: Path) -> str:
     return data.get("project", {}).get("version", "unknown")
 
 
+def _warn_degradation(message: str) -> None:
+    """Surface a silent-scan degradation instead of emitting an empty manifest."""
+    print(f"⚠ manifest_generator: {message}", file=sys.stderr)
+
+
 def _scan_cli_commands(root: Path) -> list[CommandInfo]:
     """Parse cli.py for subparser names and help text."""
     cli_file = root / "src" / "drifter" / "cli.py"
     if not cli_file.exists():
         return []
 
-    text = cli_file.read_text(encoding="utf-8")
-    commands: list[CommandInfo] = []
+    try:
+        tree = ast.parse(cli_file.read_text(encoding="utf-8"))
+    except SyntaxError as exc:
+        _warn_degradation(f"cannot parse {cli_file}: {exc}")
+        return []
 
-    # Match: subparsers.add_parser("name", help="...")
-    # or multi-line: subparsers.add_parser(
-    #     "name",
-    #     help="...",
-    # )
-    single_line = re.findall(
-        r'subparsers\.add_parser\(\s*"([^"]+)"(?:\s*,\s*help\s*=\s*"([^"]*)")?',
-        text,
-    )
-    for name, help_text in single_line:
+    commands: list[CommandInfo] = []
+    for node in ast.walk(tree):
+        if not (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "add_parser"
+            and node.args
+            and isinstance(node.args[0], ast.Constant)
+            and isinstance(node.args[0].value, str)
+        ):
+            continue
+        name = node.args[0].value
+        help_text = ""
+        for keyword in node.keywords:
+            if (
+                keyword.arg == "help"
+                and isinstance(keyword.value, ast.Constant)
+                and isinstance(keyword.value.value, str)
+            ):
+                help_text = keyword.value.value
+        target = node.func.value
+        if isinstance(target, ast.Name) and target.id == "conductor_sub":
+            name = f"conductor {name}"
         commands.append(CommandInfo(name=name, help=help_text))
 
-    # Multi-line conductor sub-commands
-    conductor = re.findall(
-        r'conductor_sub\.add_parser\(\s*"([^"]+)"(?:\s*,\s*help\s*=\s*"([^"]*)")?',
-        text,
-    )
-    for name, help_text in conductor:
-        commands.append(CommandInfo(name=f"conductor {name}", help=help_text))
-
+    if not commands:
+        _warn_degradation(f"no add_parser calls found in {cli_file}")
     return commands
+
+
+def _builtin_checks_map(tree: ast.Module) -> dict[str, str]:
+    """Extract {check_name: class_name} from the BUILTIN_CHECKS dict."""
+    for node in tree.body:
+        value: ast.expr | None = None
+        if (
+            isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and node.target.id == "BUILTIN_CHECKS"
+        ):
+            value = node.value
+        elif isinstance(node, ast.Assign) and any(
+            isinstance(t, ast.Name) and t.id == "BUILTIN_CHECKS" for t in node.targets
+        ):
+            value = node.value
+        if not isinstance(value, ast.Dict):
+            continue
+        mapping: dict[str, str] = {}
+        for key, val in zip(value.keys, value.values, strict=False):
+            if (
+                isinstance(key, ast.Constant)
+                and isinstance(key.value, str)
+                and isinstance(val, ast.Name)
+            ):
+                mapping[key.value] = val.id
+        return mapping
+    return {}
 
 
 def _scan_checks(root: Path) -> list[CheckInfo]:
@@ -116,20 +160,15 @@ def _scan_checks(root: Path) -> list[CheckInfo]:
     if not init_file.exists():
         return []
 
-    text = init_file.read_text(encoding="utf-8")
-    checks: list[CheckInfo] = []
+    try:
+        init_tree = ast.parse(init_file.read_text(encoding="utf-8"))
+    except SyntaxError as exc:
+        _warn_degradation(f"cannot parse {init_file}: {exc}")
+        return []
 
-    # Extract the BUILTIN_CHECKS dict
-    match = re.search(r"BUILTIN_CHECKS:\s*dict\[.*?\]\s*=\s*\{(.*?)\}", text, re.DOTALL)
-    if not match:
-        return checks
-
-    body = match.group(1)
-    name_to_module: dict[str, str] = {}
-    for line in body.split("\n"):
-        m = re.search(r'"([^"]+)"\s*:\s*(\w+)', line)
-        if m:
-            name_to_module[m.group(1)] = m.group(2)
+    name_to_module = _builtin_checks_map(init_tree)
+    if not name_to_module:
+        _warn_degradation(f"no BUILTIN_CHECKS entries found in {init_file}")
 
     # Parse all check module files to extract docstrings
     class_docstrings: dict[str, str] = {}
@@ -156,6 +195,7 @@ def _scan_checks(root: Path) -> list[CheckInfo]:
     except Exception:
         pass
 
+    checks: list[CheckInfo] = []
     for check_name, class_name in name_to_module.items():
         checks.append(
             CheckInfo(

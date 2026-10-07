@@ -5,29 +5,36 @@ pre-flight) as Model Context Protocol (MCP) tools. It is a consumer of the
 core library, not the enforcement layer itself.
 
 Dependencies:
-    pip install fastmcp
+    pip install "drifter-check[mcp]"
 
 Run:
     python plugins/mcp-server/server.py
+
+Root resolution:
+    Each tool accepts an optional `root` argument. If omitted, the
+    DRIFTER_ROOT environment variable is used; if that is also unset,
+    the current working directory is used.
 """
 
 from __future__ import annotations
 
-import functools
 import hmac
 import json
 import os
 import sys
 from pathlib import Path
 
-# Ensure core drifter is importable
+# Ensure core drifter is importable when running from a source checkout
 ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from drifter.errors import ApprovalRequiredError, DangerousCommandError
-from drifter.plugin_api import ToolInterceptor
-from drifter.session_logger import SessionLogger
-from drifter.shell_guard import ShellGuard
+from drifter.config import Config  # noqa: E402
+from drifter.drift_guard import run_checks  # noqa: E402
+from drifter.errors import ApprovalRequiredError, DangerousCommandError  # noqa: E402
+from drifter.plugin_api import ToolInterceptor  # noqa: E402
+from drifter.pre_flight import run_pre_flight  # noqa: E402
+from drifter.session_logger import SessionLogger  # noqa: E402
+from drifter.shell_guard import ShellGuard  # noqa: E402
 
 
 try:
@@ -35,13 +42,12 @@ try:
 except ImportError as exc:
     raise SystemExit(
         "fastmcp is required for the MCP server. "
-        "Install it with: pip install fastmcp"
+        'Install it with: pip install "drifter-check[mcp]"'
     ) from exc
 
 
 mcp = FastMCP("drifter")
 
-_MCP_REGISTRY: list[str] = []
 _EXPECTED_TOKEN = os.environ.get("DRIFTER_MCP_TOKEN")
 
 
@@ -53,133 +59,147 @@ def _require_auth(token: str) -> dict | None:
     return None
 
 
-def mcp_tool(func=None, **kwargs):
-    """Self-registering decorator for MCP tools.
+def _resolve_root(root: str | None) -> Path:
+    """Resolve the project root for a tool call.
 
-    Automatically registers the decorated function name to _MCP_REGISTRY
-    and applies the underlying @mcp.tool() decorator.
+    Precedence: explicit `root` argument > DRIFTER_ROOT env var > current
+    working directory.
     """
+    if root:
+        return Path(root)
+    return Path(os.environ.get("DRIFTER_ROOT", "."))
+
+
+def mcp_tool(**kwargs):
+    """Register a function as an MCP tool via the underlying @mcp.tool()."""
+
     def decorator(f):
-        _MCP_REGISTRY.append(f.__name__)
         return mcp.tool(**kwargs)(f)
-    if func is not None:
-        return decorator(func)
+
     return decorator
 
 
-def get_registered_tools() -> list[str]:
-    """Return the list of registered MCP tool names."""
-    return list(_MCP_REGISTRY)
-
-
 @mcp_tool()
-def drifter_classify(command: str, root: str = ".", token: str = "") -> str:
-    auth_error = _require_auth(token)
-    if auth_error:
-        return json.dumps(auth_error)
+def drifter_classify(command: str, root: str | None = None, token: str = "") -> str:
     """Classify a shell command via Drifter's ShellGuard.
 
     Returns: JSON with action, reason, matched_pattern.
     """
-    guard = ShellGuard(root=Path(root))
-    classification = guard.classify(command)
-    return json.dumps({
-        "action": classification.action,
-        "reason": classification.reason,
-        "matched_pattern": classification.matched_pattern,
-    })
-
-
-@mcp_tool()
-def drifter_enforce(command: str, root: str = ".", token: str = "") -> str:
     auth_error = _require_auth(token)
     if auth_error:
         return json.dumps(auth_error)
-    """Enforce a shell command via Drifter's ShellGuard.
-
-    Raises DangerousCommandError or ApprovalRequiredError on violation.
-    Returns: JSON with action on success.
-    """
-    interceptor = ToolInterceptor(root=Path(root))
-    try:
-        classification = interceptor.before_shell(command)
-        return json.dumps({
+    guard = ShellGuard(root=_resolve_root(root))
+    classification = guard.classify(command)
+    return json.dumps(
+        {
             "action": classification.action,
             "reason": classification.reason,
             "matched_pattern": classification.matched_pattern,
-            "status": "allowed",
-        })
-    except DangerousCommandError as e:
-        return json.dumps({
-            "status": "blocked",
-            "command": e.command,
-            "pattern": e.pattern,
-            "reason": str(e),
-        })
-    except ApprovalRequiredError as e:
-        return json.dumps({
-            "status": "approval_required",
-            "command": e.command,
-            "reason": str(e),
-        })
+        }
+    )
 
 
 @mcp_tool()
-def drifter_log(action: str, target: str, root: str = ".", token: str = "") -> str:
+def drifter_enforce(command: str, root: str | None = None, token: str = "") -> str:
+    """Enforce a shell command via Drifter's ShellGuard.
+
+    Never raises; returns JSON with status "allowed", "blocked", or
+    "approval_required" (plus action/reason/matched_pattern when allowed).
+    """
     auth_error = _require_auth(token)
     if auth_error:
         return json.dumps(auth_error)
+    interceptor = ToolInterceptor(root=_resolve_root(root))
+    try:
+        classification = interceptor.before_shell(command)
+        return json.dumps(
+            {
+                "action": classification.action,
+                "reason": classification.reason,
+                "matched_pattern": classification.matched_pattern,
+                "status": "allowed",
+            }
+        )
+    except DangerousCommandError as e:
+        return json.dumps(
+            {
+                "status": "blocked",
+                "command": e.command,
+                "pattern": e.pattern,
+                "reason": str(e),
+            }
+        )
+    except ApprovalRequiredError as e:
+        return json.dumps(
+            {
+                "status": "approval_required",
+                "command": e.command,
+                "reason": str(e),
+            }
+        )
+
+
+@mcp_tool()
+def drifter_log(
+    action: str, target: str, root: str | None = None, token: str = ""
+) -> str:
     """Log an action to the Drifter session audit log."""
-    logger = SessionLogger(root=Path(root))
+    auth_error = _require_auth(token)
+    if auth_error:
+        return json.dumps(auth_error)
+    logger = SessionLogger(root=_resolve_root(root))
     logger.log(action, target)
     return json.dumps({"status": "logged", "action": action, "target": target})
 
 
 @mcp_tool()
-def drifter_preflight(task: str | None = None, keyword: str | None = None, root: str = ".", token: str = "") -> str:
-    auth_error = _require_auth(token)
-    if auth_error:
-        return json.dumps(auth_error)
+def drifter_preflight(
+    task: str | None = None,
+    keyword: str | None = None,
+    root: str | None = None,
+    token: str = "",
+) -> str:
     """Run the Drifter pre-flight checklist.
 
     Returns: JSON with passed, drift_score, errors, step_results.
     """
-    from drifter.config import Config
-    from drifter.pre_flight import run_pre_flight
-
-    path_root = Path(root)
-    config = Config.load(root=path_root)
-    result = run_pre_flight(root=path_root, config=config, task=task, keyword=keyword)
-    return json.dumps({
-        "passed": result.passed,
-        "drift_score": result.drift_score,
-        "errors": result.errors,
-        "step_results": result.step_results,
-    })
-
-
-@mcp_tool()
-def drifter_check(root: str = ".", token: str = "") -> str:
     auth_error = _require_auth(token)
     if auth_error:
         return json.dumps(auth_error)
+    path_root = _resolve_root(root)
+    config = Config.load(root=path_root)
+    result = run_pre_flight(root=path_root, config=config, task=task, keyword=keyword)
+    return json.dumps(
+        {
+            "passed": result.passed,
+            "drift_score": result.drift_score,
+            "errors": result.errors,
+            "step_results": result.step_results,
+        }
+    )
+
+
+@mcp_tool()
+def drifter_check(root: str | None = None, token: str = "") -> str:
     """Run the Drifter drift guard.
 
     Returns: JSON with score, errors, warns, total.
     """
-    from drifter.config import Config
-    from drifter.drift_guard import run_checks
-
-    path_root = Path(root)
+    auth_error = _require_auth(token)
+    if auth_error:
+        return json.dumps(auth_error)
+    path_root = _resolve_root(root)
     config = Config.load(root=path_root)
     report = run_checks(root=path_root, config=config)
-    return json.dumps({
-        "score": report.score,
-        "total": report.total,
-        "errors": report.errors,
-        "warns": report.warns,
-        "infos": report.infos,
-    })
+    return json.dumps(
+        {
+            "score": report.score,
+            "total": report.total,
+            "errors": report.errors,
+            "warns": report.warns,
+            "infos": report.infos,
+        }
+    )
 
 
 if __name__ == "__main__":

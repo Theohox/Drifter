@@ -7,6 +7,9 @@
 #
 # If the computer resets, clone the repo and read this file.
 # You will immediately know what commands are forbidden.
+#
+# Fail-closed: if this file is missing or unparseable, ShellGuard blocks
+# EVERY command rather than allowing everything. Do not delete it.
 
 [git]
 # NEVER run these. Not with flags. Not with excuses.
@@ -18,6 +21,9 @@ always_block = [
     "git rebase",
     "git merge",
     "git checkout -b",
+    "git switch -c",
+    "git checkout .",
+    "git restore .",
     "git tag",
     "git cherry-pick",
 ]
@@ -86,8 +92,10 @@ sensitive_patterns = [
 
 [agent]
 # Actions the agent must NEVER take without explicit human approval.
-# These are enforced by AgentSelfAuditCheck and GitCommitApprovalCheck.
-# The agent CANNOT bypass these — violations are detected by drifter check.
+# These are audited by AgentSelfAuditCheck and GitCommitApprovalCheck.
+# Drifter is a cooperative guard: violations are detected and reported by
+# drifter check, but a determined agent can bypass them. For mandatory
+# enforcement use git hooks and CI — see AGENTS.md "Who Guards the Guard".
 always_report = [
     "git commit",
     "git push",

@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from drifter.config import Config
+from drifter.checks.code_quality import HardcodedPathCheck
 from drifter.checks.security import (
     CredentialLeakCheck,
     DangerousPatternsCheck,
@@ -160,6 +163,15 @@ class TestCredentialLeakCheck:
         issues = check.run(tmp_path, config)
         assert len(issues) == 0
 
+    def test_ignores_example_placeholder(self, tmp_path: Path) -> None:
+        config = Config.load(root=tmp_path)
+        src = tmp_path / "src" / "main.py"
+        src.parent.mkdir(parents=True)
+        src.write_text('api_key = "sk-your_example_key_here"')
+        check = CredentialLeakCheck()
+        issues = check.run(tmp_path, config)
+        assert len(issues) == 0
+
     def test_skips_tests_directory(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
         test_file = tmp_path / "tests" / "test_foo.py"
@@ -168,3 +180,20 @@ class TestCredentialLeakCheck:
         check = CredentialLeakCheck()
         issues = check.run(tmp_path, config)
         assert len(issues) == 0
+
+
+class TestDirectoryNamedLikeSource:
+    """Regression: a directory whose name ends in a source extension must not
+    crash extension-globbing checks (found via third_party whisper.android.java)."""
+
+    @pytest.mark.parametrize(
+        "check_cls",
+        [CredentialLeakCheck, GitSafetyCheck, HardcodedPathCheck],
+        ids=lambda c: c.__name__,
+    )
+    def test_extension_named_directory_is_skipped(
+        self, tmp_path: Path, check_cls: type
+    ) -> None:
+        config = Config.load(root=tmp_path)
+        (tmp_path / "vendor" / "whisper.android.java").mkdir(parents=True)
+        assert check_cls().run(tmp_path, config) == []

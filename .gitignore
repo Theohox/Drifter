@@ -38,9 +38,5 @@ id_rsa*
 *.password
 *secret*
 
-# Drifter approval markers (local only)
-.git/approved
-
 # Drifter session audit logs (local only)
 .drifter/
-uv.lock

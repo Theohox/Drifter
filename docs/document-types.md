@@ -4,7 +4,7 @@ type: reference
 status: active
 phase: 0
 created: '2026-05-27T00:00:00Z'
-updated: '2026-06-05T10:00:00Z'
+updated: '2026-10-07T12:00:00Z'
 ---
 
 # Document Type System
@@ -131,8 +131,7 @@ The document type system makes these violations **detectable**.
 **Purpose:** How-to documentation for humans or agents.
 
 **Examples:**
-- `docs/adoption-guide.md` — how to adopt Drifter
-- `docs/methodology.md` — philosophy and design principles
+- `docs/adoption-guide.md` — how to adopt Drifter in a project
 
 **Mutation Rules:**
 - Update when workflow changes.
@@ -151,7 +150,6 @@ The document type system makes these violations **detectable**.
 
 **Examples:**
 - `docs/rules-reference.md` — complete rule catalog
-- `docs/phase-index.md` — maps all docs to their phase
 
 **Mutation Rules:**
 - Update when facts change.
@@ -161,6 +159,24 @@ The document type system makes these violations **detectable**.
 **Drift Signals:**
 - Facts that contradict the codebase
 - Missing entries for new features
+
+---
+
+### `index`
+
+**Purpose:** Navigation. Maps documents to phases, categories, or each other.
+
+**Examples:**
+- `docs/phase-index.md` — maps all docs to their originating phase
+
+**Mutation Rules:**
+- Update when the set of documents changes (new document added, document removed, phase reassigned).
+- Every entry must point at a live document.
+- Update the `updated:` timestamp when changed.
+
+**Drift Signals:**
+- Entries for documents that no longer exist
+- Missing entries for new documents
 
 ---
 
@@ -205,7 +221,7 @@ Run `drifter validate` to check:
 1. Every `.md` file in `docs/` has a `type:` field
 2. The `type:` value is valid
 3. The `updated:` timestamp is present and not older than the `created:` timestamp
-4. Snapshot-type documents have not grown excessively (warning if >2× original length)
+4. Snapshot-type documents have not grown excessively (warning if the body exceeds 10,000 characters — an absolute threshold, not relative to original length; see `src/drifter/_doc_validate.py`)
 5. Backlog-type documents don't contain stale items (checked by drift guard)
 
 ---

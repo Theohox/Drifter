@@ -16,7 +16,7 @@ from drifter.checks.structure import (
 class TestCliOutputCheck:
     def test_missing_mention(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
-        cli = tmp_path / "src" / "drifter" / "cli.py"
+        cli = tmp_path / "src" / "drifter" / "_cli_init.py"
         cli.parent.mkdir(parents=True)
         cli.write_text(
             "def cmd_init(args):\n"
@@ -30,7 +30,7 @@ class TestCliOutputCheck:
 
     def test_all_mentions_present(self, tmp_path: Path) -> None:
         config = Config.load(root=tmp_path)
-        cli = tmp_path / "src" / "drifter" / "cli.py"
+        cli = tmp_path / "src" / "drifter" / "_cli_init.py"
         cli.parent.mkdir(parents=True)
         cli.write_text(
             "def cmd_init(args):\n"

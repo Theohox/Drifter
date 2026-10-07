@@ -5,7 +5,7 @@ version: "1.0"
 status: active
 phase: "0"
 created: '2026-05-27T00:00:00Z'
-updated: '2026-06-05T10:00:00Z'
+updated: '2026-10-07T13:07:00Z'
 ---
 
 # Drifter Agent Contract
@@ -44,9 +44,9 @@ Before any coding session:
 | Config loader | `src/drifter/config.py` | Layered resolution: defaults → drifter.toml → pyproject.toml → CLI. |
 | Shell guard | `src/drifter/shell_guard.py` | Command classifier + enforcement. Plugin-agnostic. |
 | Session logger | `src/drifter/session_logger.py` | Per-project append-only audit log. |
-| CLI | `src/drifter/cli.py` | All CLI commands live here. Add new subcommands, not new files. |
-| Reporters | `src/drifter/reporters/` | Each reporter is independent. Don't couple output formats. |
-| Templates | `templates/` | Annotated templates, not generated content. |
+| CLI | `src/drifter/cli.py` (parser + dispatch) + the `_cli_*.py` handler modules | Add new subcommands to the matching `_cli` module, not new files. |
+| Reporters | `src/drifter/reporters/` | Each reporter is independent and wired into `cmd_check`. Don't couple output formats. |
+| Templates | `src/drifter/templates/` | Annotated templates shipped as package data, not generated content. |
 | Plugins | `plugins/` | Agent-specific integrations. Core must not depend on plugins. |
 | Enforcement exceptions | `src/drifter/errors.py` | Structured exceptions for blocked/approval-required commands. |
 | Plugin interceptor | `src/drifter/plugin_api.py` | `ToolInterceptor` for auto-logging + enforcement in integrations. |
@@ -62,6 +62,7 @@ Before any coding session:
 | Manage conductor | `drifter conductor` or `python -m drifter conductor` |
 | Validate docs | `drifter validate` or `python -m drifter validate` |
 | Audit session | `drifter audit` or `src/drifter/shell_guard.py` |
+| Rotate session log | `drifter log-rotate` or `src/drifter/session_logger.py` — `SessionLogger.rotate_log()` |
 | Enforce command | `src/drifter/shell_guard.py` — `guard.enforce()` raises on violation |
 | Read shell history | `src/drifter/history_reader.py` — `HistoryReader` auto-detects bash/zsh/fish |
 | Tool interceptor | `src/drifter/plugin_api.py` — `ToolInterceptor` for integrations |
@@ -102,7 +103,7 @@ When you finish the Active Task:
 1. RUN tests (pytest)
 2. RUN drift guard again — did you create new drift?
 3. UPDATE Conductor — mark done, paste evidence
-4. STOP — if no next task is Ready, wait for hox
+4. STOP — if no next task is Ready, wait for the maintainer
 ```
 
 ### The No-Recreation Rule
@@ -208,6 +209,7 @@ Every markdown file in `docs/` MUST have a `type:` in its frontmatter:
 - `playbook` — operational procedures (this file)
 - `guide` — how-to documentation (`docs/adoption-guide.md`)
 - `reference` — lookup docs (`docs/rules-reference.md`)
+- `index` — navigation docs (`docs/phase-index.md`)
 
 **Wrong type = drift.** Fix it.
 
@@ -231,7 +233,7 @@ Every document in `docs/` is canonical. Read the right one at the right time:
 
 ## 7. Communication Protocol
 
-**When reporting to hox:**
+**When reporting to the maintainer:**
 
 1. **Lead with the answer, not the process.**
 2. **If you don't know, say so.** Never hallucinate file contents.
@@ -296,6 +298,7 @@ drifter conductor next     # Show next ready task
 drifter validate           # Validate document types
 drifter audit              # Audit session for dangerous commands
 drifter log                # Log an action to session audit
+drifter log-rotate         # Archive session log and start fresh
 drifter session-report     # Generate behavioral report card
 drifter init               # Initialize Drifter in a new project
 drifter install-hook       # Install git pre-commit hook
@@ -307,7 +310,7 @@ mypy src/                            # Type check
 
 ## 10. If You're Stuck
 
-**Before asking hox:**
+**Before asking the maintainer:**
 
 1. Read this prompt again.
 2. Check `docs/digests/index.md`

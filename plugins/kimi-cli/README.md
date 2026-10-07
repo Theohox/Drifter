@@ -1,3 +1,13 @@
+---
+title: Kimi CLI Plugin Stub
+type: guide
+version: "0.1"
+status: draft
+phase: "3"
+created: '2026-06-01T16:15:00Z'
+updated: '2026-10-07T00:00:00Z'
+---
+
 # Kimi CLI Plugin Stub
 
 **Status:** Future / Backlog (PLUG-001)
