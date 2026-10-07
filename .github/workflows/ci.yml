@@ -27,7 +27,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          python -m pytest tests/ --cov=drifter --cov-report=xml -q
+          python -m pytest tests/ --cov=drifter --cov-report=term -q
 
       - name: Run type check
         run: |
@@ -44,12 +44,3 @@ jobs:
       - name: Self-check with Drifter
         run: |
           python -m drifter check --score
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./coverage.xml
-          fail_ci_if_error: true
-          # Public repo: tokenless upload works; set CODECOV_TOKEN if uploads
-          # start failing with rate-limit errors.
-        if: matrix.python == '3.12'
