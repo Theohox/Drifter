@@ -11,15 +11,21 @@ _PRE_COMMIT_HOOK = """#!/bin/sh
 
 echo "Running Drifter pre-commit check..."
 
-# Try drifter in PATH first, then python -m drifter, then python3
-if command -v drifter >/dev/null 2>&1; then
+# Resolution order: repo-local venv, drifter in PATH, python -m fallbacks.
+# A human committing from a bare shell has no venv activated — find the
+# project's own .venv first so the check is not silently skipped.
+if [ -x ".venv/bin/drifter" ]; then
+    .venv/bin/drifter check
+elif command -v drifter >/dev/null 2>&1; then
     drifter check
+elif [ -f ".venv/bin/python" ]; then
+    .venv/bin/python -m drifter check
 elif command -v python3 >/dev/null 2>&1; then
     python3 -m drifter check
 elif command -v python >/dev/null 2>&1; then
     python -m drifter check
 else
-    echo "Warning: drifter not found in PATH. Skipping drift check."
+    echo "Warning: drifter not found (no .venv, not on PATH). Skipping drift check."
     exit 0
 fi
 
@@ -32,6 +38,35 @@ fi
 
 echo "✓ Drifter check passed. Proceeding with commit."
 """
+
+_APPROVAL_GATE = """
+# --- Human-approval gate (`drifter install-hook --approval`) ---
+# Blocks commits until the human arms a one-time approval.
+if [ ! -f ".git/approved" ]; then
+    echo ""
+    echo "✗ Commit blocked: no human approval."
+    echo "   Run:  drifter approve"
+    echo "   Then: re-run your git commit."
+    echo ""
+    exit 1
+fi
+rm ".git/approved"  # consume — one-time use
+"""
+
+
+def _render_hook(approval: bool) -> str:
+    if not approval:
+        return _PRE_COMMIT_HOOK
+    # Approval gate first, then the drift check.
+    body = _PRE_COMMIT_HOOK.replace(
+        'echo "Running Drifter pre-commit check..."',
+        'echo "Running Drifter pre-commit check..."\n' + _APPROVAL_GATE,
+    )
+    return body.replace(
+        "# Runs drift guard before every commit. Blocks commit on error-level drift.",
+        "# Runs drift guard before every commit. Blocks commit on error-level drift.\n"
+        "# Also requires `drifter approve` (one-time human approval) per commit.",
+    )
 
 
 def cmd_install_hook(args: argparse.Namespace) -> int:
@@ -51,11 +86,15 @@ def cmd_install_hook(args: argparse.Namespace) -> int:
         print("  Run 'drifter uninstall-hook' first, or manually back it up.")
         return 1
 
-    hook_path.write_text(_PRE_COMMIT_HOOK, encoding="utf-8")
+    hook_path.write_text(
+        _render_hook(bool(getattr(args, "approval", False))), encoding="utf-8"
+    )
     hook_path.chmod(0o755)
 
     print(f"✓ Pre-commit hook installed: {hook_path}")
     print("  It will run 'drifter check' before every commit.")
+    if getattr(args, "approval", False):
+        print("  Commits also require one-time human approval: `drifter approve`.")
     return 0
 
 

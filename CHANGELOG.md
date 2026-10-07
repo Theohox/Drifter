@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`drifter approve`** — human-only command that arms the one-time commit
+  approval (`.git/approved`) consumed by the pre-commit hook, replacing the
+  cryptic `touch .git/approved` incantation.
+- **`drifter commit-msg`** — drafts a commit message from staged changes
+  (grouped by area, conventional-commit prefix, explicit "edit for WHY" note).
+- **`drifter install-hook --approval`** — installs the pre-commit hook with the
+  human-approval gate built in (previously the gate existed only as a
+  hand-maintained script; the message now points at `drifter approve`).
+
 ## [0.4.0] — 2026-10-07
 
 ### Security

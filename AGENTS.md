@@ -180,6 +180,7 @@ Drifter increases the cost of mistakes and makes bypasses auditable. It does not
 2. **Approval must be verbatim.** The human must say something like "commit and push" or "you may commit." IMPLIED approval ("ok", "proceed", "looks good", "C") is NOT sufficient.
 3. **If you committed without approval, STOP.** Do not commit again. Report the violation immediately. The human decides whether to revert.
 4. **If `drifter check` fails because of AgentSelfAuditCheck or GitCommitApprovalCheck, you violated the rule.** Stop working. Report it. Ask for instructions.
+5. **Agents never run `drifter approve`.** When the approval gate is installed (`install-hook --approval`), only the human arms the one-time approval. Asking the human to run it is correct; running it yourself is a boundary violation.
 
 **NO EXCUSES:**
 - "It was small" — NOT AN EXCUSE.
@@ -301,8 +302,10 @@ drifter log                # Log an action to session audit
 drifter log-rotate         # Archive session log and start fresh
 drifter session-report     # Generate behavioral report card
 drifter init               # Initialize Drifter in a new project
-drifter install-hook       # Install git pre-commit hook
+drifter install-hook       # Install git pre-commit hook (--approval adds the human-approval gate)
 drifter uninstall-hook     # Remove git pre-commit hook
+drifter approve            # HUMAN-ONLY: arm one-time commit approval (agents never run this)
+drifter commit-msg         # Draft a commit message from staged changes
 python -m pytest tests/ -q           # Run tests
 ruff check src/ tests/               # Lint
 mypy src/                            # Type check

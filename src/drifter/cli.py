@@ -23,6 +23,7 @@ from drifter._cli_check import cmd_check, cmd_session_report
 from drifter._cli_conductor import cmd_conductor
 from drifter._cli_init import cmd_init, cmd_validate
 from drifter._hook_commands import cmd_install_hook, cmd_uninstall_hook
+from drifter._commit_commands import cmd_approve, cmd_commit_msg
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -157,6 +158,11 @@ def main(argv: list[str] | None = None) -> int:
     install_hook_parser = subparsers.add_parser(
         "install-hook", help="Install git pre-commit hook"
     )
+    install_hook_parser.add_argument(
+        "--approval",
+        action="store_true",
+        help="Also require human approval (`drifter approve`) before each commit",
+    )
     install_hook_parser.set_defaults(func=cmd_install_hook)
 
     # uninstall-hook
@@ -164,6 +170,18 @@ def main(argv: list[str] | None = None) -> int:
         "uninstall-hook", help="Uninstall git pre-commit hook"
     )
     uninstall_hook_parser.set_defaults(func=cmd_uninstall_hook)
+
+    # approve
+    approve_parser = subparsers.add_parser(
+        "approve", help="Arm one-time commit approval (human-only)"
+    )
+    approve_parser.set_defaults(func=cmd_approve)
+
+    # commit-msg
+    commit_msg_parser = subparsers.add_parser(
+        "commit-msg", help="Draft a commit message from staged changes"
+    )
+    commit_msg_parser.set_defaults(func=cmd_commit_msg)
 
     # manifest
     manifest_parser = subparsers.add_parser(

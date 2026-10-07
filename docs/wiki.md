@@ -5,7 +5,7 @@ version: "1.3"
 status: active
 phase: "3"
 created: '2026-10-06T00:00:00Z'
-updated: '2026-10-07T12:00:00Z'
+updated: '2026-10-07T13:32:00Z'
 ---
 
 # Drifter Wiki
@@ -91,7 +91,7 @@ Same command. Without `--force` nothing you already have is overwritten; gaps ar
 
 ## 3. CLI Command Reference
 
-Parser construction and dispatch live in `src/drifter/cli.py`; command handlers live in the `_cli_*` modules (`_cli_check`, `_cli_conductor`, `_cli_init`, `_cli_admin`, `_hook_commands`). Global flag: `--root <dir>` to operate on a different project root. Every command exits non-zero on failure, so all are CI-safe.
+Parser construction and dispatch live in `src/drifter/cli.py`; command handlers live in the `_cli_*` modules (`_cli_check`, `_cli_conductor`, `_cli_init`, `_cli_admin`, `_hook_commands`, `_commit_commands`). Global flag: `--root <dir>` to operate on a different project root. Every command exits non-zero on failure, so all are CI-safe.
 
 ### `drifter check`
 
@@ -305,7 +305,8 @@ Everything under `src/drifter/`. Layering is convention: checks may import core;
 | `errors.py` | `DrifterError`, `DangerousCommandError`, `ApprovalRequiredError` (carry command/pattern/reason/classification) | Imports `Classification` from `_types` — no circular import with shell_guard | — |
 | `_types.py` | `Classification(action, reason, matched_pattern)`, `ClassificationAction` | Shared enforcement types; home of `Classification` so `shell_guard` and `errors` both import it without a cycle (re-exported via both modules for backward compatibility) | — |
 | `_toml_utils.py` | `safe_load_toml(path) -> dict \| None` | tomllib (3.11+) / tomli fallback; None on any error so callers degrade gracefully | R: TOML files |
-| `_hook_commands.py` | `cmd_install_hook`, `cmd_uninstall_hook` | Writes/removes `.git/hooks/pre-commit` (0755); refuses to overwrite a non-Drifter hook | RW: `.git/hooks/` |
+| `_hook_commands.py` | `cmd_install_hook`, `cmd_uninstall_hook` | Writes/removes `.git/hooks/pre-commit` (0755); refuses to overwrite a non-Drifter hook; `--approval` adds the human-approval gate | RW: `.git/hooks/` |
+| `_commit_commands.py` | `cmd_approve`, `cmd_commit_msg` | Arms the one-time `.git/approved` token (human-only); drafts a commit message from the staged diff | RW: `.git/approved` |
 | `reporters/` | `ConsoleReporter`, `JsonReporter`, `GitHubActionsReporter` — `report(issues, meta=None) -> str` | The single formatting path for `drifter check` output (console/JSON/GitHub Actions). Console owns the canonical grouped report; JSON emits a metadata envelope with structured issue dicts | — |
 
 ---

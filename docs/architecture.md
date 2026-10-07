@@ -21,7 +21,7 @@ How Drifter is built. For contributors and advanced users.
 4. **Fast feedback** — the `check` command runs in < 5 seconds on a 10k-file repo
 5. **Language-agnostic** — Works with any project that has files and docs
 
-CLI surface (13 commands): `drifter check`, `drifter preflight`, `drifter conductor`, `drifter validate`, `drifter audit`, `drifter init`, `drifter log`, `drifter log-rotate`, `drifter session-report`, `drifter install-hook`, `drifter uninstall-hook`, `drifter manifest`, `drifter describe`.
+CLI surface (15 commands): `drifter check`, `drifter preflight`, `drifter conductor`, `drifter validate`, `drifter audit`, `drifter init`, `drifter log`, `drifter log-rotate`, `drifter session-report`, `drifter install-hook`, `drifter uninstall-hook`, `drifter approve`, `drifter commit-msg`, `drifter manifest`, `drifter describe`.
 
 ---
 

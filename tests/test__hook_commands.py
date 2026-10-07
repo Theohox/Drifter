@@ -39,6 +39,26 @@ class TestInstallHook:
         args = _args(tmp_path)
         assert cmd_install_hook(args) == 1
 
+    def test_approval_variant_installs_gate(self, tmp_path: Path) -> None:
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True, check=True
+        )
+        args = SimpleNamespace(root=tmp_path, approval=True)
+        assert cmd_install_hook(args) == 0
+        hook_text = (tmp_path / ".git" / "hooks" / "pre-commit").read_text()
+        assert ".git/approved" in hook_text
+        assert "drifter approve" in hook_text
+        # Gate runs before the drift check
+        assert hook_text.index(".git/approved") < hook_text.index("drifter check")
+
+    def test_default_variant_has_no_gate(self, tmp_path: Path) -> None:
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True, check=True
+        )
+        assert cmd_install_hook(_args(tmp_path)) == 0
+        hook_text = (tmp_path / ".git" / "hooks" / "pre-commit").read_text()
+        assert ".git/approved" not in hook_text
+
 
 class TestUninstallHook:
     def test_uninstalls_drifter_hook(self, tmp_path: Path) -> None:

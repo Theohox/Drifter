@@ -26,7 +26,7 @@ Requires **Python 3.10+**.
 
 ```bash
 # Install (PyPI package is `drifter-check`; the CLI command is `drifter`)
-pip install drifter-check
+pip install drifter-check        # or: pipx install drifter-check / uv tool install drifter-check
 
 # Initialize in your project
 cd your-project
@@ -37,6 +37,13 @@ drifter check
 
 # Run pre-flight before a coding session
 drifter preflight --task "fix login bug"
+```
+
+Working from a source checkout instead? Use the project venv directly — no activation needed:
+
+```bash
+.venv/bin/drifter check
+.venv/bin/drifter approve     # human-only: arm a one-time commit approval
 ```
 
 ## What You Get
@@ -57,8 +64,12 @@ drifter preflight --task "fix login bug"
 | `drifter log-rotate` | Archive the session log and start a fresh one. |
 | `drifter session-report` | Generate behavioral report card from session audit log. |
 | `drifter init` | Initialize Drifter in a new project. |
-| `drifter install-hook` | Install git pre-commit hook that blocks commits with drift. |
+| `drifter install-hook` | Install git pre-commit hook that blocks commits with drift (`--approval` also requires per-commit human approval). |
 | `drifter uninstall-hook` | Remove the Drifter pre-commit hook. |
+| `drifter approve` | Human-only: arm one-time commit approval for the hook's approval gate. |
+| `drifter commit-msg` | Draft a commit message from staged changes (pipe: `drifter commit-msg | git commit -F -`). |
+| `drifter manifest` | Regenerate `.drifter/capability-manifest.json` (commands, checks, MCP tools). |
+| `drifter describe` | Machine-readable project description (`--format json\|markdown`). |
 
 <!-- Generated from `drifter describe --format markdown` — regenerate when checks change -->
 <details>

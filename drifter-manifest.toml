@@ -35,7 +35,7 @@ max_file_lines = 300
 
 [tree.src.drifter]
 "__init__.py" = { layer = "package", max_lines = 10, purpose = "Package init" }
-"cli.py" = { layer = "cli", max_lines = 220, purpose = "Parser + dispatch", imports = ["_cli_admin", "_cli_check", "_cli_conductor", "_cli_init", "_hook_commands"] }
+"cli.py" = { layer = "cli", max_lines = 220, purpose = "Parser + dispatch", imports = ["_cli_admin", "_cli_check", "_cli_conductor", "_cli_init", "_hook_commands", "_commit_commands"] }
 "_cli_admin.py" = { layer = "cli", max_lines = 145, purpose = "CLI handlers: preflight, audit, log, manifest, describe" }
 "_cli_check.py" = { layer = "cli", max_lines = 110, purpose = "CLI handlers: check, session-report" }
 "_cli_common.py" = { layer = "cli", max_lines = 20, purpose = "Shared CLI presentation helpers (banner/rule)" }
@@ -55,7 +55,8 @@ max_file_lines = 300
 "plugin_api.py" = { layer = "core", max_lines = 50, purpose = "Plugin interceptor API" }
 "session_logger.py" = { layer = "core", max_lines = 150, purpose = "Session audit logger" }
 "history_reader.py" = { layer = "core", max_lines = 160, purpose = "Cross-platform shell history reader" }
-"_hook_commands.py" = { layer = "core", max_lines = 95, purpose = "Git hook install/uninstall helpers" }
+"_hook_commands.py" = { layer = "core", max_lines = 130, purpose = "Git hook install/uninstall + approval gate" }
+"_commit_commands.py" = { layer = "cli", max_lines = 130, purpose = "CLI handlers: approve, commit-msg" }
 "_toml_utils.py" = { layer = "core", max_lines = 30, purpose = "Safe TOML loading" }
 "__main__.py" = { layer = "cli", max_lines = 10, purpose = "Module entry point for python -m drifter" }
 "manifest_generator.py" = { layer = "core", max_lines = 470, purpose = "Capability manifest generator" }
@@ -142,6 +143,7 @@ max_file_lines = 300
 "test_history_reader.py" = { tests = "history_reader" }
 "test_mcp_server.py" = { tests = "mcp_server" }
 "test__hook_commands.py" = { tests = "hook_commands" }
+"test__commit_commands.py" = { tests = "commit_commands" }
 "test__toml_utils.py" = { tests = "toml_utils" }
 "test__types.py" = { tests = "_types" }
 "test__templates.py" = { tests = "_templates" }
