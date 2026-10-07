@@ -25,8 +25,12 @@ Drifter is not a prompt. It is a **system of enforced protocols**.
 Requires **Python 3.10+**.
 
 ```bash
-# Install (PyPI package is `drifter-check`; the CLI command is `drifter`)
-pip install drifter-check        # or: pipx install drifter-check / uv tool install drifter-check
+# Install from GitHub (PyPI publish is pending; the package name will be
+# `drifter-check`, the CLI command is `drifter`):
+pip install "git+https://github.com/Theohox/Drifter.git"
+
+# Or from a local checkout:
+pip install -e .           # add "[dev]" for development
 
 # Initialize in your project
 cd your-project

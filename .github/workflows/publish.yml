@@ -1,8 +1,11 @@
 name: Publish
 
+# PyPI publish is MANUAL until trusted publishing is configured on PyPI
+# (pending publisher: project drifter-check, owner Theohox, repo Drifter,
+# workflow publish.yml, environment pypi). To re-enable automatic publishes,
+# restore the tag trigger:  on: push: tags: ["v*"]
 on:
-  push:
-    tags: ["v*"]
+  workflow_dispatch:
 
 jobs:
   build:

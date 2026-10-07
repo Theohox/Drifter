@@ -27,8 +27,8 @@ MCP (Model Context Protocol) server that exposes Drifter's enforcement primitive
 ## Installation
 
 ```bash
-# Install Drifter + MCP dependencies from PyPI
-pip install "drifter-check[mcp]"
+# Install Drifter + MCP dependencies from GitHub (PyPI publish pending)
+pip install "drifter-check[mcp] @ git+https://github.com/Theohox/Drifter.git"
 
 # Or install in development mode
 cd /path/to/drifter
